@@ -222,36 +222,22 @@ const Player: React.FC = () => {
       </div>
 
       {/* Volume Controls */}
-      <div className="flex items-center justify-end w-1/4 gap-4">
+      <div className="flex items-center justify-center w-1/4">
         <button
           className="text-spotify-text-secondary hover:text-spotify-text-primary"
-          onClick={() => {}}
+          onClick={handleVolumeClick}
         >
-          <FaList />
+          {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
         </button>
-        <div className="flex items-center gap-2">
-          <button onClick={handleVolumeClick}>
-            {isMuted || volume === 0 ? (
-              <FaVolumeMute className="text-spotify-text-secondary hover:text-spotify-text-primary" />
-            ) : (
-              <FaVolumeUp className="text-spotify-text-secondary hover:text-spotify-text-primary" />
-            )}
-          </button>
-          <div className="w-24 h-1 bg-gray-600 rounded-full cursor-pointer">
-            <div
-              className="h-full bg-spotify-text-secondary hover:bg-spotify-green rounded-full"
-              style={{ width: `${isMuted ? 0 : volume * 100}%` }}
-              onClick={(e) => {
-                const rect = e.currentTarget.parentElement?.getBoundingClientRect();
-                if (rect) {
-                  const percent = (e.clientX - rect.left) / rect.width;
-                  setVolume(Math.max(0, Math.min(1, percent)));
-                  setIsMuted(false);
-                }
-              }}
-            />
-          </div>
-        </div>
+        <input
+          type="range"
+          min="0"
+          max="1"
+          step="0.01"
+          value={isMuted ? 0 : volume}
+          onChange={(e) => setVolume(Number(e.target.value))}
+          className="w-16 ml-2"
+        />
       </div>
 
       {/* Audio Element (hidden) */}
