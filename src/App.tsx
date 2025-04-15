@@ -2,8 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
+import ArtistDetailPage from "./pages/ArtistDetailPage"
 
-// Add the dark class to body for dark mode styling
 document.body.classList.add('dark');
 
 function App() {
@@ -12,11 +12,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
-          <Route path="search" element={<div>Search Page (Coming Soon)</div>} />
+          <Route path="search/:keyword" element={<div>Search Page (Coming Soon)</div>} />
           <Route path="library" element={<div>Library (Coming Soon)</div>} />
           <Route path="playlist/:id" element={<div>Playlist Detail (Coming Soon)</div>} />
           <Route path="album/:id" element={<div>Album Detail (Coming Soon)</div>} />
-          <Route path="artist/:id" element={<div>Artist Detail (Coming Soon)</div>} />
+          <Route path="artist/:id" element={<ArtistDetailPage />} />
           <Route path="category/:id" element={<div>Category Detail (Coming Soon)</div>} />
 
           {/* Routes for "Show All" links */}

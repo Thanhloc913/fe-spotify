@@ -12,16 +12,14 @@ import {
 const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-black flex flex-col overflow-hidden">
-      {/* Logo */}
-      <div className="p-6">
+      {/* <div className="p-6">
         <NavLink to="/" className="flex items-center">
           <FaSpotify className="text-spotify-green text-3xl mr-2" />
           <span className="text-xl font-bold">Spotify</span>
         </NavLink>
-      </div>
+      </div> */}
 
-      {/* Main Navigation */}
-      <nav className="flex-1">
+      {/* <nav className="flex-1">
         <ul className="space-y-2 p-2">
           <li>
             <NavLink
@@ -57,7 +55,7 @@ const Sidebar: React.FC = () => {
             </NavLink>
           </li>
         </ul>
-      </nav>
+      </nav> */}
 
       {/* Playlist Section */}
       <div className="p-6 border-t border-gray-800 space-y-4">
@@ -97,13 +95,6 @@ const Sidebar: React.FC = () => {
             <NavLink to="/playlist/5" className="text-sm">Workout Mix</NavLink>
           </li>
         </ul>
-      </div>
-
-      {/* Install App */}
-      <div className="p-6 pt-2">
-        <button className="sidebar-item text-sm">
-          <span>Install App</span>
-        </button>
       </div>
     </aside>
   );

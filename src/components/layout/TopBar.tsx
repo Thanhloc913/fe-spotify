@@ -7,12 +7,12 @@ const TopBar: React.FC = () => {
   const [searchValue, setSearchValue] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
-  const isSearchPage = location.pathname === '/search';
+  const isSearchPage = location.pathname.startsWith('/search');
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchValue.trim()) {
-      navigate(`/search?q=${encodeURIComponent(searchValue)}`);
+      navigate(`/search/${encodeURIComponent(searchValue)}`);
     }
   };
 
