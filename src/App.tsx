@@ -2,7 +2,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
-import ArtistDetailPage from "./pages/ArtistDetailPage"
+// import ArtistDetailPage from "./pages/ArtistDetailPage"
 
 document.body.classList.add('dark');
 
@@ -16,7 +16,7 @@ function App() {
           <Route path="library" element={<div>Library (Coming Soon)</div>} />
           <Route path="playlist/:id" element={<div>Playlist Detail (Coming Soon)</div>} />
           <Route path="album/:id" element={<div>Album Detail (Coming Soon)</div>} />
-          <Route path="artist/:id" element={<ArtistDetailPage />} />
+          {/* <Route path="artist/:id" element={<ArtistDetailPage />} /> */}
           <Route path="category/:id" element={<div>Category Detail (Coming Soon)</div>} />
 
           {/* Routes for "Show All" links */}

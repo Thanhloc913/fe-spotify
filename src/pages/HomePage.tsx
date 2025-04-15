@@ -87,11 +87,11 @@ const HomePage: React.FC = () => {
             Show all
           </Link>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+        {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {data?.popularArtists.slice(0, 5).map(artist => (
             <ArtistCard key={artist.id} artist={artist} />
           ))}
-        </div>
+        </div> */}
       </section>
 
       {/* Popular Albums */}
