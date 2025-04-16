@@ -1,0 +1,49 @@
+{
+    "login": [
+      {
+        "email": "user1@example.com",
+        "password": "password123",
+        "token": "token_user1"
+      },
+      {
+        "email": "user2@example.com",
+        "password": "password456",
+        "token": "token_user2"
+      },
+      {
+        "email": "user3@example.com",
+        "password": "password789",
+        "token": "token_user3"
+      },
+      {
+        "email": "user4@example.com",
+        "password": "password101112",
+        "token": "token_user4"
+      },
+      {
+        "email": "user5@example.com",
+        "password": "password131415",
+        "token": "token_user5"
+      }
+    ],
+    "register": {
+      "email": "newuser@example.com",
+      "password": "newpassword123",
+      "user": {
+        "id": "12345",
+        "name": "New User",
+        "email": "newuser@example.com",
+        "profileImageUrl": "https://www.example.com/profile.jpg",
+        "following": {
+          "artists": ["artist1", "artist2"],
+          "users": ["user1", "user2"]
+        },
+        "playlists": ["playlist1", "playlist2"],
+        "createdAt": "2023-04-16T00:00:00Z"
+      }
+    },
+    "checkToken": {
+      "valid": true
+    }
+  }
+  

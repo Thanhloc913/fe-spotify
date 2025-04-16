@@ -16,6 +16,11 @@ export default function Navbar() {
         }
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('authToken');
+        navigate('/login');
+    };
+
     return (
         <div className="flex items-center justify-between px-4 py-2 bg-[#000000] relative">
             <div className="flex items-center">
@@ -88,9 +93,10 @@ export default function Navbar() {
                                 Cài đặt
                             </button>
                             <button
-                                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-[#242424]"
+                                onClick={handleLogout}
+                                className="bg-red-500 text-white px-4 py-2 rounded"
                             >
-                                Đăng xuất
+                                Logout
                             </button>
                         </div>
                     )}

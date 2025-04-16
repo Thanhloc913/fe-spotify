@@ -2,7 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Layout from './components/layout/Layout';
 import HomePage from './pages/HomePage';
-// import ArtistDetailPage from "./pages/ArtistDetailPage"
+import LoginPage from './pages/LoginPage';
+import PrivateRoute from './components/PrivateRoute';
 
 document.body.classList.add('dark');
 
@@ -10,7 +11,15 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <PrivateRoute>
+              <Layout />
+            </PrivateRoute>
+          }
+        >
           <Route index element={<HomePage />} />
           <Route path="search/:keyword" element={<div>Search Page (Coming Soon)</div>} />
           <Route path="library" element={<div>Library (Coming Soon)</div>} />
