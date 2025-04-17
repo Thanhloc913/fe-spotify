@@ -1,106 +1,76 @@
-import axios from 'axios';
-import { ApiResponse, User } from '../types/index';
+import axios from "axios";
 
-// Cấu hình base URL (backend Django tại localhost)
-const API_URL = 'http://localhost:8000';
+// Tạo instance axios
+const api = axios.create({
+  baseURL: "http://localhost:8000",
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
+});
 
-// Cấu hình axios mặc định: gửi cookie trong mọi request
-axios.defaults.withCredentials = true;
-
-// Hàm lấy CSRF token từ cookie (chuẩn giống fetch)
-const getCookie = (name: string): string | null => {
-  let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
-    for (let cookie of cookies) {
-      cookie = cookie.trim();
-      if (cookie.startsWith(name + '=')) {
-        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-        break;
-      }
+// Interceptor để tự động gắn token vào request nếu có
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
     }
-  }
-  return cookieValue;
-};
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
-// ✅ Hàm gọi trước để lấy CSRF token từ backend và set cookie
-export const getCsrfToken = async (): Promise<void> => {
+// Lấy CSRF token
+const getCsrfToken = async (): Promise<string> => {
   try {
-    await axios.get(`${API_URL}/`, {
-      withCredentials: true,
-    });
+    const { data } = await api.get("/csrf/");
+    const csrfToken = data?.data?.token;
+    if (!csrfToken) throw new Error("Không có token trong phản hồi");
+    return csrfToken;
   } catch (error) {
-    console.error('Lỗi khi lấy CSRF token:', error);
+    console.error("Không lấy được CSRF token:", error);
+    throw new Error("Không lấy được CSRF token");
   }
 };
 
-// ✅ Đăng nhập
-export const login = async (email: string, password: string): Promise<ApiResponse<{ token: string }>> => {
+// Gọi API login
+export const login = async (
+  accountInput: string,
+  password: string
+): Promise<{ data: { token: string } }> => {
   try {
-    const response = await axios.post(`${API_URL}/login/`, {
-      email,
-      password,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken') || '',
-      },
-      withCredentials: true,
-    });
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(accountInput);
+    const payload = isEmail
+      ? { email: accountInput, password }
+      : { username: accountInput, password };
 
-    return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response?.data?.message || 'Đăng nhập thất bại');
+    const csrfToken = await getCsrfToken();
+
+    const response = await api.post(
+      "/login/",
+      payload,
+      {
+        headers: {
+          "X-CSRFToken": csrfToken,
+        },
+      }
+    );
+
+    const { access_token, refresh_token, account } = response.data.data;
+
+    if (access_token) {
+      localStorage.setItem("token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("account_id", account.id);
+      return { data: { token: access_token } };
     } else {
-      throw new Error('Đăng nhập thất bại');
+      throw new Error("Không nhận được access token");
     }
+  } catch (error: any) {
+    console.error("Lỗi login:", error);
+    throw new Error(error.response?.data?.message || "Sai tài khoản hoặc mật khẩu!");
   }
 };
 
-// ✅ Đăng ký
-export const register = async (email: string, password: string): Promise<ApiResponse<{ user: User }>> => {
-  try {
-    const response = await axios.post(`${API_URL}/register/`, {
-      email,
-      password,
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken') || '',
-      },
-      withCredentials: true,
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response?.data?.message || 'Đăng ký thất bại');
-    } else {
-      throw new Error('Đăng ký thất bại');
-    }
-  }
-};
-
-// ✅ Kiểm tra token
-export const checkToken = async (): Promise<ApiResponse<{ valid: boolean }>> => {
-  try {
-    const token = localStorage.getItem('authToken');
-    if (!token) throw new Error('Token không tồn tại');
-
-    const response = await axios.get(`${API_URL}/check/`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      withCredentials: true,
-    });
-
-    return response.data;
-  } catch (error: unknown) {
-    if (axios.isAxiosError(error) && error.response) {
-      throw new Error(error.response?.data?.message || 'Token không hợp lệ');
-    } else {
-      throw new Error('Token không hợp lệ');
-    }
-  }
-};
+export default api;
