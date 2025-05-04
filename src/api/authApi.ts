@@ -73,4 +73,37 @@ export const login = async (
   }
 };
 
+// Gọi API register
+export const register = async (registerData: {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  avatarUrl?: string;
+  bio?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
+}) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const dataToSend = {
+      ...registerData,
+      avatarUrl:
+        !registerData.avatarUrl ||
+        ["no", "null", "undefined"].includes((registerData.avatarUrl || "").trim().toLowerCase())
+          ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8WOsLxlKgTXh7gry1qONjjpnozv1IwdHf165tgttVd5FiaWx4G8yOo4LCWt9uPt6y0EWxE89oyHdEPbgre41s8Q"
+          : registerData.avatarUrl,
+    };
+    const response = await api.post("/register", dataToSend, {
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+    });
+    return response.data;
+  } catch (error: any) {
+    console.error("Lỗi register:", error);
+    throw new Error(error.response?.data?.message || "Đăng ký thất bại!");
+  }
+};
+
 export default api;

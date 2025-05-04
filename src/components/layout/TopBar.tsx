@@ -1,9 +1,13 @@
-import type React from 'react';
+import React from 'react';
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaChevronLeft, FaChevronRight, FaSearch, FaUser } from 'react-icons/fa';
 
-const TopBar: React.FC = () => {
+interface TopBarProps {
+  onLogout: () => void;
+}
+
+const TopBar: React.FC<TopBarProps> = ({ onLogout }) => {
   const [searchValue, setSearchValue] = useState('');
   const location = useLocation();
   const navigate = useNavigate();
@@ -57,6 +61,12 @@ const TopBar: React.FC = () => {
             <FaUser className="text-black" />
           </div>
         </div>
+        <button
+          onClick={onLogout}
+          className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 ml-2"
+        >
+          Đăng xuất
+        </button>
       </div>
     </div>
   );

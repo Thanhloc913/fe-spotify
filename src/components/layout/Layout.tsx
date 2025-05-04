@@ -1,15 +1,17 @@
 import React, { useRef } from 'react';
 import Sidebar from './Sidebar';
 import Player from '../player/Player';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import TopBar from './TopBar';
 import Navbar from './Navbar';
 import { usePlayerStore } from '../../store/playerStore';
 import VideoPlayer from '../player/VideoPlayer';
+import axios from 'axios';
 
 const Layout: React.FC = () => {
   const { showVideo, currentTrack, isPlaying, progress, volume, setShowVideo, repeat } = usePlayerStore();
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
+  const navigate = useNavigate();
 
   const handleTrackEnd = () => {
     if (repeat === 'track') {
@@ -20,6 +22,20 @@ const Layout: React.FC = () => {
       }
     } else {
       usePlayerStore.getState().pauseTrack();
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await axios.post('http://localhost:8080/logout', {}, {
+        withCredentials: true
+      });
+      // Xóa token và refresh token từ localStorage
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
     }
   };
 
@@ -52,6 +68,8 @@ const Layout: React.FC = () => {
 
       {/* Player - Fixed at bottom */}
       <Player />
+
+      <TopBar onLogout={handleLogout} />
     </div>
   );
 };
