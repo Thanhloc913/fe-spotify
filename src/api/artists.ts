@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { type Artist, type Album, type Track, type ApiResponse } from '../types';
 import { mockData } from '../mock/data';
+import { getToken } from '../utils/auth';
 
 // Constants
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -32,12 +33,8 @@ export const getArtists = async (): Promise<ApiResponse<Artist[]>> => {
   }
 };
 
-export const getArtistById = async (id: string): Promise<ApiResponse<Artist & { 
-  albums: Album[], 
-  singles: Album[], 
-  topTracks: Track[], 
-  relatedArtists: Artist[] 
-}>> => {
+export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: Artist; albums: Album[]; singles: Album[]; topTracks: Track[]; relatedArtists: Artist[] }>> => {
+  if (!getToken()) throw new Error('No token');
   try {
     if (USE_MOCK_DATA) {
       const artist = mockData.artists.find(a => a.id === id);
@@ -67,7 +64,7 @@ export const getArtistById = async (id: string): Promise<ApiResponse<Artist & {
       ).filter(Boolean) as Artist[];
 
       return createResponse({
-        ...artist,
+        artist,
         albums,
         singles,
         topTracks,

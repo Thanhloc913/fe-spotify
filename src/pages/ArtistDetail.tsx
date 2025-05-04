@@ -34,7 +34,14 @@ const ArtistDetail = () => {
         // Fetch artist details with all related data
         const artistResponse = await artistsApi.getArtistById(id);
         if (artistResponse.status === 200 && artistResponse.data) {
-          setArtist(artistResponse.data as unknown as ExtendedArtist);
+          const { artist, albums, singles, topTracks, relatedArtists } = artistResponse.data;
+          setArtist({
+            ...artist,
+            albums,
+            singles,
+            topTracks,
+            relatedArtists
+          });
         } else {
           setError('Artist not found');
         }
@@ -63,15 +70,17 @@ const ArtistDetail = () => {
       {/* Artist Header */}
       <div className="flex items-end gap-6 mb-8">
         <img
-          src={artist.imageUrl}
-          alt={artist.name}
+          src={artist?.imageUrl}
+          alt={artist?.name}
           className="w-48 h-48 rounded-full object-cover"
         />
         <div>
-          <h1 className="text-5xl font-bold mb-4">{artist.name}</h1>
-          <p className="text-gray-400 mb-2">{artist.genres.join(', ')}</p>
+          <h1 className="text-5xl font-bold mb-4">{artist?.name}</h1>
+          <p className="text-gray-400 mb-2">
+            {artist?.genres?.length ? artist.genres.join(', ') : 'No genres available'}
+          </p>
           <p className="text-gray-500">
-            {artist.monthlyListeners.toLocaleString()} monthly listeners
+            {artist?.monthlyListeners?.toLocaleString() || 0} monthly listeners
           </p>
         </div>
       </div>
@@ -138,7 +147,7 @@ const ArtistDetail = () => {
       </div>
 
       {/* Albums */}
-      {artist.albums.length > 0 && (
+      {Array.isArray(artist.albums) && artist.albums.length > 0 ? (
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Albums</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
@@ -159,6 +168,8 @@ const ArtistDetail = () => {
             ))}
           </div>
         </div>
+      ) : (
+        <div className="mt-8 text-gray-400">No albums found.</div>
       )}
     </div>
   );

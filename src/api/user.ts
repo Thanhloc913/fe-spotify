@@ -1,10 +1,12 @@
 import { Album, Track } from '../types';
+import { getToken } from '../utils/auth';
 
 const USER_ALBUMS_KEY = 'user_albums';
 const USER_FAVORITES_KEY = 'user_favorite_tracks';
 const USER_PLAYLISTS_KEY = 'user_playlists';
 
 export function createAlbum(album: Album): Promise<Album> {
+  if (!getToken()) return Promise.reject(new Error('No token'));
   const albums = JSON.parse(localStorage.getItem(USER_ALBUMS_KEY) || '[]');
   albums.push(album);
   localStorage.setItem(USER_ALBUMS_KEY, JSON.stringify(albums));
@@ -12,6 +14,7 @@ export function createAlbum(album: Album): Promise<Album> {
 }
 
 export function getUserAlbums(): Promise<Album[]> {
+  if (!getToken()) return Promise.reject(new Error('No token'));
   const albums = JSON.parse(localStorage.getItem(USER_ALBUMS_KEY) || '[]');
   return Promise.resolve(albums);
 }
@@ -33,6 +36,7 @@ export function removeFavoriteTrack(trackId: string): Promise<void> {
 }
 
 export function getFavoriteTracks(): Promise<Track[]> {
+  if (!getToken()) return Promise.reject(new Error('No token'));
   const tracks = JSON.parse(localStorage.getItem(USER_FAVORITES_KEY) || '[]');
   return Promise.resolve(tracks);
 }
@@ -52,6 +56,7 @@ export function createPlaylist(playlist: UserPlaylist): Promise<UserPlaylist> {
 }
 
 export function getUserPlaylists(): Promise<UserPlaylist[]> {
+  if (!getToken()) return Promise.reject(new Error('No token'));
   const playlists = JSON.parse(localStorage.getItem(USER_PLAYLISTS_KEY) || '[]');
   return Promise.resolve(playlists);
 }

@@ -26,13 +26,13 @@ const AlbumDetail = () => {
       try {
         if (!id) return;
         const albumResponse = await getAlbumById(id);
-        setAlbum(albumResponse.data);
-        // Nếu API trả về tracks trong album, dùng luôn, nếu không thì fetch riêng
-        if (albumResponse.data && albumResponse.data.tracks) {
-          setTracks(albumResponse.data.tracks);
+        if (albumResponse.data) {
+          const { album, tracks } = albumResponse.data;
+          setAlbum(album);
+          setTracks(tracks);
         } else {
-          const tracksResponse = await getTracksByAlbum(id);
-          setTracks(tracksResponse.data);
+          setAlbum(null);
+          setTracks([]);
         }
       } catch (err) {
         setError('Failed to fetch album data');

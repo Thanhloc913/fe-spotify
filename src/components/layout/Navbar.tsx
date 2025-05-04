@@ -82,30 +82,31 @@ export default function Navbar() {
                     </button>
 
                     {showMenu && (
-                        <div className="absolute right-0 mt-2 w-48 bg-[#121212] rounded-lg shadow-lg py-2 z-10">
-                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424]">
+                        <div className="absolute right-0 mt-2 w-48 bg-[#121212] rounded-lg shadow-lg py-2 z-10 space-y-1">
+                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md">
                                 Tài khoản
                             </button>
                             <button
-                                className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424]"
+                                className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md"
                                 onClick={() => { setShowMenu(false); navigate('/profile'); }}
                             >
                                 Hồ sơ
                             </button>
-                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424]">
+                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md">
                                 Hỗ trợ
                             </button>
-                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424]">
+                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md">
                                 Tải xuống
                             </button>
-                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424]">
+                            <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md">
                                 Cài đặt
                             </button>
+                            <div className="border-t border-[#2a2a2a] my-1"></div>
                             <button
                                 onClick={handleLogout}
-                                className="bg-red-500 text-white px-4 py-2 rounded"
+                                className="block w-full text-left px-4 py-2 text-red-500 hover:bg-[#242424] hover:text-white rounded-md"
                             >
-                                Logout
+                                Đăng xuất
                             </button>
                         </div>
                     )}

@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { type Album, type Track, type Artist, type ApiResponse } from '../types';
 import { mockData } from '../mock/data';
+import { getToken } from '../utils/auth';
 
 // Constants
 const API_BASE_URL = 'https://api.spotify.com/v1';
@@ -32,28 +33,23 @@ export const getAlbums = async (): Promise<ApiResponse<Album[]>> => {
   }
 };
 
-export const getAlbumById = async (id: string): Promise<ApiResponse<Album & { 
-  tracks: Track[], 
-  artist: Artist 
-}>> => {
+export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Album; tracks: Track[]; artist: Artist; }>> => {
+  if (!getToken()) throw new Error('No token');
   try {
     if (USE_MOCK_DATA) {
       const album = mockData.albums.find(a => a.id === id);
-      
       if (!album) {
         return createResponse(null as any, 404, 'Album not found');
       }
-
-      // Get album tracks
+      // Get album tracks (Track[])
       const tracks = album.tracks.map(trackId =>
         mockData.tracks.find(t => t.id === trackId)
       ).filter(Boolean) as Track[];
-
       // Get album artist
       const artist = mockData.artists.find(a => a.id === album.artistId);
-
+      // Trả về object đúng cấu trúc
       return createResponse({
-        ...album,
+        album,
         tracks,
         artist: artist as Artist,
       });

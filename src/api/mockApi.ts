@@ -22,6 +22,7 @@ import {
   getTopTracks,
   getRecommendations 
 } from './tracks';
+import { getToken } from '../utils/auth';
 
 // Add delay to simulate network latency (ms)
 const API_DELAY = 300;
@@ -39,7 +40,10 @@ const delayResponse = <T>(data: T): Promise<T> => {
 export const mockApi = {
   // Artist endpoints
   artists: {
-    getAll: () => getArtists(),
+    getAll: async () => {
+      if (!getToken()) throw new Error('No token');
+      return getArtists();
+    },
     getById: (id: string) => getArtistById(id),
     search: (query: string) => searchArtists(query),
     getAlbums: (artistId: string) => getArtistAlbums(artistId)
@@ -47,7 +51,10 @@ export const mockApi = {
 
   // Album endpoints
   albums: {
-    getAll: () => getAlbums(),
+    getAll: async () => {
+      if (!getToken()) throw new Error('No token');
+      return getAlbums();
+    },
     getById: (id: string) => getAlbumById(id),
     search: (query: string) => searchAlbums(query),
     getNewReleases: () => getNewReleases(),
@@ -56,7 +63,10 @@ export const mockApi = {
 
   // Track endpoints
   tracks: {
-    getAll: () => getTracks(),
+    getAll: async () => {
+      if (!getToken()) throw new Error('No token');
+      return getTracks();
+    },
     getById: (id: string) => getTrackById(id),
     search: (query: string) => searchTracks(query),
     getByAlbum: (albumId: string) => getTracksByAlbum(albumId),
