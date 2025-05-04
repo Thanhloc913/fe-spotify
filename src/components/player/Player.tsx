@@ -12,24 +12,31 @@ import {
   FaList,
   FaVolumeMute
 } from 'react-icons/fa';
-import usePlayerStore from '../../store/playerStore';
+import { usePlayerStore } from '../../store/playerStore';
+import { Link } from 'react-router-dom';
+
+const formatDuration = (ms: number) => {
+  const minutes = Math.floor(ms / 60000);
+  const seconds = Math.floor((ms % 60000) / 1000);
+  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+};
 
 const Player: React.FC = () => {
   const {
     currentTrack,
     isPlaying,
     volume,
-    progress,
-    duration,
     repeat,
     shuffle,
+    progress,
+    duration,
     togglePlay,
-    skipToNext,
-    skipToPrevious,
     setVolume,
-    setProgress,
     setRepeat,
-    setShuffle
+    toggleShuffle,
+    setProgress,
+    skipToNext,
+    skipToPrevious
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
@@ -76,7 +83,8 @@ const Player: React.FC = () => {
   // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.volume = isMuted ? 0 : volume;
+      const normalizedVolume = Math.max(0, Math.min(1, volume));
+      audioRef.current.volume = isMuted ? 0 : normalizedVolume;
     }
   }, [volume, isMuted]);
 
@@ -125,109 +133,110 @@ const Player: React.FC = () => {
     setRepeat(repeatModes[nextIndex]);
   };
 
-  // Format time
-  const formatTime = (time: number) => {
-    const minutes = Math.floor(time / 60);
-    const seconds = Math.floor(time % 60);
-    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
-  };
+  if (!currentTrack) return null;
 
   return (
-    <div className="bg-spotify-gray border-t border-gray-800 px-4 py-3 flex items-center justify-between">
+    <div className="fixed bottom-0 left-0 right-0 bg-gray-900 border-t border-gray-800 p-4">
+      <div className="max-w-7xl mx-auto flex items-center justify-between">
       {/* Track Info */}
-      <div className="flex items-center w-1/4">
-        {currentTrack ? (
-          <>
+        <div className="flex items-center gap-4 w-1/4">
             <img
               src={currentTrack.coverUrl}
               alt={currentTrack.title}
-              className="h-14 w-14 object-cover mr-3"
+            className="w-14 h-14 rounded"
             />
             <div>
-              <div className="text-sm font-medium text-spotify-text-primary truncate">{currentTrack.title}</div>
-              <div className="text-xs text-spotify-text-secondary truncate">{currentTrack.artistName}</div>
+            <p className="text-white font-medium">{currentTrack.title}</p>
+            <p className="text-gray-400 text-sm">
+              <Link to={`/artist/${currentTrack.artistId}`} className="hover:underline text-white/80">
+                {currentTrack.artistName}
+              </Link>
+            </p>
             </div>
-            <button className="ml-4 text-spotify-text-secondary hover:text-spotify-text-primary">
-              <FaHeart />
-            </button>
-          </>
-        ) : (
-          <div className="text-sm text-spotify-text-secondary">No track selected</div>
-        )}
       </div>
 
       {/* Player Controls */}
-      <div className="flex flex-col items-center justify-center w-2/4">
+        <div className="flex flex-col items-center w-2/4">
         <div className="flex items-center gap-4 mb-2">
           <button
-            className={`text-spotify-text-secondary hover:text-spotify-text-primary ${shuffle ? 'text-spotify-green' : ''}`}
-            onClick={() => setShuffle(!shuffle)}
+              onClick={toggleShuffle}
+              className={`text-gray-400 hover:text-white ${shuffle ? 'text-green-500' : ''}`}
           >
-            <FaRandom />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M10 3a1 1 0 011 1v5.586l3.293-3.293a1 1 0 111.414 1.414l-5 5a1 1 0 01-1.414 0l-5-5a1 1 0 111.414-1.414L9 9.586V4a1 1 0 011-1z" />
+              </svg>
           </button>
           <button
-            className="text-spotify-text-secondary hover:text-spotify-text-primary"
             onClick={skipToPrevious}
-            disabled={!currentTrack}
+              className="text-gray-400 hover:text-white"
           >
-            <FaStepBackward className="text-2xl" />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M8.445 14.832A1 1 0 0010 14v-2.798l5.445 3.63A1 1 0 0017 14V6a1 1 0 00-1.555-.832L10 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z" />
+              </svg>
           </button>
           <button
-            className="text-spotify-text-primary hover:scale-105 transition"
             onClick={togglePlay}
-            disabled={!currentTrack}
+              className="bg-white text-black rounded-full p-2 hover:scale-105 transition-transform"
           >
             {isPlaying ? (
-              <FaPauseCircle className="text-white text-4xl" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm6 4a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 1a1 1 0 10-2 0v4a1 1 0 102 0V8z" />
+                </svg>
             ) : (
-              <FaPlayCircle className="text-white text-4xl" />
+                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                  <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                </svg>
             )}
           </button>
           <button
-            className="text-spotify-text-secondary hover:text-spotify-text-primary"
             onClick={skipToNext}
-            disabled={!currentTrack}
+              className="text-gray-400 hover:text-white"
           >
-            <FaStepForward className="text-2xl" />
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M11.445 14.832A1 1 0 0013 14v-2.798l5.445 3.63A1 1 0 0020 14V6a1 1 0 00-1.555-.832L13 8.798V6a1 1 0 00-1.555-.832l-6 4a1 1 0 000 1.664l6 4z" />
+              </svg>
           </button>
           <button
-            className={`text-spotify-text-secondary hover:text-spotify-text-primary ${repeat !== 'off' ? 'text-spotify-green' : ''}`}
-            onClick={handleRepeatClick}
+              onClick={() => setRepeat(repeat === 'off' ? 'track' : 'off')}
+              className={`text-gray-400 hover:text-white ${repeat === 'track' ? 'text-green-500' : ''}`}
           >
-            <FaRedo />
-          </button>
-        </div>
-
-        {/* Progress Bar */}
-        <div className="flex items-center w-full gap-2">
-          <span className="text-xs text-spotify-text-secondary w-10 text-right">
-            {formatTime(progress)}
-          </span>
-          <div
-            ref={progressRef}
-            className="flex-1 h-1 bg-gray-600 rounded-full cursor-pointer"
-            onClick={handleProgressClick}
-          >
-            <div
-              className="h-full bg-spotify-text-secondary rounded-full relative"
-              style={{ width: `${(progress / (duration || 1)) * 100}%` }}
-            >
-              <div className="absolute right-0 top-1/2 transform -translate-y-1/2 w-3 h-3 rounded-full bg-white opacity-0 group-hover:opacity-100" />
-            </div>
+              <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
+              </svg>
+            </button>
           </div>
-          <span className="text-xs text-spotify-text-secondary w-10">
-            {formatTime(duration)}
+          <div className="flex items-center gap-2 w-full">
+            <span className="text-gray-400 text-sm">
+              {formatDuration(progress * 1000)}
+            </span>
+            <input
+              type="range"
+              min="0"
+              max={duration}
+              value={progress}
+              onChange={(e) => {
+                const newTime = Number(e.target.value);
+                if (audioRef.current) {
+                  audioRef.current.currentTime = newTime;
+                }
+                setProgress(newTime);
+              }}
+              className="w-full h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
+            />
+            <span className="text-gray-400 text-sm">
+              {formatDuration(currentTrack.durationMs)}
           </span>
         </div>
       </div>
 
-      {/* Volume Controls */}
-      <div className="flex items-center justify-center w-1/4">
-        <button
-          className="text-spotify-text-secondary hover:text-spotify-text-primary"
-          onClick={handleVolumeClick}
-        >
-          {isMuted ? <FaVolumeMute /> : <FaVolumeUp />}
+        {/* Volume Control */}
+        <div className="flex items-center gap-2 w-1/4 justify-end">
+          <button onClick={handleVolumeClick} className="focus:outline-none">
+            {isMuted || volume === 0 ? (
+              <FaVolumeMute className="w-5 h-5 text-gray-400" />
+            ) : (
+              <FaVolumeUp className="w-5 h-5 text-gray-400" />
+            )}
         </button>
         <input
           type="range"
@@ -235,9 +244,18 @@ const Player: React.FC = () => {
           max="1"
           step="0.01"
           value={isMuted ? 0 : volume}
-          onChange={(e) => setVolume(Number(e.target.value))}
-          className="w-16 ml-2"
+            onChange={(e) => {
+              const newVolume = Number(e.target.value);
+              setVolume(newVolume);
+              if (audioRef.current) {
+                audioRef.current.volume = newVolume;
+                if (newVolume === 0) setIsMuted(true);
+                else setIsMuted(false);
+              }
+            }}
+            className="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
         />
+        </div>
       </div>
 
       {/* Audio Element (hidden) */}

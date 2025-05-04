@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { mockData } from '../lib/mocks/data';
+import { mockData } from '../mock/data';
 import {
   type Artist,
   type Album,
@@ -10,6 +10,12 @@ import {
   type SearchResult,
   type ApiResponse
 } from '../types';
+
+// Import specific API implementations
+import * as artistsApi from './artists';
+import * as albumsApi from './albums';
+import * as tracksApi from './tracks';
+import { mockApi } from './mockApi';
 
 // Create a mock Axios instance
 const mockAxios = axios.create();
@@ -32,12 +38,21 @@ const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse
   };
 };
 
+// Main API configuration
+const USE_MOCK_DATA = true; // Set to false to use real API when it's ready
+
 // Mock API service
 const api = {
+  // Use imported API implementations
+  artists: artistsApi,
+  albums: albumsApi,
+  tracks: tracksApi,
+  mock: mockApi,
+
   // Home
   getHomeData: async () => {
     try {
-      const categories = mockData.categories.slice(0, 5);
+      const categories = mockData.categories?.slice(0, 5) || [];
       const popularArtists = [...mockData.artists]
         .sort((a, b) => b.monthlyListeners - a.monthlyListeners)
         .slice(0, 10);
@@ -50,9 +65,11 @@ const api = {
         .sort((a, b) => b.popularity - a.popularity)
         .slice(0, 10);
 
-      const popularPlaylists = [...mockData.playlists]
+      const popularPlaylists = mockData.playlists 
+        ? [...mockData.playlists]
         .sort((a, b) => b.followers - a.followers)
-        .slice(0, 10);
+            .slice(0, 10)
+        : [];
 
       return createResponse({
         categories,

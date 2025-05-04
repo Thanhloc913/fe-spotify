@@ -1,14 +1,14 @@
 import type React from 'react';
 import { FaPlay, FaPause } from 'react-icons/fa';
 import type { Track } from '../../types';
-import usePlayerStore from '../../store/playerStore';
+import { usePlayerStore } from '../../store/playerStore';
 
 interface TrackCardProps {
   track: Track;
 }
 
 const TrackCard: React.FC<TrackCardProps> = ({ track }) => {
-  const { currentTrack, isPlaying, playTrack, togglePlay } = usePlayerStore();
+  const { currentTrack, isPlaying, playTrack, togglePlay, setCurrentTrack } = usePlayerStore();
 
   const isCurrentTrack = currentTrack?.id === track.id;
 
@@ -16,7 +16,8 @@ const TrackCard: React.FC<TrackCardProps> = ({ track }) => {
     if (isCurrentTrack) {
       togglePlay();
     } else {
-      playTrack(track);
+      setCurrentTrack(track);
+      playTrack();
     }
   };
 

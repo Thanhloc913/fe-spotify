@@ -1,28 +1,124 @@
 // 📁 src/api/mockApi.ts
-import { generateArtists, updateArtistsWithContent } from './artistApi';
-import { generateAlbums } from './albumApi';
-import { generateTracks } from './trackApi';
-import { generateCategories } from './categoryApi';
-import { generatePlaylists } from './playlistApi';
-import { generateUsers, updateUsersWithContent } from './userApi';
+import { faker } from '@faker-js/faker';
+import { mockData } from '../mock/data';
+import { 
+  getArtists, 
+  getArtistById, 
+  searchArtists, 
+  getArtistAlbums 
+} from './artists';
+import { 
+  getAlbums, 
+  getAlbumById, 
+  searchAlbums, 
+  getNewReleases, 
+  getAlbumsByArtist 
+} from './albums';
+import { 
+  getTracks, 
+  getTrackById, 
+  searchTracks, 
+  getTracksByAlbum, 
+  getTopTracks,
+  getRecommendations 
+} from './tracks';
 
-export const generateMockData = () => {
-  const categories = generateCategories();
-  const artists = generateArtists();
-  const albums = generateAlbums(artists, 50);
-  const tracks = generateTracks(albums);
-  const users = generateUsers();
-  const playlists = generatePlaylists(users, tracks, 30);
+// Add delay to simulate network latency (ms)
+const API_DELAY = 300;
 
-  const updatedArtists = updateArtistsWithContent(artists, albums, tracks);
-  const updatedUsers = updateUsersWithContent(users, updatedArtists, playlists);
-
-  return {
-    categories,
-    artists: updatedArtists,
-    albums,
-    tracks,
-    users: updatedUsers,
-    playlists,
-  };
+// Helper function to delay responses to simulate network latency
+const delayResponse = <T>(data: T): Promise<T> => {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      resolve(data);
+    }, API_DELAY);
+  });
 };
+
+// Mock API service combining all endpoints
+export const mockApi = {
+  // Artist endpoints
+  artists: {
+    getAll: () => getArtists(),
+    getById: (id: string) => getArtistById(id),
+    search: (query: string) => searchArtists(query),
+    getAlbums: (artistId: string) => getArtistAlbums(artistId)
+  },
+
+  // Album endpoints
+  albums: {
+    getAll: () => getAlbums(),
+    getById: (id: string) => getAlbumById(id),
+    search: (query: string) => searchAlbums(query),
+    getNewReleases: () => getNewReleases(),
+    getByArtist: (artistId: string) => getAlbumsByArtist(artistId)
+  },
+
+  // Track endpoints
+  tracks: {
+    getAll: () => getTracks(),
+    getById: (id: string) => getTrackById(id),
+    search: (query: string) => searchTracks(query),
+    getByAlbum: (albumId: string) => getTracksByAlbum(albumId),
+    getTopTracks: (artistId: string) => getTopTracks(artistId),
+    getRecommendations: (seedTrackIds: string[]) => getRecommendations(seedTrackIds)
+  },
+
+  // Generic search across all entities
+  search: async (query: string) => {
+    const [artists, albums, tracks] = await Promise.all([
+      searchArtists(query),
+      searchAlbums(query),
+      searchTracks(query)
+    ]);
+    
+    return delayResponse({
+      data: {
+        artists: artists.data,
+        albums: albums.data,
+        tracks: tracks.data,
+        playlists: []
+      },
+      status: 200
+    });
+  },
+
+  // Home/discovery data
+  getHomeData: async () => {
+    try {
+      const categories = [];
+      const popularArtists = [...mockData.artists]
+        .sort((a, b) => b.monthlyListeners - a.monthlyListeners)
+        .slice(0, 10);
+
+      const popularAlbums = [...mockData.albums]
+        .sort(() => Math.random() - 0.5)
+        .slice(0, 10);
+
+      const trendingSongs = [...mockData.tracks]
+        .sort((a, b) => b.popularity - a.popularity)
+        .slice(0, 10);
+
+      return delayResponse({
+        data: {
+          categories,
+          popularArtists,
+          popularAlbums,
+          trendingSongs,
+          popularPlaylists: []
+        },
+        status: 200
+      });
+    } catch (error) {
+      console.error('Error fetching home data:', error);
+      return delayResponse({
+        data: null,
+        status: 500,
+        message: 'Failed to fetch home data'
+      });
+    }
+  }
+};
+
+// Export the complete mock data
+export { mockData };

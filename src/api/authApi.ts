@@ -2,7 +2,7 @@ import axios from "axios";
 
 // Tạo instance axios
 const api = axios.create({
-  baseURL: "http://localhost:8000",
+  baseURL: "http://localhost:8080",
   headers: {
     "Content-Type": "application/json",
   },
@@ -24,7 +24,7 @@ api.interceptors.request.use(
 // Lấy CSRF token
 const getCsrfToken = async (): Promise<string> => {
   try {
-    const { data } = await api.get("/csrf/");
+    const { data } = await api.get("/csrf");
     const csrfToken = data?.data?.token;
     if (!csrfToken) throw new Error("Không có token trong phản hồi");
     return csrfToken;
@@ -48,7 +48,7 @@ export const login = async (
     const csrfToken = await getCsrfToken();
 
     const response = await api.post(
-      "/login/",
+      "/login",
       payload,
       {
         headers: {

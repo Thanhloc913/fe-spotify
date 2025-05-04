@@ -7,7 +7,7 @@ import AlbumCard from '../components/cards/AlbumCard';
 import ArtistCard from '../components/cards/ArtistCard';
 import PlaylistCard from '../components/cards/PlaylistCard';
 import CategoryCard from '../components/cards/CategoryCard';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface HomeData {
   categories: Category[];
@@ -21,6 +21,7 @@ const HomePage: React.FC = () => {
   const [data, setData] = useState<HomeData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -42,6 +43,10 @@ const HomePage: React.FC = () => {
 
     fetchHomeData();
   }, []);
+
+  const handleArtistClick = (id: string) => {
+    navigate(`/artist/${id}`);
+  };
 
   if (loading) {
     return (
@@ -73,7 +78,7 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data?.trendingSongs.slice(0, 5).map(track => (
+          {data?.trendingSongs?.slice(0, 5).map(track => (
             <TrackCard key={track.id} track={track} />
           ))}
         </div>
@@ -87,11 +92,11 @@ const HomePage: React.FC = () => {
             Show all
           </Link>
         </div>
-        {/* <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data?.popularArtists.slice(0, 5).map(artist => (
-            <ArtistCard key={artist.id} artist={artist} />
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+          {data?.popularArtists?.slice(0, 5).map(artist => (
+            <ArtistCard key={artist.id} artist={artist} onClick={handleArtistClick} />
           ))}
-        </div> */}
+        </div>
       </section>
 
       {/* Popular Albums */}
@@ -103,7 +108,7 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data?.popularAlbums.slice(0, 5).map(album => (
+          {data?.popularAlbums?.slice(0, 5).map(album => (
             <AlbumCard key={album.id} album={album} />
           ))}
         </div>
@@ -118,7 +123,7 @@ const HomePage: React.FC = () => {
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data?.popularPlaylists.slice(0, 5).map(playlist => (
+          {data?.popularPlaylists?.slice(0, 5).map(playlist => (
             <PlaylistCard key={playlist.id} playlist={playlist} />
           ))}
         </div>
@@ -127,13 +132,13 @@ const HomePage: React.FC = () => {
       {/* Categories */}
       <section className="mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">Browse categories</h2>
+          <h2 className="text-2xl font-bold">Categories</h2>
           <Link to="/categories" className="text-sm text-spotify-text-secondary hover:underline">
             Show all
           </Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {data?.categories.map(category => (
+          {data?.categories?.slice(0, 5).map(category => (
             <CategoryCard key={category.id} category={category} />
           ))}
         </div>

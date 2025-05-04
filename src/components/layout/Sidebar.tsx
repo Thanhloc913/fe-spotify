@@ -12,51 +12,6 @@ import {
 const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-black flex flex-col overflow-hidden">
-      {/* <div className="p-6">
-        <NavLink to="/" className="flex items-center">
-          <FaSpotify className="text-spotify-green text-3xl mr-2" />
-          <span className="text-xl font-bold">Spotify</span>
-        </NavLink>
-      </div> */}
-
-      {/* <nav className="flex-1">
-        <ul className="space-y-2 p-2">
-          <li>
-            <NavLink
-              to="/"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <FaHome className="text-2xl" />
-              <span>Home</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/search"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <FaSearch className="text-2xl" />
-              <span>Search</span>
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              to="/library"
-              className={({ isActive }) =>
-                `sidebar-item ${isActive ? 'active' : ''}`
-              }
-            >
-              <FaBook className="text-2xl" />
-              <span>Your Library</span>
-            </NavLink>
-          </li>
-        </ul>
-      </nav> */}
-
       {/* Playlist Section */}
       <div className="p-6 border-t border-gray-800 space-y-4">
         <div className="sidebar-item cursor-pointer">

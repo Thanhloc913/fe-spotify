@@ -10,14 +10,11 @@ const Layout: React.FC = () => {
     <div className="h-screen bg-spotify-black text-spotify-text-primary flex flex-col">
       <Navbar />
       <div className="flex flex-1 overflow-hidden">
-
-
         {/* Sidebar */}
         <Sidebar />
 
         {/* Main content */}
         <main className="flex-1 overflow-auto p-4 relative">
-          {/* <TopBar /> */}
           <div className="py-4">
             <Outlet />
           </div>
