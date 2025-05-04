@@ -1,24 +1,24 @@
 // utils/auth.ts
 
 export const getToken = () => {
-  return localStorage.getItem('token') || localStorage.getItem('authToken');
+  return sessionStorage.getItem('token') || sessionStorage.getItem('authToken');
 };
 
 export const getRefreshToken = () => {
-  return localStorage.getItem('refresh_token');
+  return sessionStorage.getItem('refresh_token');
 };
 
 export const setToken = (token: string) => {
-  localStorage.setItem('token', token);
+  sessionStorage.setItem('token', token);
 };
 
 export const setRefreshToken = (refreshToken: string) => {
-  localStorage.setItem('refresh_token', refreshToken);
+  sessionStorage.setItem('refresh_token', refreshToken);
 };
 
 export const removeToken = () => {
-  localStorage.removeItem('token');
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('refresh_token');
+  sessionStorage.removeItem('token');
+  sessionStorage.removeItem('authToken');
+  sessionStorage.removeItem('refresh_token');
 };
   

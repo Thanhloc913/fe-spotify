@@ -3,6 +3,7 @@ import { useLocation, NavLink, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { FaSearch, FaSpotify } from 'react-icons/fa';
 import { mockData } from '../../mock/data';
+import { removeToken } from '../../utils/auth';
 
 interface User {
     id: string;
@@ -26,7 +27,7 @@ export default function Navbar() {
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('authToken');
+        removeToken();
         navigate('/login');
     };
 

@@ -12,7 +12,7 @@ const api = axios.create({
 // Interceptor để tự động gắn token vào request nếu có
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("token");
+    const token = sessionStorage.getItem("token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -60,9 +60,9 @@ export const login = async (
     const { access_token, refresh_token, account } = response.data.data;
 
     if (access_token) {
-      localStorage.setItem("token", access_token);
-      localStorage.setItem("refresh_token", refresh_token);
-      localStorage.setItem("account_id", account.id);
+      sessionStorage.setItem("token", access_token);
+      sessionStorage.setItem("refresh_token", refresh_token);
+      sessionStorage.setItem("account_id", account.id);
       return { data: { token: access_token } };
     } else {
       throw new Error("Không nhận được access token");
