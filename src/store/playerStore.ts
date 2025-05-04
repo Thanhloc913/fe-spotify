@@ -11,6 +11,7 @@ interface PlayerState {
   duration: number;
   repeat: 'off' | 'track' | 'context';
   shuffle: boolean;
+  showVideo: boolean;
   setCurrentTrack: (track: Track) => void;
   playTrack: () => void;
   pauseTrack: () => void;
@@ -22,6 +23,7 @@ interface PlayerState {
   toggleShuffle: () => void;
   skipToNext: () => void;
   skipToPrevious: () => void;
+  setShowVideo: (show: boolean) => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -33,6 +35,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   duration: 0,
   repeat: 'off',
   shuffle: false,
+  showVideo: false,
   setCurrentTrack: (track) => {
     set({ 
       currentTrack: track, 
@@ -105,5 +108,6 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       set({ progress: 0 });
       playTrack();
     }
-  }
+  },
+  setShowVideo: (show) => set({ showVideo: show })
 }));

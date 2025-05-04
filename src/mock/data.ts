@@ -108,6 +108,18 @@ export const mockArtists: Artist[] = [
     singles: ['27'],
     topTracks: ['25', '26', '27'],
     related: ['6', '7', '8']
+  },
+  {
+    id: '10',
+    name: 'Bùi Trường Linh',
+    imageUrl: 'https://yt3.googleusercontent.com/p2GLClmkc7oAlrfDey6e5hE4JUKu_KbEy7l3tS2tMeGMlHYL8qnl_s7ta2AOVyQhV8GkrkvN=s900-c-k-c0x00ffffff-no-rj',
+    bio: 'Bùi Trường Linh là ca sĩ trẻ nổi bật với các bản hit indie ballad sâu lắng.',
+    genres: ['Indie', 'Ballad', 'V-Pop'],
+    monthlyListeners: 5000000,
+    albums: ['30'],
+    singles: ['40'],
+    topTracks: ['100', '101'],
+    related: []
   }
 ];
 
@@ -243,6 +255,18 @@ export const mockAlbums: Album[] = [
     type: 'album',
     totalTracks: 10,
     durationMs: 2100000
+  },
+  {
+    id: '30',
+    title: 'Từng Ngày Như Mãi Mãi',
+    artistId: '10',
+    artistName: 'Bùi Trường Linh',
+    coverUrl: 'https://i.ytimg.com/vi/p3FnuJnm8iQ/maxresdefault.jpg',
+    releaseDate: '2023-12-01',
+    tracks: ['100', '101'],
+    type: 'album',
+    totalTracks: 2,
+    durationMs: 500000
   }
 ];
 
@@ -260,7 +284,8 @@ export const mockTracks: Track[] = [
     explicit: false,
     popularity: 90,
     trackNumber: 2,
-    isPlayable: true
+    isPlayable: true,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4'
   },
   {
     id: '2',
@@ -275,7 +300,8 @@ export const mockTracks: Track[] = [
     explicit: false,
     popularity: 85,
     trackNumber: 3,
-    isPlayable: true
+    isPlayable: true,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4'
   },
   {
     id: '3',
@@ -290,7 +316,8 @@ export const mockTracks: Track[] = [
     explicit: false,
     popularity: 92,
     trackNumber: 6,
-    isPlayable: true
+    isPlayable: true,
+    videoUrl: 'https://www.w3schools.com/html/mov_bbb.mp4'
   },
   {
     id: '4',
@@ -471,6 +498,38 @@ export const mockTracks: Track[] = [
     popularity: 88,
     trackNumber: 3,
     isPlayable: true
+  },
+  {
+    id: '100',
+    title: 'Nàng Công Chúa Nhỏ',
+    artistId: '10',
+    artistName: 'Bùi Trường Linh',
+    albumId: '30',
+    albumName: 'Từng ngày như mãi mãi',
+    coverUrl: 'https://i.ytimg.com/vi/3CSNJ5_TCbY/sddefault.jpg',
+    previewUrl: 'https://od.lk/s/NjBfMTc2NzI2NDk1Xw/n%C3%A0ng-c%C3%B4ng-ch%C3%BAa-nh%E1%BB%8F--buitruonglinh-interlude.mp3',
+    durationMs: 120000,
+    explicit: false,
+    popularity: 80,
+    trackNumber: 1,
+    isPlayable: true,
+    videoUrl: 'https://od.lk/s/NjBfMTc2NzI2NDk0Xw/n%C3%A0ng-c%C3%B4ng-ch%C3%BAa-nh%E1%BB%8F--buitruonglinh-interlude.mp4'
+  },
+  {
+    id: '101',
+    title: 'Giờ Thì',
+    artistId: '10',
+    artistName: 'Bùi Trường Linh',
+    albumId: '30',
+    albumName: 'Từng ngày như mãi mãi',
+    coverUrl: 'https://i.scdn.co/image/ab67616d00001e02508d542821cba61dea5670f8',
+    previewUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
+    durationMs: 230000,
+    explicit: false,
+    popularity: 78,
+    trackNumber: 2,
+    isPlayable: true,
+    videoUrl: 'https://www.w3schools.com/html/movie.mp4'
   }
 ];
 

@@ -55,6 +55,7 @@ export interface Track {
   popularity: number;
   trackNumber: number;
   isPlayable: boolean;
+  videoUrl?: string;
 }
 
 // Playlist type definition
