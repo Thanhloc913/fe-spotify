@@ -2,17 +2,20 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { login } from '../api/authApi';
 import { FaSpotify, FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
+import { useUser } from '../contexts/UserContext';
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { fetchProfile } = useUser();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await login(email, password);
+      await fetchProfile();
       navigate('/');
     } catch (err: any) {
       setError(err.message || 'Đăng nhập thất bại');

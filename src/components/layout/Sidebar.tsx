@@ -12,6 +12,7 @@ import {
 } from 'react-icons/fa';
 import { createPlaylist, getUserPlaylists, UserPlaylist } from '../../api/user';
 import { mockTracks } from '../../mock/data';
+import { useUser } from '../../contexts/UserContext';
 
 const Sidebar: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
@@ -21,6 +22,7 @@ const Sidebar: React.FC = () => {
   const [showMenuId, setShowMenuId] = useState<string | null>(null);
   const [showRenameId, setShowRenameId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
+  const { artist } = useUser();
 
   useEffect(() => {
     getUserPlaylists().then(setPlaylists);

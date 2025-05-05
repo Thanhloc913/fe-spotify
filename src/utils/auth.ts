@@ -9,11 +9,11 @@ export const getRefreshToken = () => {
 };
 
 export const setToken = (token: string) => {
-  sessionStorage.setItem('token', token);
+  localStorage.setItem('access_token', token);
 };
 
 export const setRefreshToken = (refreshToken: string) => {
-  sessionStorage.setItem('refresh_token', refreshToken);
+  localStorage.setItem('refresh_token', refreshToken);
 };
 
 export const removeToken = () => {

@@ -1,8 +1,8 @@
 import { Search, Library, Bell, Home } from "lucide-react";
 import { useLocation, NavLink, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { FaSearch, FaSpotify } from 'react-icons/fa';
-import { mockData } from '../../mock/data';
+import { useUser } from '../../contexts/UserContext';
 import { removeToken } from '../../utils/auth';
 
 interface User {
@@ -17,7 +17,11 @@ export default function Navbar() {
     const [showMenu, setShowMenu] = useState(false);
     const [searchValue, setSearchValue] = useState('');
     const location = useLocation();
-    const user: User = mockData.users[0] as User;
+    const { artist } = useUser();
+
+    useEffect(() => {
+        console.log('artist in Navbar:', artist);
+    }, [artist]);
 
     const handleSearch = (e: React.FormEvent) => {
         e.preventDefault();
@@ -76,8 +80,8 @@ export default function Navbar() {
                         onClick={() => setShowMenu(!showMenu)}
                     >
                         <img
-                            src={user?.profileImageUrl || "https://i.scdn.co/image/ab6775700000ee8518fe447fac315f236ce0bb52"}
-                            alt="User avatar"
+                            src={artist?.avatarUrl || "https://i.scdn.co/image/ab6775700000ee8518fe447fac315f236ce0bb52"}
+                            alt={artist?.fullName || "User avatar"}
                             className="h-8 w-8 rounded-full"
                         />
                     </button>

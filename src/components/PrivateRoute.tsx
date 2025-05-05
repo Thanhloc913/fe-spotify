@@ -6,7 +6,7 @@ interface PrivateRouteProps {
 }
 
 const PrivateRoute: React.FC<PrivateRouteProps> = ({ children }) => {
-  const isAuthenticated = !!sessionStorage.getItem('token'); // Check token
+  const isAuthenticated = !!localStorage.getItem('access_token'); // Check token đúng localStorage
 
   return isAuthenticated ? <>{children}</> : <Navigate to="/login" replace />;
 };

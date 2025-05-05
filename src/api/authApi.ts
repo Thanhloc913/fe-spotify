@@ -60,9 +60,9 @@ export const login = async (
     const { access_token, refresh_token, account } = response.data.data;
 
     if (access_token) {
-      sessionStorage.setItem("token", access_token);
-      sessionStorage.setItem("refresh_token", refresh_token);
-      sessionStorage.setItem("account_id", account.id);
+      localStorage.setItem("access_token", access_token);
+      localStorage.setItem("refresh_token", refresh_token);
+      localStorage.setItem("account_id", account.id);
       return { data: { token: access_token } };
     } else {
       throw new Error("Không nhận được access token");
