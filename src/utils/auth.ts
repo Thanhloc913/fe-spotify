@@ -17,8 +17,8 @@ export const setRefreshToken = (refreshToken: string) => {
 };
 
 export const removeToken = () => {
-  sessionStorage.removeItem('token');
-  sessionStorage.removeItem('authToken');
-  sessionStorage.removeItem('refresh_token');
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  localStorage.removeItem('account_id');
 };
   

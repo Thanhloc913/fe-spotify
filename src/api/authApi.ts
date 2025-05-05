@@ -58,11 +58,15 @@ export const login = async (
     );
 
     const { access_token, refresh_token, account } = response.data.data;
+    const csrfTokenFromResponse = response.data.data.token;
 
     if (access_token) {
       localStorage.setItem("access_token", access_token);
       localStorage.setItem("refresh_token", refresh_token);
       localStorage.setItem("account_id", account.id);
+      if (csrfTokenFromResponse) {
+        sessionStorage.setItem("csrf_token", csrfTokenFromResponse);
+      }
       return { data: { token: access_token } };
     } else {
       throw new Error("Không nhận được access token");

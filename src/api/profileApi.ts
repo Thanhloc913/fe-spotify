@@ -20,12 +20,9 @@ profileApi.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Lấy CSRF token từ cookie
+// Lấy CSRF token từ sessionStorage
 const getCsrfToken = () => {
-  return document.cookie
-    .split('; ')
-    .find(row => row.startsWith('csrftoken='))
-    ?.split('=')[1] || '';
+  return sessionStorage.getItem('csrf_token') || '';
 };
 
 export const getProfile = async () => {
