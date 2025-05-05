@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Artist } from '../types';
 import { updateProfile, getProfile } from '../api/profileApi';
 import { useUser } from '../contexts/UserContext';
+import { getAccountById, verifyCurrentPassword, updatePassword } from '../api/authApi';
 
 const formatDate = (dateStr: string) => {
   const d = new Date(dateStr);
@@ -24,6 +25,16 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
   const { fetchProfile } = useUser();
+
+  // State cho form đổi mật khẩu
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+  });
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -66,6 +77,53 @@ const Profile = () => {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPasswordData({ ...passwordData, [e.target.name]: e.target.value });
+  };
+
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordError('');
+    setPasswordSuccess('');
+    setIsChangingPassword(true);
+
+    try {
+      // Kiểm tra mật khẩu mới và xác nhận có khớp không
+      if (passwordData.newPassword !== passwordData.confirmPassword) {
+        throw new Error('Mật khẩu mới không khớp!');
+      }
+
+      // Lấy account ID từ localStorage
+      const accountId = localStorage.getItem('account_id');
+      if (!accountId) {
+        throw new Error('Không tìm thấy thông tin tài khoản!');
+      }
+
+      // Lấy thông tin tài khoản để có email
+      const accountInfo = await getAccountById(accountId);
+      if (!accountInfo.success || !accountInfo.data.email) {
+        throw new Error('Không thể lấy thông tin tài khoản!');
+      }
+
+      // Kiểm tra mật khẩu hiện tại
+      await verifyCurrentPassword(accountInfo.data.email, passwordData.currentPassword);
+
+      // Nếu mật khẩu hiện tại đúng, tiến hành đổi mật khẩu
+      await updatePassword(passwordData.newPassword);
+
+      setPasswordSuccess('Đổi mật khẩu thành công!');
+      setPasswordData({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi đổi mật khẩu');
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -183,6 +241,56 @@ const Profile = () => {
           </div>
         )}
       </div>
+
+      {/* Form đổi mật khẩu */}
+      <div className="mb-8 bg-gray-800 p-6 rounded-lg">
+        <h2 className="text-2xl font-bold mb-4">Đổi mật khẩu</h2>
+        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+          <div>
+            <label className="block text-gray-400 mb-1">Mật khẩu hiện tại</label>
+            <input
+              type="password"
+              name="currentPassword"
+              value={passwordData.currentPassword}
+              onChange={handlePasswordChange}
+              className="w-full p-2 rounded bg-gray-900 text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 mb-1">Mật khẩu mới</label>
+            <input
+              type="password"
+              name="newPassword"
+              value={passwordData.newPassword}
+              onChange={handlePasswordChange}
+              className="w-full p-2 rounded bg-gray-900 text-white"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-gray-400 mb-1">Xác nhận mật khẩu mới</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              value={passwordData.confirmPassword}
+              onChange={handlePasswordChange}
+              className="w-full p-2 rounded bg-gray-900 text-white"
+              required
+            />
+          </div>
+          <button
+            type="submit"
+            className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
+            disabled={isChangingPassword}
+          >
+            {isChangingPassword ? 'Đang xử lý...' : 'Đổi mật khẩu'}
+          </button>
+          {passwordError && <div className="text-red-400 mt-2">{passwordError}</div>}
+          {passwordSuccess && <div className="text-green-400 mt-2">{passwordSuccess}</div>}
+        </form>
+      </div>
+
       {/* TODO: Thêm form upload nhạc và tạo album mới ở đây */}
     </div>
   );

@@ -110,4 +110,82 @@ export const register = async (registerData: {
   }
 };
 
+// Hàm lấy thông tin tài khoản theo ID
+export const getAccountById = async (accountId: string) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await api.post(
+      '/account/find',
+      { id: accountId },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Lỗi lấy thông tin tài khoản:', error);
+    throw new Error(error.response?.data?.message || 'Không thể lấy thông tin tài khoản');
+  }
+};
+
+// Hàm kiểm tra mật khẩu hiện tại
+export const verifyCurrentPassword = async (email: string, currentPassword: string) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await api.post(
+      '/login',
+      { email, password: currentPassword },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Lỗi kiểm tra mật khẩu:', error);
+    throw new Error(error.response?.data?.message || 'Mật khẩu không chính xác');
+  }
+};
+
+const getCookie = (name: string): string | null => {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+};
+
+// Hàm cập nhật mật khẩu
+export const updatePassword = async (newPassword: string) => {
+  try {
+    const csrftoken = getCookie('csrftoken');
+    const accessToken = localStorage.getItem('access_token');
+    const response = await api.post(
+      '/account/update',
+      { password: newPassword },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': csrftoken,
+          'Authorization': `Bearer ${accessToken}`
+      },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Lỗi cập nhật mật khẩu:', error);
+    throw new Error(error.response?.data?.message || 'Cập nhật mật khẩu thất bại');
+  }
+};
+
 export default api;
