@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { login } from '../api/authApi';
 import { FaSpotify, FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
 import { useUser } from '../contexts/UserContext';
@@ -23,68 +23,93 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex justify-center bg-gradient-to-b from-[#181818] via-[#232526] to-[#181818] overflow-y-auto">
-      <div className="w-full max-w-lg bg-[#181818]/90 rounded-3xl shadow-2xl p-10 flex flex-col items-center backdrop-blur-md border border-[#232323] my-8 max-h-[90vh] overflow-y-auto">
-      <FaSpotify className="text-spotify-green text-5xl mb-6" />
-        <h1 className="text-4xl font-extrabold text-white mb-8 text-center">Đăng nhập vào Spotify</h1>
-        <div className="w-full flex flex-col gap-4 mb-8">
-          <button className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-gray-700 text-white hover:bg-gray-800 transition font-semibold text-lg">
-            <FaGoogle className="text-xl" /> Tiếp tục bằng Google
-          </button>
-          <button className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-gray-700 text-white hover:bg-gray-800 transition font-semibold text-lg">
-            <FaFacebook className="text-xl text-blue-500" /> Tiếp tục bằng Facebook
-          </button>
-          <button className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-gray-700 text-white hover:bg-gray-800 transition font-semibold text-lg">
-            <FaApple className="text-xl" /> Tiếp tục bằng Apple
-          </button>
-          <button className="flex items-center justify-center gap-2 w-full py-3 rounded-full border border-gray-700 text-white hover:bg-gray-800 transition font-semibold text-lg">
-            <span className="font-bold text-xl">#</span> Tiếp tục bằng số điện thoại
-          </button>
+    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+      <div className="bg-[#121212] p-6 rounded-lg w-full max-w-sm shadow-lg">
+        <div className="text-center mb-8">
+          <FaSpotify className="text-spotify-green text-5xl mx-auto mb-4" />
+          <h1 className="text-3xl font-bold text-white">Đăng nhập vào Spotify</h1>
         </div>
-        <div className="flex items-center w-full mb-8">
-          <div className="flex-1 h-px bg-gray-700" />
-          <span className="mx-4 text-gray-400 text-base font-semibold">hoặc</span>
-          <div className="flex-1 h-px bg-gray-700" />
-        </div>
-        <form onSubmit={handleLogin} className="w-full flex flex-col gap-6">
-          {error && <div className="text-red-500 text-center font-semibold">{error}</div>}
+
+        <form onSubmit={handleLogin} className="space-y-4">
+          {error && (
+            <div className="bg-red-500 text-white p-3 rounded text-center">
+              {error}
+            </div>
+          )}
+
           <div>
-            <label className="block text-gray-300 text-base font-bold mb-2">Email hoặc tên người dùng</label>
+            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+              Email hoặc tên người dùng
+            </label>
             <input
               type="text"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full p-4 rounded-2xl bg-[#222222] text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-spotify-green text-lg"
-              placeholder="Email hoặc tên người dùng"
+              className="w-full p-3 bg-[#3e3e3e] text-white rounded focus:outline-none focus:ring-2 focus:ring-spotify-green"
               required
             />
           </div>
+
           <div>
-            <label className="block text-gray-300 text-base font-bold mb-2">Mật khẩu</label>
+            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+              Mật khẩu
+            </label>
             <input
               type="password"
+              id="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full p-4 rounded-2xl bg-[#222222] text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-spotify-green text-lg"
-              placeholder="Mật khẩu"
+              className="w-full p-3 bg-[#3e3e3e] text-white rounded focus:outline-none focus:ring-2 focus:ring-spotify-green"
               required
             />
           </div>
+
+          <Link
+            to="/forgot-password"
+            className="block text-sm text-spotify-green hover:underline text-center"
+          >
+            Quên mật khẩu của bạn?
+          </Link>
+
           <button
             type="submit"
-            className="w-full bg-spotify-green text-black py-4 rounded-full font-extrabold text-xl hover:scale-105 transition shadow-lg mt-2"
+            className="w-full bg-spotify-green text-black font-bold py-3 rounded-full hover:bg-[#1ed760] transition-colors"
           >
-            Đăng nhập
+            ĐĂNG NHẬP
           </button>
         </form>
-        <div className="mt-10 text-gray-400 text-base">
-          Bạn chưa có tài khoản?{' '}
-          <span
-            className="text-spotify-green hover:underline cursor-pointer font-semibold"
-            onClick={() => navigate('/register')}
-          >
-            Đăng ký Spotify
-          </span>
+
+        <div className="mt-8">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-600"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-[#121212] text-gray-400">HOẶC</span>
+            </div>
+          </div>
+
+          <div className="mt-6 space-y-4">
+            <button className="w-full flex items-center justify-center gap-2 bg-white text-black font-bold py-3 rounded-full hover:bg-gray-100 transition-colors">
+              <FaGoogle /> TIẾP TỤC VỚI GOOGLE
+            </button>
+            <button className="w-full flex items-center justify-center gap-2 bg-[#1877f2] text-white font-bold py-3 rounded-full hover:bg-[#166fe5] transition-colors">
+              <FaFacebook /> TIẾP TỤC VỚI FACEBOOK
+            </button>
+            <button className="w-full flex items-center justify-center gap-2 bg-black text-white font-bold py-3 rounded-full border border-gray-600 hover:bg-gray-900 transition-colors">
+              <FaApple /> TIẾP TỤC VỚI APPLE
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-8 text-center">
+          <p className="text-gray-400">
+            Bạn chưa có tài khoản?{' '}
+            <Link to="/register" className="text-spotify-green hover:underline">
+              Đăng ký Spotify
+            </Link>
+          </p>
         </div>
       </div>
     </div>

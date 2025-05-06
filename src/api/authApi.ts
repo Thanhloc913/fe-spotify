@@ -188,4 +188,72 @@ export const updatePassword = async (newPassword: string) => {
   }
 };
 
+// Hàm kiểm tra email tồn tại
+export const checkEmailExists = async (email: string) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await api.post(
+      '/account/find',
+      { email },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    return response.data.success;
+  } catch (error: any) {
+    console.error('Lỗi kiểm tra email:', error);
+    throw new Error(error.response?.data?.message || 'Không thể kiểm tra email');
+  }
+};
+
+// Hàm yêu cầu đặt lại mật khẩu
+export const requestPasswordReset = async (email: string) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await api.post(
+      '/password-reset/request',
+      { email },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Lỗi yêu cầu đặt lại mật khẩu:', error);
+    throw new Error(error.response?.data?.message || 'Không thể gửi yêu cầu đặt lại mật khẩu');
+  }
+};
+
+// Hàm xác thực và đặt lại mật khẩu
+export const verifyAndResetPassword = async (
+  token: string,
+  verificationCode: string,
+  newPassword: string
+) => {
+  try {
+    const csrfToken = await getCsrfToken();
+    const response = await api.post(
+      '/password-reset/verify',
+      {
+        token,
+        verification_code: verificationCode,
+        new_password: newPassword,
+      },
+      {
+        headers: {
+          'X-CSRFToken': csrfToken,
+        },
+      }
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error('Lỗi xác thực và đặt lại mật khẩu:', error);
+    throw new Error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
+  }
+};
+
 export default api;
