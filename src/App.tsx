@@ -15,6 +15,7 @@ import Profile from './pages/Profile';
 import PlaylistDetail from './pages/PlaylistDetail';
 import LikedSongs from './pages/LikedSongs';
 import { UserProvider } from './contexts/UserContext';
+import Search from './pages/Search';
 
 document.body.classList.add('dark');
 
@@ -35,7 +36,8 @@ function App() {
             }
           >
             <Route index element={<HomePage />} />
-            <Route path="search/:keyword" element={<div>Search Page (Coming Soon)</div>} />
+            <Route path="search" element={<Search />} />
+            <Route path="search/:keyword" element={<Search />} />
             <Route path="library" element={<div>Library (Coming Soon)</div>} />
             <Route path="playlist/:id" element={<PlaylistDetail />} />
             <Route path="album/:id" element={<AlbumDetail />} />

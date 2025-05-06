@@ -65,7 +65,7 @@ const HomePage: React.FC = () => {
   }
 
   return (
-    <div className="pb-20">
+    <div className="pb-20 p-4">
       {/* Page Title */}
       <h1 className="text-3xl font-bold mb-6">Good evening</h1>
 

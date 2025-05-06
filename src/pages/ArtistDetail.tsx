@@ -66,7 +66,7 @@ const ArtistDetail = () => {
   if (!artist) return <div>Artist not found</div>;
 
   return (
-    <div className="p-8">
+    <div className="p-12">
       {/* Artist Header */}
       <div className="flex items-end gap-6 mb-8">
         <img

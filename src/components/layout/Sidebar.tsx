@@ -64,7 +64,7 @@ const Sidebar: React.FC = () => {
   return (
     <aside className="w-64 bg-black flex flex-col overflow-hidden">
       {/* Playlist Section */}
-      <div className="p-6 border-t border-gray-800 space-y-4">
+      <div className="p-6 space-y-4">
         <div className="sidebar-item cursor-pointer" onClick={() => setShowForm(true)}>
           <div className="bg-spotify-text-secondary rounded-sm p-1">
             <FaPlus className="text-black text-sm" />
