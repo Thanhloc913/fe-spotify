@@ -2,7 +2,7 @@
 
 import type React from "react"
 import { useState, useEffect } from "react"
-import { fetchAllArtists, fetchArtistById, fetchRelatedArtists } from "../api/artistApi"
+import { getArtists, getArtistById, getArtistAlbums } from "../api/artists"
 import ArtistCard from "../components/cards/ArtistCard"
 import ArtistDetail from "../components/detail/ArtistsDetail"
 import type { Artist } from "../types"
@@ -19,8 +19,8 @@ const ArtistPage: React.FC = () => {
     const loadArtists = async () => {
       try {
         setLoading(true)
-        const data = await fetchAllArtists()
-        setArtists(data)
+        const data = await getArtists()
+        setArtists(data.data)
         setError(null)
       } catch (err) {
         setError("Có lỗi xảy ra khi tải dữ liệu nghệ sĩ")
@@ -37,12 +37,11 @@ const ArtistPage: React.FC = () => {
   const handleArtistClick = async (id: string) => {
     try {
       setLoading(true)
-      const artist = await fetchArtistById(id)
-      if (artist) {
-        setSelectedArtist(artist)
+      const artistRes = await getArtistById(id)
+      if (artistRes && artistRes.data) {
+        setSelectedArtist(artistRes.data.artist)
         // Fetch nghệ sĩ liên quan
-        const related = await fetchRelatedArtists(id)
-        setRelatedArtists(related)
+        setRelatedArtists(artistRes.data.relatedArtists || [])
       }
       setError(null)
     } catch (err) {

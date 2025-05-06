@@ -1,6 +1,7 @@
 // 📁 src/api/mockApi.ts
 import { faker } from '@faker-js/faker';
 import { mockData } from '../mock/data';
+import { Category } from '../types';
 import { 
   getArtists, 
   getArtistById, 
@@ -96,7 +97,7 @@ export const mockApi = {
   // Home/discovery data
   getHomeData: async () => {
     try {
-      const categories = [];
+      const categories: Category[] = [];
       const popularArtists = [...mockData.artists]
         .sort((a, b) => b.monthlyListeners - a.monthlyListeners)
         .slice(0, 10);

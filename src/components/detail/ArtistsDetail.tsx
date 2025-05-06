@@ -22,7 +22,7 @@ const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onR
 
       <div className="flex flex-col md:flex-row gap-6 mb-10">
         <img
-          src={artist.imageUrl || "/placeholder.svg"}
+          src={artist.avatarUrl || "/placeholder.svg"}
           alt={artist.name}
           className="w-full md:w-48 h-48 object-cover rounded-lg"
         />
@@ -66,7 +66,7 @@ const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onR
                 className="flex items-center gap-3 p-3 bg-gray-800 rounded hover:bg-gray-700 cursor-pointer transition-colors"
               >
                 <img
-                  src={relatedArtist.imageUrl || "/placeholder.svg"}
+                  src={relatedArtist.avatarUrl || "/placeholder.svg"}
                   alt={relatedArtist.name}
                   className="w-12 h-12 rounded-full object-cover"
                 />
