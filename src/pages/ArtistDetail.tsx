@@ -70,7 +70,7 @@ const ArtistDetail = () => {
       {/* Artist Header */}
       <div className="flex items-end gap-6 mb-8">
         <img
-          src={artist?.imageUrl}
+          src={artist?.avatarUrl}
           alt={artist?.name}
           className="w-48 h-48 rounded-full object-cover"
         />

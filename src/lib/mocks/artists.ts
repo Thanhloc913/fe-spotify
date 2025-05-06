@@ -5,7 +5,7 @@ export const vietnameseArtists: Artist[] = [
   {
     id: "HoaMinzy",
     name: "Hòa Minzy",
-    imageUrl:
+    avatarUrl:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-ob7miW3mUreePYfXdVwkpFWHthzoR5.svg?height=300&width=300",
     bio: "Hòa Minzy (tên thật: Nguyễn Thị Hòa) là một ca sĩ, diễn viên người Việt Nam. Cô nổi tiếng sau khi đoạt giải quán quân cuộc thi Học viện Ngôi sao năm 2014. Hòa Minzy được biết đến với giọng hát nội lực và khả năng trình diễn sân khấu ấn tượng.",
     genres: ["V-Pop", "Ballad", "Pop"],
@@ -24,7 +24,7 @@ export const vietnameseArtists: Artist[] = [
   {
     id: "HieuThu2",
     name: "Hiếu Thứ 2",
-    imageUrl:
+    avatarUrl:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-ob7miW3mUreePYfXdVwkpFWHthzoR5.svg?height=300&width=300",
     bio: "Hiếu Thứ 2 (tên thật: Nguyễn Minh Hiếu) là một rapper, nhạc sĩ người Việt Nam. Anh được biết đến rộng rãi sau khi tham gia chương trình Rap Việt mùa 2. Hiếu Thứ 2 nổi bật với phong cách âm nhạc độc đáo, kết hợp giữa rap và R&B.",
     genres: ["Hip-hop", "R&B", "Rap Việt"],
@@ -37,7 +37,7 @@ export const vietnameseArtists: Artist[] = [
   {
     id: "SonTungMTP",
     name: "Sơn Tùng M-TP",
-    imageUrl:
+    avatarUrl:
       "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/placeholder-ob7miW3mUreePYfXdVwkpFWHthzoR5.svg?height=300&width=300",
     bio: "Sơn Tùng M-TP (tên thật: Nguyễn Thanh Tùng) là một ca sĩ, nhạc sĩ, nhà sản xuất âm nhạc người Việt Nam. Anh được mệnh danh là 'Hoàng tử V-Pop' với nhiều bản hit đình đám và phong cách âm nhạc hiện đại, kết hợp nhiều yếu tố quốc tế. Sơn Tùng cũng là người sáng lập công ty giải trí M-TP Entertainment.",
     genres: ["V-Pop", "Electronic", "R&B", "Hip-hop"],

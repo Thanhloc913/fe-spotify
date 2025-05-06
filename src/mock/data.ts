@@ -3,9 +3,17 @@ import { Artist, Album, Track } from '../types';
 export const mockArtists: Artist[] = [
   {
     id: '1',
+    createdAt: '2010-01-01',
+    updatedAt: '2024-01-01',
+    deletedAt: null,
+    isActive: true,
+    accountID: 'acc_1',
+    fullName: 'Taylor Swift',
     name: 'Taylor Swift',
-    imageUrl: 'https://scontent.fsgn8-3.fna.fbcdn.net/v/t39.30808-6/432176453_961740661984419_3874775538159957915_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFv_BgBWKGzC3OuZ8k7npSf9LR-hK-CBJ_0tH6Er4IEn3k103VIfyBE9Bc8ZvuiLJRc0l3jc71NUpp-V7HCilnX&_nc_ohc=oYvGjr453K0Q7kNvwGO0PsP&_nc_oc=AdmBAFiOTB3gD0sINnnYM55sU4wEYqqcWyVaGwQBqSJPPqnh_PSjBCmVSA8NS6hcdhkMMqDbPmVdZllrNwo65Flx&_nc_zt=23&_nc_ht=scontent.fsgn8-3.fna&_nc_gid=jmkwOcxyfbqAsA1mJPieDA&oh=00_AfHFGU69LMJlZcUGJokukhFpVlh-qFd2B_6mGmk6nrx6nw&oe=681CACB4',
+    avatarUrl: 'https://scontent.fsgn8-3.fna.fbcdn.net/v/t39.30808-6/432176453_961740661984419_3874775538159957915_n.jpg?_nc_cat=1&ccb=1-7&_nc_sid=6ee11a&_nc_eui2=AeFv_BgBWKGzC3OuZ8k7npSf9LR-hK-CBJ_0tH6Er4IEn3k103VIfyBE9Bc8ZvuiLJRc0l3jc71NUpp-V7HCilnX&_nc_ohc=oYvGjr453K0Q7kNvwGO0PsP&_nc_oc=AdmBAFiOTB3gD0sINnnYM55sU4wEYqqcWyVaGwQBqSJPPqnh_PSjBCmVSA8NS6hcdhkMMqDbPmVdZllrNwo65Flx&_nc_zt=23&_nc_ht=scontent.fsgn8-3.fna&_nc_gid=jmkwOcxyfbqAsA1mJPieDA&oh=00_AfHFGU69LMJlZcUGJokukhFpVlh-qFd2B_6mGmk6nrx6nw&oe=681CACB4',
     bio: 'Taylor Swift is an American singer-songwriter known for narrative songs about her personal life.',
+    dateOfBirth: '1989-12-13',
+    phoneNumber: '+1234567890',
     genres: ['Pop', 'Country', 'Folk'],
     monthlyListeners: 80000000,
     albums: ['1', '2'],
@@ -16,7 +24,7 @@ export const mockArtists: Artist[] = [
   {
     id: '2',
     name: 'Ed Sheeran',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb12a2ef08d00dd7451a6dbed6',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb12a2ef08d00dd7451a6dbed6',
     bio: 'Ed Sheeran is an English singer-songwriter known for his soulful vocals and acoustic sound.',
     genres: ['Pop', 'Folk', 'Acoustic'],
     monthlyListeners: 70000000,
@@ -28,7 +36,7 @@ export const mockArtists: Artist[] = [
   {
     id: '3',
     name: 'Billie Eilish',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb4b3beaef36de8f3fb15978ce',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb4b3beaef36de8f3fb15978ce',
     bio: 'Billie Eilish is an American singer-songwriter known for her unique vocal style and dark themes.',
     genres: ['Pop', 'Alternative', 'Electropop'],
     monthlyListeners: 60000000,
@@ -40,7 +48,7 @@ export const mockArtists: Artist[] = [
   {
     id: '4',
     name: 'The Weeknd',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb7a487027eb0c10af725d5410',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb7a487027eb0c10af725d5410',
     bio: 'The Weeknd is a Canadian singer-songwriter known for his distinctive sound and cinematic music.',
     genres: ['R&B', 'Pop', 'Alternative R&B'],
     monthlyListeners: 75000000,
@@ -52,7 +60,7 @@ export const mockArtists: Artist[] = [
   {
     id: '5',
     name: 'Dua Lipa',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb54aefdcdafb6617c3070a100',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb54aefdcdafb6617c3070a100',
     bio: 'Dua Lipa is an English singer and songwriter known for her disco-influenced pop music.',
     genres: ['Pop', 'Dance', 'Disco'],
     monthlyListeners: 65000000,
@@ -64,7 +72,7 @@ export const mockArtists: Artist[] = [
   {
     id: '6',
     name: 'Son Tung M-TP',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5ebcbbb2f3f8e8e02d23b6a9eba',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5ebcbbb2f3f8e8e02d23b6a9eba',
     bio: 'Son Tung M-TP is a Vietnamese singer, songwriter, and actor known for his unique musical style.',
     genres: ['V-Pop', 'Pop', 'Contemporary R&B'],
     monthlyListeners: 40000000,
@@ -76,7 +84,7 @@ export const mockArtists: Artist[] = [
   {
     id: '7',
     name: 'My Tam',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb5888ec00f89827c7a1edc843',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb5888ec00f89827c7a1edc843',
     bio: 'My Tam is a Vietnamese singer known as the "Queen of V-Pop" for her contributions to Vietnamese music.',
     genres: ['V-Pop', 'Ballad', 'Dance'],
     monthlyListeners: 35000000,
@@ -88,7 +96,7 @@ export const mockArtists: Artist[] = [
   {
     id: '8',
     name: 'Hoang Thuy Linh',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5eb48f3fab0a8e984278a1d8a60',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5eb48f3fab0a8e984278a1d8a60',
     bio: 'Hoang Thuy Linh is a Vietnamese singer and actress known for her modern take on traditional Vietnamese music.',
     genres: ['V-Pop', 'Contemporary Folk', 'Dance'],
     monthlyListeners: 30000000,
@@ -100,7 +108,7 @@ export const mockArtists: Artist[] = [
   {
     id: '9',
     name: 'Den Vau',
-    imageUrl: 'https://i.scdn.co/image/ab6761610000e5ebd52bc309ab4e1584562058e3',
+    avatarUrl: 'https://i.scdn.co/image/ab6761610000e5ebd52bc309ab4e1584562058e3',
     bio: 'Den Vau is a Vietnamese rapper and songwriter known for his thoughtful lyrics and storytelling.',
     genres: ['V-Pop', 'Hip Hop', 'Rap'],
     monthlyListeners: 25000000,
@@ -112,7 +120,7 @@ export const mockArtists: Artist[] = [
   {
     id: '10',
     name: 'Bùi Trường Linh',
-    imageUrl: 'https://yt3.googleusercontent.com/p2GLClmkc7oAlrfDey6e5hE4JUKu_KbEy7l3tS2tMeGMlHYL8qnl_s7ta2AOVyQhV8GkrkvN=s900-c-k-c0x00ffffff-no-rj',
+    avatarUrl: 'https://yt3.googleusercontent.com/p2GLClmkc7oAlrfDey6e5hE4JUKu_KbEy7l3tS2tMeGMlHYL8qnl_s7ta2AOVyQhV8GkrkvN=s900-c-k-c0x00ffffff-no-rj',
     bio: 'Bùi Trường Linh là ca sĩ trẻ nổi bật với các bản hit indie ballad sâu lắng.',
     genres: ['Indie', 'Ballad', 'V-Pop'],
     monthlyListeners: 5000000,

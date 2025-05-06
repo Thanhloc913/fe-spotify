@@ -15,16 +15,23 @@ export interface User {
 // Artist type definition
 export interface Artist {
   id: string;
-  createdAt: string;
-  updatedAt: string;
-  deletedAt: string | null;
-  isActive: boolean;
-  accountID: string;
-  fullName: string;
+  name: string;
   avatarUrl: string;
   bio: string;
-  dateOfBirth: string;
-  phoneNumber: string;
+  genres: string[];
+  monthlyListeners: number;
+  albums: string[];
+  singles: string[];
+  topTracks: string[];
+  related: string[];
+  createdAt?: string;
+  updatedAt?: string;
+  deletedAt?: string | null;
+  isActive?: boolean;
+  accountID?: string;
+  fullName?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
 }
 
 // Album type definition

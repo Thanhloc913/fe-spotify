@@ -34,7 +34,7 @@ const LoginPage: React.FC = () => {
           {error && (
             <div className="bg-red-500 text-white p-3 rounded text-center">
               {error}
-            </div>
+        </div>
           )}
 
           <div>
@@ -105,9 +105,9 @@ const LoginPage: React.FC = () => {
 
         <div className="mt-8 text-center">
           <p className="text-gray-400">
-            Bạn chưa có tài khoản?{' '}
+          Bạn chưa có tài khoản?{' '}
             <Link to="/register" className="text-spotify-green hover:underline">
-              Đăng ký Spotify
+            Đăng ký Spotify
             </Link>
           </p>
         </div>

@@ -31,7 +31,7 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
     >
       <div style={{ position: "relative", paddingBottom: "100%" }}>
         <img
-          src={artist.imageUrl || "/placeholder.svg"}
+          src={artist.avatarUrl || "/placeholder.svg"}
           alt={artist.name}
           style={{
             position: "absolute",

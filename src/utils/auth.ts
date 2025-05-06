@@ -1,11 +1,11 @@
 // utils/auth.ts
 
 export const getToken = () => {
-  return sessionStorage.getItem('token') || sessionStorage.getItem('authToken');
+  return localStorage.getItem('access_token');
 };
 
 export const getRefreshToken = () => {
-  return sessionStorage.getItem('refresh_token');
+  return localStorage.getItem('refresh_token');
 };
 
 export const setToken = (token: string) => {
