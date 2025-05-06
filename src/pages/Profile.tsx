@@ -4,7 +4,8 @@ import { updateProfile, getProfile } from '../api/profileApi';
 import { useUser } from '../contexts/UserContext';
 import { getAccountById, verifyCurrentPassword, updatePassword } from '../api/authApi';
 
-const formatDate = (dateStr: string) => {
+const formatDate = (dateStr: string | undefined) => {
+  if (!dateStr) return 'N/A';
   const d = new Date(dateStr);
   return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
 };
@@ -144,7 +145,7 @@ const Profile = () => {
           <h1 className="text-5xl font-bold mb-4">{artist.fullName}</h1>
           <p className="text-gray-400">{artist.bio || 'No bio available'}</p>
           <p className="text-gray-500 mt-2">
-            Member since {formatDate(artist.createdAt)}
+            Member since {formatDate(artist?.createdAt)}
           </p>
         </div>
       </div>
@@ -224,7 +225,7 @@ const Profile = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-gray-400">Ngày sinh</p>
-              <p className="text-white">{formatDate(artist.dateOfBirth)}</p>
+              <p className="text-white">{formatDate(artist?.dateOfBirth)}</p>
             </div>
             <div>
               <p className="text-gray-400">Số điện thoại</p>
@@ -236,7 +237,7 @@ const Profile = () => {
             </div>
             <div>
               <p className="text-gray-400">Cập nhật lần cuối</p>
-              <p className="text-white">{formatDate(artist.updatedAt)}</p>
+              <p className="text-white">{formatDate(artist?.updatedAt)}</p>
             </div>
           </div>
         )}
