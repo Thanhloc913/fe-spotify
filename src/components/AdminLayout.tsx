@@ -27,7 +27,7 @@ const AdminLayout = () => {
   };
 
   return (
-    <div style={{ display: "flex", height: "100vh" }}>
+    <div style={{ display: "flex" }}>
       <Box sx={{ borderRight: 1, borderColor: "divider", width: "200px" }}>
         <Tabs
           orientation="vertical"
@@ -52,9 +52,9 @@ const AdminLayout = () => {
           ))}
         </Tabs>
       </Box>
-      <main style={{ padding: "20px", flexGrow: 1 }}>
+      <div style={{ padding: "20px", flexGrow: 1 }}>
         <Outlet />
-      </main>
+      </div>
     </div>
   );
 };

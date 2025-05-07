@@ -1,26 +1,45 @@
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogTitle,
+  Paper,
+  Tab,
+  Tabs,
+  TextField,
+  Typography,
+} from "@mui/material";
+import { DatePicker, DateTimePicker } from "@mui/x-date-pickers";
+import dayjs from "dayjs";
+import { MuiTelInput } from "mui-tel-input";
 import { useState } from "react";
-import { Dialog, DialogTitle, Tabs, Tab, Box, Button } from "@mui/material";
 import { useForm } from "react-hook-form";
-import TextFieldArray from "../TextFieldArray";
 import { Profile, User } from "../../../types";
+import TextFieldArray from "../TextFieldArray";
+
+interface UserFormProps {
+  name?: string;
+  email?: string;
+  playlists: string[];
+  following: {
+    artists: string[];
+    users: string[];
+  };
+}
+
+interface ProfileFormProps {
+  fullName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
+}
 
 interface EditUserModalProps {
   open: boolean;
   onClose: () => void;
   user: User;
   profile: Profile | null;
-}
-
-interface UserForm {
-  name: string;
-  email: string;
-  playlists: string[];
-}
-
-interface ProfileForm {
-  fullName: string;
-  bio: string | null;
-  phoneNumber: string | null;
 }
 
 const EditUserModal: React.FC<EditUserModalProps> = ({
@@ -30,39 +49,23 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   profile,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
+  const [showPreview, setShowPreview] = useState(false);
+  const [submittedData, setSubmittedData] = useState<
+    UserFormProps | ProfileFormProps | null
+  >(null);
 
-  // Form for User
-  const {
-    register: registerUser,
-    control: controlUser,
-    handleSubmit: handleSubmitUser,
-  } = useForm<UserForm>({
-    defaultValues: {
-      name: user.name,
-      email: user.email,
-      playlists: user.playlists,
-    },
-  });
-
-  // Form for Profile
-  const {
-    register: registerProfile,
-    control: controlProfile,
-    handleSubmit: handleSubmitProfile,
-  } = useForm<ProfileForm>({
-    defaultValues: {
-      fullName: profile?.fullName,
-      bio: profile?.bio,
-      phoneNumber: profile?.phoneNumber,
-    },
-  });
-
-  const handleUserSubmit = (data: UserForm) => {
-    console.log("User Updated:", data);
+  const handleUserSubmit = (data: UserFormProps) => {
+    const dataMerged: any = { ...data, ...user };
+    console.log("User Updated:", dataMerged);
+    setSubmittedData(dataMerged);
+    setShowPreview(true);
   };
 
-  const handleProfileSubmit = (data: ProfileForm) => {
-    console.log("Profile Updated:", data);
+  const handleProfileSubmit = (data: ProfileFormProps) => {
+    const dataMerged: any = { ...data, ...profile };
+    console.log("Profile Updated:", dataMerged);
+    setSubmittedData(dataMerged);
+    setShowPreview(true);
   };
 
   return (
@@ -73,32 +76,153 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         <Tab label="Profile" />
       </Tabs>
       <Box p={2}>
-        {tabIndex === 0 && (
-          <form onSubmit={handleSubmitUser(handleUserSubmit)}>
-            <TextFieldArray
-              name="playlists"
-              register={registerUser}
-              control={controlUser}
-              label="Playlists"
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Save User
-            </Button>
-          </form>
+        <PreviewModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          data={submittedData}
+        />
+        {tabIndex === 0 && <UserForm user={user} onSubmit={handleUserSubmit} />}
+        {tabIndex === 1 && profile && (
+          <ProfileForm profile={profile} onSubmit={handleProfileSubmit} />
         )}
-        {tabIndex === 1 && (
-          <form onSubmit={handleSubmitProfile(handleProfileSubmit)}>
-            <TextFieldArray
-              name="bio"
-              register={registerProfile}
-              control={controlProfile}
-              label="Bio"
-            />
-            <Button type="submit" variant="contained" color="primary">
-              Save Profile
-            </Button>
-          </form>
-        )}
+      </Box>
+    </Dialog>
+  );
+};
+
+const UserForm: React.FC<{
+  user: User;
+  onSubmit: (data: UserFormProps) => void;
+}> = ({ user, onSubmit }) => {
+  const { register, control, handleSubmit } = useForm<UserFormProps>({
+    defaultValues: {
+      name: user.name,
+      email: user.email,
+      playlists: user.playlists,
+      following: user.following,
+    },
+  });
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Typography variant="subtitle1">User Info</Typography>
+      <TextField label="ID" value={user.id} fullWidth disabled margin="dense" />
+      <DateTimePicker
+        label="Created At"
+        value={dayjs(user.createdAt)}
+        disabled
+      />
+
+      <TextField
+        label="Email"
+        {...register("email")}
+        fullWidth
+        margin="dense"
+      />
+      <TextField label="Name" {...register("name")} fullWidth margin="dense" />
+
+      {/* Playlists Section */}
+      <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
+        <Typography variant="subtitle1">Playlists</Typography>
+        <TextFieldArray
+          name="playlists"
+          register={register}
+          control={control}
+          label="Playlist"
+        />
+      </Paper>
+
+      {/* Following Section - Editable */}
+      <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
+        <Typography variant="subtitle1">Following</Typography>
+        <TextFieldArray
+          name="following.artists"
+          register={register}
+          control={control}
+          label="Artists Followed"
+        />
+        <TextFieldArray
+          name="following.users"
+          register={register}
+          control={control}
+          label="Users Followed"
+        />
+      </Paper>
+
+      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+        Save User
+      </Button>
+    </form>
+  );
+};
+
+const ProfileForm: React.FC<{
+  profile: Profile;
+  onSubmit: (data: ProfileFormProps) => void;
+}> = ({ profile, onSubmit }) => {
+  const { register, handleSubmit, watch, setValue } = useForm<ProfileFormProps>(
+    {
+      defaultValues: {
+        fullName: profile?.fullName,
+        avatarUrl: profile?.avatarUrl,
+        bio: profile?.bio,
+        dateOfBirth: profile?.dateOfBirth,
+        phoneNumber: profile?.phoneNumber,
+      },
+    }
+  );
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Typography variant="subtitle1">Profile Info</Typography>
+      <TextField
+        label="Account ID"
+        value={profile?.accountID}
+        fullWidth
+        disabled
+        margin="dense"
+      />
+      <TextField
+        label="Full Name"
+        {...register("fullName")}
+        fullWidth
+        margin="dense"
+      />
+      <TextField
+        label="Avatar URL"
+        {...register("avatarUrl")}
+        fullWidth
+        margin="dense"
+      />
+      <TextField label="Bio" {...register("bio")} fullWidth margin="dense" />
+      <DatePicker label="Date of Birth" value={dayjs(profile?.dateOfBirth)} />
+
+      <MuiTelInput
+        label="Phone Number"
+        value={watch("phoneNumber") || ""}
+        onChange={(value) => setValue("phoneNumber", value)}
+        defaultCountry="VN"
+        fullWidth
+        margin="dense"
+      />
+
+      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
+        Save Profile
+      </Button>
+    </form>
+  );
+};
+
+const PreviewModal: React.FC<{
+  open: boolean;
+  onClose: () => void;
+  data: Record<string, any> | null;
+}> = ({ open, onClose, data }) => {
+  return (
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+      <DialogTitle>Form Submission Preview</DialogTitle>
+      <Box p={2}>
+        <pre>{JSON.stringify(data, null, 2)}</pre> {/* Pretty-print JSON */}
       </Box>
     </Dialog>
   );

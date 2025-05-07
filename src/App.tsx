@@ -22,20 +22,13 @@ import { UserProvider } from "./contexts/UserContext";
 import Search from "./pages/Search";
 import AdminLayout from "./components/AdminLayout";
 import ManageUsers from "./pages/admin/ManageUsers";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
+import GlobalProvider from "./GlobalProvider";
 
 document.body.classList.add("dark");
-const darkTheme = createTheme({
-  palette: {
-    mode: "dark",
-  },
-});
 
 function App() {
   return (
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline />
+    <GlobalProvider>
       <UserProvider>
         <Router>
           <Routes>
@@ -96,7 +89,7 @@ function App() {
           </Routes>
         </Router>
       </UserProvider>
-    </ThemeProvider>
+    </GlobalProvider>
   );
 }
 
