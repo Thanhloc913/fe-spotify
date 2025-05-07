@@ -70,7 +70,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit User</DialogTitle>
+      <DialogTitle>Edit User {user.id}</DialogTitle>
       <Tabs value={tabIndex} onChange={(_, newIndex) => setTabIndex(newIndex)}>
         <Tab label="User" />
         <Tab label="Profile" />
@@ -82,7 +82,7 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
           data={submittedData}
         />
         {tabIndex === 0 && <UserForm user={user} onSubmit={handleUserSubmit} />}
-        {tabIndex === 1 && profile && (
+        {tabIndex === 1 && (
           <ProfileForm profile={profile} onSubmit={handleProfileSubmit} />
         )}
       </Box>
@@ -104,60 +104,74 @@ const UserForm: React.FC<{
   });
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <>
       <Typography variant="subtitle1">User Info</Typography>
-      <TextField label="ID" value={user.id} fullWidth disabled margin="dense" />
-      <DateTimePicker
-        label="Created At"
-        value={dayjs(user.createdAt)}
-        disabled
-      />
-
-      <TextField
-        label="Email"
-        {...register("email")}
-        fullWidth
-        margin="dense"
-      />
-      <TextField label="Name" {...register("name")} fullWidth margin="dense" />
-
-      {/* Playlists Section */}
-      <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-        <Typography variant="subtitle1">Playlists</Typography>
-        <TextFieldArray
-          name="playlists"
-          register={register}
-          control={control}
-          label="Playlist"
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <Button
+          type="submit"
+          variant="contained"
+          color="primary"
+          sx={{ mt: 2 }}
+        >
+          Save User
+        </Button>
+        <TextField
+          label="ID"
+          value={user.id}
+          fullWidth
+          disabled
+          margin="dense"
         />
-      </Paper>
-
-      {/* Following Section - Editable */}
-      <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-        <Typography variant="subtitle1">Following</Typography>
-        <TextFieldArray
-          name="following.artists"
-          register={register}
-          control={control}
-          label="Artists Followed"
+        <DateTimePicker
+          label="Created At"
+          value={dayjs(user.createdAt)}
+          disabled
         />
-        <TextFieldArray
-          name="following.users"
-          register={register}
-          control={control}
-          label="Users Followed"
+        <TextField
+          label="Email"
+          {...register("email")}
+          fullWidth
+          margin="dense"
         />
-      </Paper>
-
-      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-        Save User
-      </Button>
-    </form>
+        <TextField
+          label="Name"
+          {...register("name")}
+          fullWidth
+          margin="dense"
+        />
+        {/* Playlists Section */}
+        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
+          <Typography variant="subtitle1">Playlists</Typography>
+          <TextFieldArray
+            name="playlists"
+            register={register}
+            control={control}
+            label="Playlist"
+          />
+        </Paper>
+        {/* Following Section - Editable */}
+        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
+          <Typography variant="subtitle1">Following</Typography>
+          <TextFieldArray
+            name="following.artists"
+            register={register}
+            control={control}
+            label="Artists Followed"
+          />
+          <TextFieldArray
+            name="following.users"
+            register={register}
+            control={control}
+            label="Users Followed"
+          />
+        </Paper>
+      </form>
+    </>
   );
 };
 
 const ProfileForm: React.FC<{
-  profile: Profile;
+  profile: Profile | null;
   onSubmit: (data: ProfileFormProps) => void;
 }> = ({ profile, onSubmit }) => {
   const { register, handleSubmit, watch, setValue } = useForm<ProfileFormProps>(
@@ -173,43 +187,62 @@ const ProfileForm: React.FC<{
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <>
       <Typography variant="subtitle1">Profile Info</Typography>
-      <TextField
-        label="Account ID"
-        value={profile?.accountID}
-        fullWidth
-        disabled
-        margin="dense"
-      />
-      <TextField
-        label="Full Name"
-        {...register("fullName")}
-        fullWidth
-        margin="dense"
-      />
-      <TextField
-        label="Avatar URL"
-        {...register("avatarUrl")}
-        fullWidth
-        margin="dense"
-      />
-      <TextField label="Bio" {...register("bio")} fullWidth margin="dense" />
-      <DatePicker label="Date of Birth" value={dayjs(profile?.dateOfBirth)} />
-
-      <MuiTelInput
-        label="Phone Number"
-        value={watch("phoneNumber") || ""}
-        onChange={(value) => setValue("phoneNumber", value)}
-        defaultCountry="VN"
-        fullWidth
-        margin="dense"
-      />
-
-      <Button type="submit" variant="contained" color="primary" sx={{ mt: 2 }}>
-        Save Profile
-      </Button>
-    </form>
+      {profile ? (
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <Button
+            type="submit"
+            variant="contained"
+            color="primary"
+            sx={{ mt: 2 }}
+          >
+            Save Profile
+          </Button>
+          <TextField
+            label="Account ID"
+            value={profile?.accountID}
+            fullWidth
+            disabled
+            margin="dense"
+          />
+          <TextField
+            label="Full Name"
+            {...register("fullName")}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Avatar URL"
+            {...register("avatarUrl")}
+            fullWidth
+            margin="dense"
+          />
+          <TextField
+            label="Bio"
+            {...register("bio")}
+            fullWidth
+            margin="dense"
+          />
+          <DatePicker
+            label="Date of Birth"
+            value={dayjs(profile?.dateOfBirth)}
+          />
+          <MuiTelInput
+            label="Phone Number"
+            value={watch("phoneNumber") || ""}
+            onChange={(value) => setValue("phoneNumber", value)}
+            defaultCountry="VN"
+            fullWidth
+            margin="dense"
+          />
+        </form>
+      ) : (
+        <Typography variant="caption">
+          No profile info associated with Account
+        </Typography>
+      )}
+    </>
   );
 };
 
