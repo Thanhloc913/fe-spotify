@@ -14,8 +14,8 @@ import dayjs from "dayjs";
 import { MuiTelInput } from "mui-tel-input";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Profile, User } from "../../../types";
-import TextFieldArray from "../TextFieldArray";
+import { Profile, User } from "./../../types";
+import TextFieldArray from "./TextFieldArray";
 
 interface UserFormProps {
   name?: string;

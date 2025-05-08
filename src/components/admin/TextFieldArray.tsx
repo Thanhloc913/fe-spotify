@@ -1,4 +1,5 @@
 import { Button, Grid, TextField, Typography, Paper } from "@mui/material";
+import { FC } from "react";
 import { Control, useFieldArray, UseFormRegister } from "react-hook-form";
 
 interface TextFieldArrayProps {
@@ -8,7 +9,7 @@ interface TextFieldArrayProps {
   control: Control<any>;
 }
 
-const TextFieldArray: React.FC<TextFieldArrayProps> = ({
+const TextFieldArray: FC<TextFieldArrayProps> = ({
   name,
   label,
   register,
