@@ -32,9 +32,21 @@ import {
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
 import React, { useState } from "react";
-import EditUserModal from "../../components/admin/modal/EditUserModal"; // Make sure this path is correct
-import { mockData } from "../../mock/data"; // Make sure this path is correct
-import { User } from "../../types"; // Make sure this path is correct
+import EditUserModal from "../../components/admin/modal/EditUserModal";
+import { mockData } from "../../mock/data";
+import { User } from "../../types";
+
+interface UserTableColumns {
+  id: string;
+  name: string;
+  email: string;
+}
+
+const userTableColumnNames: { id: keyof UserTableColumns; label: string }[] = [
+  { id: "id", label: "ID" },
+  { id: "name", label: "Name" },
+  { id: "email", label: "Email" },
+];
 
 interface TablePaginationActionsProps {
   count: number;
@@ -188,6 +200,37 @@ const EnhancedTableToolbar: React.FC<EnhancedTableToolbarProps> = (props) => {
   );
 };
 
+interface SortableTableHeaderLabelProps<T> {
+  columnId: keyof T;
+  label: string;
+  orderBy: keyof T;
+  order: "asc" | "desc";
+  onRequestSort: (property: keyof T) => void;
+}
+
+const SortableTableHeaderLabel = <T,>({
+  columnId,
+  label,
+  orderBy,
+  order,
+  onRequestSort,
+}: SortableTableHeaderLabelProps<T>) => {
+  return (
+    <TableSortLabel
+      active={orderBy === columnId}
+      direction={orderBy === columnId ? order : "asc"}
+      onClick={() => onRequestSort(columnId)}
+    >
+      {label}
+      {orderBy === columnId ? (
+        <Box component="span" sx={visuallyHidden}>
+          {order === "desc" ? "sorted descending" : "sorted ascending"}
+        </Box>
+      ) : null}
+    </TableSortLabel>
+  );
+};
+
 interface UserTableRowProps {
   user: User;
   onSelect: (id: string, isSelected: boolean) => void;
@@ -228,19 +271,19 @@ const ManageUsers = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
   const [columnSortOrderBy, setColumnSortOrderBy] =
-    useState<keyof User>("name");
+    useState<keyof UserTableColumns>("name");
 
-  const filteredUsers = mockData.users.filter(
-    (user) =>
-      user.id.toLowerCase().includes(search.toLowerCase()) ||
-      user.name.toLowerCase().includes(search.toLowerCase()) ||
-      user.email.toLowerCase().includes(search.toLowerCase())
-  );
+  const filteredUsers = React.useMemo(() => {
+    return mockData.users.filter((user) =>
+      Object.keys(user).some((key) =>
+        String(user[key as keyof User])
+          .toLowerCase()
+          .includes(search.toLowerCase())
+      )
+    );
+  }, [search, mockData.users]);
 
-  const handleRequestSort = (
-    _: React.MouseEvent<unknown>,
-    property: keyof User
-  ) => {
+  const handleRequestSort = (property: keyof UserTableColumns) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
     setColumnSortOrder(isAsc ? "desc" : "asc");
     setColumnSortOrderBy(property);
@@ -370,60 +413,17 @@ const ManageUsers = () => {
                       }}
                     />
                   </TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={columnSortOrderBy === "id"}
-                      direction={
-                        columnSortOrderBy === "id" ? columnSortOrder : "asc"
-                      }
-                      onClick={(event) => handleRequestSort(event, "id")}
-                    >
-                      ID
-                      {columnSortOrderBy === "id" ? (
-                        <Box component="span" sx={visuallyHidden}>
-                          {columnSortOrder === "desc"
-                            ? "sorted descending"
-                            : "sorted ascending"}
-                        </Box>
-                      ) : null}
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={columnSortOrderBy === "name"}
-                      direction={
-                        columnSortOrderBy === "name" ? columnSortOrder : "asc"
-                      }
-                      onClick={(event) => handleRequestSort(event, "name")}
-                    >
-                      Name
-                      {columnSortOrderBy === "name" ? (
-                        <Box component="span" sx={visuallyHidden}>
-                          {columnSortOrder === "desc"
-                            ? "sorted descending"
-                            : "sorted ascending"}
-                        </Box>
-                      ) : null}
-                    </TableSortLabel>
-                  </TableCell>
-                  <TableCell>
-                    <TableSortLabel
-                      active={columnSortOrderBy === "email"}
-                      direction={
-                        columnSortOrderBy === "email" ? columnSortOrder : "asc"
-                      }
-                      onClick={(event) => handleRequestSort(event, "email")}
-                    >
-                      Email
-                      {columnSortOrderBy === "email" ? (
-                        <Box component="span" sx={visuallyHidden}>
-                          {columnSortOrder === "desc"
-                            ? "sorted descending"
-                            : "sorted ascending"}
-                        </Box>
-                      ) : null}
-                    </TableSortLabel>
-                  </TableCell>
+                  {userTableColumnNames.map((column) => (
+                    <TableCell key={column.id}>
+                      <SortableTableHeaderLabel<UserTableColumns>
+                        columnId={column.id}
+                        label={column.label}
+                        orderBy={columnSortOrderBy}
+                        order={columnSortOrder}
+                        onRequestSort={handleRequestSort}
+                      />
+                    </TableCell>
+                  ))}
                   <TableCell>Actions</TableCell>
                 </TableRow>
               </TableHead>

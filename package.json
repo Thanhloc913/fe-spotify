@@ -47,5 +47,8 @@
     "typescript": "^5.2.2",
     "vite": "^6.3.5"
   },
-  "packageManager": "yarn@4.9.1"
+  "packageManager": "yarn@4.9.1",
+  "prettier": {
+    "tabWidth": 2
+  }
 }
