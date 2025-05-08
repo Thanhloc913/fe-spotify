@@ -15,7 +15,7 @@ export interface User {
 export interface Profile {
   id: string;
   accountID: string;
-  fullName: string;
+  fullName?: string;
   avatarUrl?: string;
   bio?: string;
   dateOfBirth?: string;

@@ -42,6 +42,10 @@ interface EditUserModalProps {
   profile: Profile | null;
 }
 
+type SubmitFormData = Partial<
+  User | UserFormProps | Profile | ProfileFormProps | null
+>;
+
 const EditUserModal: React.FC<EditUserModalProps> = ({
   open,
   onClose,
@@ -50,19 +54,17 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
-  const [submittedData, setSubmittedData] = useState<
-    UserFormProps | ProfileFormProps | null
-  >(null);
+  const [submittedData, setSubmittedData] = useState<SubmitFormData>(null);
 
   const handleUserSubmit = (data: UserFormProps) => {
-    const dataMerged: any = { ...data, ...user };
+    const dataMerged: Partial<User> = { ...data, ...user };
     console.log("User Updated:", dataMerged);
     setSubmittedData(dataMerged);
     setShowPreview(true);
   };
 
   const handleProfileSubmit = (data: ProfileFormProps) => {
-    const dataMerged: any = { ...data, ...profile };
+    const dataMerged: Partial<Profile> = { ...data, ...profile };
     console.log("Profile Updated:", dataMerged);
     setSubmittedData(dataMerged);
     setShowPreview(true);
@@ -249,7 +251,7 @@ const ProfileForm: React.FC<{
 const PreviewModal: React.FC<{
   open: boolean;
   onClose: () => void;
-  data: Record<string, any> | null;
+  data: SubmitFormData | null;
 }> = ({ open, onClose, data }) => {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
