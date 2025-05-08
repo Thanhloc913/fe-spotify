@@ -1,9 +1,10 @@
 import SearchIcon from "@mui/icons-material/Search";
 import { Avatar, Stack, TextField } from "@mui/material";
-import { ChangeEvent, FC, MouseEvent, useMemo, useState } from "react";
+import { FC, useMemo, useState } from "react";
 import EditUserModal from "../../components/admin/EditUserModal";
 import GenericTableActionEdit, {
   RowId,
+  SortOrder,
 } from "../../components/admin/GenericTable";
 import { mockData } from "../../mock/data";
 import { User } from "../../types";
@@ -47,9 +48,11 @@ interface UserTableActionEditProps {
   onSelectAll: (isSelected: boolean) => void;
   onEdit: (id: RowId) => void;
   onDelete: (selectedIds: RowId[]) => void;
-  onRequestSort: (column: keyof UserTableColumnNames) => void;
+  onRequestSort: (column: keyof UserTableColumnNames, order: SortOrder) => void;
   onRequestPageChange: (newPage: number) => void;
   onRequestRowsPerPageChange: (rowsPerPage: number) => void;
+  order: SortOrder;
+  orderBy: keyof UserTableColumnNames;
   page: number;
   rowsPerPage: number;
   totalCount: number;
@@ -65,6 +68,8 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
   onRequestSort,
   onRequestPageChange,
   onRequestRowsPerPageChange,
+  order,
+  orderBy,
   page,
   rowsPerPage,
   totalCount,
@@ -80,14 +85,16 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
       onSelectAll={onSelectAll}
       onEdit={onEdit}
       onDelete={onDelete}
-      onRequestSort={(column) => {
+      onRequestSort={(column, order) => {
         const def = userTableColumnDefinitions.find((def) => def.id === column);
         if (def) {
-          onRequestSort(def.id);
+          onRequestSort(def.id, order);
         }
       }}
       onRequestPageChange={onRequestPageChange}
       onRequestRowsPerPageChange={onRequestRowsPerPageChange}
+      order={order}
+      orderBy={orderBy}
       page={page}
       rowsPerPage={rowsPerPage}
       totalCount={totalCount}
@@ -101,7 +108,7 @@ const ManageUsers = () => {
   const [editingUserId, setEditingUserId] = useState<RowId | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
-  const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [selectedItems, setSelectedItems] = useState<RowId[]>([]);
   const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
   const [columnSortOrderBy, setColumnSortOrderBy] =
     useState<keyof UserTableColumnNames>("name");
@@ -147,10 +154,18 @@ const ManageUsers = () => {
     return stabilizedThis.map((el) => el[0]);
   }, [filteredUsers, columnSortOrder, columnSortOrderBy]);
 
+  const displayingUsers = useMemo(() => {
+    return sortedUsers.slice(
+      page * rowsPerPage,
+      page * rowsPerPage + rowsPerPage
+    );
+  }, [page, rowsPerPage, sortedUsers]);
+
   const handleSelectAllClick = (isSelected: boolean) => {
     if (isSelected) {
       const newSelecteds = sortedUsers
-        .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
+        // uncomment to select all current page only
+        // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((n) => n.id);
       setSelectedItems(newSelecteds);
     } else {
@@ -168,20 +183,20 @@ const ManageUsers = () => {
     });
   };
 
-  const isItemSelected = (id: string) => selectedItems.indexOf(id) !== -1;
+  // const isItemSelected = (id: RowId) => selectedItems.indexOf(id) !== -1;
 
-  const handleChangePage = (
-    _: MouseEvent<HTMLButtonElement> | null,
-    newPage: number
-  ) => {
+  const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
 
-  const handleChangeRowsPerPage = (
-    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
+  const handleChangeRowsPerPage = (newRowsPerPage: number) => {
+    setRowsPerPage(newRowsPerPage);
     setPage(0);
+  };
+
+  const handleEditUser = (selectedId: RowId) => {
+    setEditingUserId(selectedId);
+    setOpenEditModal(true);
   };
 
   const handleDeleteUsers = (selectedIds: RowId[]) => {
@@ -218,15 +233,17 @@ const ManageUsers = () => {
         />
       </div>
       <UserTableActionEdit
-        data={[]}
-        selectedIds={[]}
+        data={displayingUsers}
+        selectedIds={selectedItems}
         onSelect={handleClick}
         onSelectAll={handleSelectAllClick}
-        onEdit={setEditingUserId}
+        onEdit={handleEditUser}
         onDelete={handleDeleteUsers}
         onRequestSort={handleRequestSort}
-        onRequestPageChange={setPage}
-        onRequestRowsPerPageChange={setRowsPerPage}
+        onRequestPageChange={handleChangePage}
+        onRequestRowsPerPageChange={handleChangeRowsPerPage}
+        order={columnSortOrder}
+        orderBy={columnSortOrderBy}
         page={page}
         rowsPerPage={rowsPerPage}
         totalCount={sortedUsers.length}

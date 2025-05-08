@@ -17,7 +17,7 @@ const links = [
   { path: "tracks", label: "Tracks", icon: <MdQueueMusic /> },
   { path: "playlists", label: "Playlists", icon: <MdPlaylistPlay /> },
   ...Array.from({ length: 20 }, (_, index) => ({
-    path: `test-${index + 1}`,
+    path: `playlists`,
     label: `Test Overflow ${index + 1}`,
     icon: <MdCategory />,
   })), // Add 20 test links dynamically

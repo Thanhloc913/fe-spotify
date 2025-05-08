@@ -1,4 +1,5 @@
 // Component that accepts a {[key: string]: any} type
+// Unexpected any. Specify a different type.eslint@typescript-eslint/no-explicit-any
 type GenericProps = { [key: string]: any };
 
 const GenericComponent: React.FC<GenericProps> = (props) => {

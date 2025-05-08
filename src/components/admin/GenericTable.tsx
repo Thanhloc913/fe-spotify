@@ -3,6 +3,7 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
+import { mergeSx } from "merge-sx";
 import {
   alpha,
   Box,
@@ -24,7 +25,9 @@ import {
   TablePagination,
   TableRow,
   TableSortLabel,
+  Theme,
   Toolbar,
+  ToolbarProps,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -46,6 +49,7 @@ type RowAction = {
   onClick: (id: RowId) => void;
 };
 type RowActions = Array<RowAction>;
+export type SortOrder = "asc" | "desc";
 
 interface TablePaginationActionsProps {
   count: number;
@@ -107,7 +111,7 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
   );
 }
 
-interface EnhancedTableToolbarProps {
+interface EnhancedTableToolbarProps extends ToolbarProps {
   label: string;
   numSelected: number;
   onDelete: (selectedIds: RowId[]) => void;
@@ -115,7 +119,7 @@ interface EnhancedTableToolbarProps {
 }
 
 const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
-  const { numSelected, onDelete, selectedIds } = props;
+  const { label, numSelected, onDelete, selectedIds, ...rest } = props;
   const [open, setOpen] = useState(false);
 
   const handleDelete = () => {
@@ -126,16 +130,19 @@ const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
   return (
     <>
       <Toolbar
-        className="flex-none"
-        sx={{
-          ...(numSelected > 0 && {
-            bgcolor: (theme) =>
-              alpha(
-                theme.palette.primary.main,
-                theme.palette.action.activatedOpacity
-              ),
-          }),
-        }}
+        {...rest}
+        sx={mergeSx(
+          {
+            ...(numSelected > 0 && {
+              bgcolor: (theme: Theme) =>
+                alpha(
+                  theme.palette.primary.main,
+                  theme.palette.action.activatedOpacity
+                ),
+            }),
+          },
+          rest.sx
+        )}
       >
         {numSelected > 0 ? (
           <Typography
@@ -153,7 +160,7 @@ const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
             id="tableTitle"
             component="div"
           >
-            {props.label}
+            {label}
           </Typography>
         )}
 
@@ -193,8 +200,8 @@ interface SortableTableHeaderLabelProps<T> {
   columnId: keyof T;
   label: string;
   orderBy: keyof T;
-  order: "asc" | "desc";
-  onRequestSort: (property: keyof T) => void;
+  order: SortOrder;
+  onRequestSort: (property: keyof T, newSortOrder: SortOrder) => void;
 }
 
 const SortableTableHeaderLabel = <T,>({
@@ -208,7 +215,7 @@ const SortableTableHeaderLabel = <T,>({
     <TableSortLabel
       active={orderBy === columnId}
       direction={orderBy === columnId ? order : "asc"}
-      onClick={() => onRequestSort(columnId)}
+      onClick={() => onRequestSort(columnId, order === "asc" ? "desc" : "asc")}
     >
       {label}
       {orderBy === columnId ? (
@@ -221,7 +228,7 @@ const SortableTableHeaderLabel = <T,>({
 };
 
 interface GenericTableRowProps<
-  T extends { [key: string]: any },
+  T extends Record<keyof T, unknown>,
   K extends keyof T
 > {
   data: T;
@@ -232,7 +239,10 @@ interface GenericTableRowProps<
   actions: RowActions;
 }
 
-const GenericTableRow = <T extends { [key: string]: any }, K extends keyof T>({
+const GenericTableRow = <
+  T extends Record<keyof T, unknown>,
+  K extends keyof T
+>({
   data,
   columnDefinitions,
   idKey,
@@ -241,12 +251,14 @@ const GenericTableRow = <T extends { [key: string]: any }, K extends keyof T>({
   actions = [],
 }: GenericTableRowProps<T, K>) => {
   return (
-    <TableRow hover role="checkbox" key={String(data[idKey])}>
+    <TableRow hover role="checkbox" key={String(data[idKey] as RowId)}>
       {onSelect && (
         <TableCell padding="checkbox">
           <Checkbox
             checked={isSelected}
-            onChange={(event) => onSelect(data[idKey], event.target.checked)}
+            onChange={(event) =>
+              onSelect(data[idKey] as RowId, event.target.checked)
+            }
           />
         </TableCell>
       )}
@@ -260,7 +272,10 @@ const GenericTableRow = <T extends { [key: string]: any }, K extends keyof T>({
       {actions.length > 0 && (
         <TableCell>
           {actions.map((action, index) => (
-            <Button key={index} onClick={() => action.onClick(data[idKey])}>
+            <Button
+              key={index}
+              onClick={() => action.onClick(data[idKey] as RowId)}
+            >
               {action.label}
             </Button>
           ))}
@@ -271,7 +286,7 @@ const GenericTableRow = <T extends { [key: string]: any }, K extends keyof T>({
 };
 
 interface GenericTableRowActionEditProps<
-  T extends { [key: string]: any },
+  T extends Record<keyof T, unknown>,
   K extends keyof T
 > {
   data: T;
@@ -283,7 +298,7 @@ interface GenericTableRowActionEditProps<
 }
 
 const GenericTableRowActionEdit = <
-  T extends { [key: string]: any },
+  T extends Record<keyof T, unknown>,
   K extends keyof T
 >({
   data,
@@ -303,7 +318,7 @@ const GenericTableRowActionEdit = <
       actions={[
         {
           label: "Edit",
-          onClick: () => onEdit(data[idKey]),
+          onClick: () => onEdit(data[idKey] as RowId),
         },
       ]}
     />
@@ -311,10 +326,11 @@ const GenericTableRowActionEdit = <
 };
 
 export interface GenericTableActionEditProps<
-  T extends { [key: string]: any },
+  T extends Record<keyof T, unknown>,
   K extends keyof T
 > {
   label: string;
+  rowsPerPageOptions?: number[];
   data: T[]; // Only the current page rows
   columnDefinitions: TableColumnDefinitions<T>;
   idKey: K;
@@ -323,19 +339,22 @@ export interface GenericTableActionEditProps<
   onSelectAll: (isSelected: boolean) => void;
   onEdit: (id: RowId) => void;
   onDelete: (selectedIds: RowId[]) => void;
-  onRequestSort: (column: keyof T) => void;
+  onRequestSort: (column: keyof T, order: SortOrder) => void;
   onRequestPageChange: (newPage: number) => void;
   onRequestRowsPerPageChange: (rowsPerPage: number) => void;
+  order: SortOrder;
+  orderBy: keyof T;
   page: number;
   rowsPerPage: number;
   totalCount: number;
 }
 
 export const GenericTableActionEdit = <
-  T extends { [key: string]: any },
+  T extends Record<keyof T, unknown>,
   K extends keyof T
 >({
   label,
+  rowsPerPageOptions = [5, 10, 25],
   data,
   columnDefinitions,
   idKey,
@@ -347,6 +366,8 @@ export const GenericTableActionEdit = <
   onRequestSort,
   onRequestPageChange,
   onRequestRowsPerPageChange,
+  order,
+  orderBy,
   page,
   rowsPerPage,
   totalCount,
@@ -355,6 +376,7 @@ export const GenericTableActionEdit = <
     <Paper className="flex-auto overflow-x-auto">
       <Stack className="h-full">
         <EnhancedTableToolbar
+          className="flex-none"
           label="Users"
           numSelected={selectedIds.length}
           onDelete={onDelete}
@@ -367,10 +389,10 @@ export const GenericTableActionEdit = <
                 <TableCell padding="checkbox">
                   <Checkbox
                     indeterminate={
-                      selectedIds.length > 0 && selectedIds.length < data.length
+                      selectedIds.length > 0 && selectedIds.length < totalCount
                     }
                     checked={
-                      data.length > 0 && selectedIds.length === data.length
+                      data.length > 0 && selectedIds.length === totalCount
                     }
                     onChange={(e) => onSelectAll(e.target.checked)}
                     slotProps={{
@@ -384,9 +406,9 @@ export const GenericTableActionEdit = <
                       <SortableTableHeaderLabel
                         columnId={column.id}
                         label={column.label}
-                        orderBy={column.id}
-                        order={"asc"} // Parent should manage state
-                        onRequestSort={() => onRequestSort(column.id)}
+                        orderBy={orderBy}
+                        order={order}
+                        onRequestSort={onRequestSort}
                       />
                     ) : (
                       column.label
@@ -403,7 +425,7 @@ export const GenericTableActionEdit = <
                   data={item}
                   columnDefinitions={columnDefinitions}
                   idKey={idKey}
-                  isSelected={selectedIds.includes(item[idKey])}
+                  isSelected={selectedIds.includes(item[idKey] as RowId)}
                   onSelect={onSelect}
                   onEdit={onEdit}
                 />
@@ -412,7 +434,8 @@ export const GenericTableActionEdit = <
           </Table>
         </TableContainer>
         <TablePagination
-          rowsPerPageOptions={[5, 10, 25]}
+          className="flex-none"
+          rowsPerPageOptions={rowsPerPageOptions}
           component="div"
           count={totalCount}
           rowsPerPage={rowsPerPage}

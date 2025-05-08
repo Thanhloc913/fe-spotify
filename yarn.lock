@@ -3153,6 +3153,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"merge-sx@npm:^3.4.0":
+  version: 3.4.0
+  resolution: "merge-sx@npm:3.4.0"
+  peerDependencies:
+    "@mui/material": ^5.1.0 || ^6.0.0 || ^7.0.0
+  checksum: 10c0/90dcc5042ccbcf61efac6f6f21c4de90a23ddcb91f7f4d7029061d3056d08ad730a6dc4731d89a6a526b7463c572950263ba4b6398405d03c97f15af6a25254c
+  languageName: node
+  linkType: hard
+
 "merge2@npm:^1.3.0, merge2@npm:^1.4.1":
   version: 1.4.1
   resolution: "merge2@npm:1.4.1"
@@ -4126,6 +4135,7 @@ __metadata:
     eslint-plugin-react-hooks: "npm:^5.2.0"
     eslint-plugin-react-refresh: "npm:^0.4.5"
     lucide-react: "npm:^0.507.0"
+    merge-sx: "npm:^3.4.0"
     mui-tel-input: "npm:^9.0.0"
     postcss: "npm:^8.4.35"
     react: "npm:^18.2.0"
