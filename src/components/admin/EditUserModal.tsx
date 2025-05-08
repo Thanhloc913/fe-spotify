@@ -17,6 +17,7 @@ import { useForm } from "react-hook-form";
 import { Profile, User } from "./../../types";
 import TextFieldArray from "./TextFieldArray";
 
+// editable form props
 interface UserFormProps {
   name?: string;
   email?: string;
@@ -27,6 +28,7 @@ interface UserFormProps {
   };
 }
 
+// editable form props
 interface ProfileFormProps {
   fullName?: string;
   avatarUrl?: string;
@@ -38,36 +40,32 @@ interface ProfileFormProps {
 interface EditUserModalProps {
   open: boolean;
   onClose: () => void;
+  onSubmitUser: (data: UserFormProps, user: User) => void;
+  onSubmitProfile: (data: ProfileFormProps, profile: Profile) => void;
   user: User;
   profile: Profile | null;
 }
 
-type SubmitFormData = Partial<
-  User | UserFormProps | Profile | ProfileFormProps | null
->;
+// type SubmitFormData = Partial<
+//   User | UserFormProps | Profile | ProfileFormProps | null
+// >;
 
 const EditUserModal: React.FC<EditUserModalProps> = ({
   open,
   onClose,
+  onSubmitUser,
+  onSubmitProfile,
   user,
   profile,
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
-  const [showPreview, setShowPreview] = useState(false);
-  const [submittedData, setSubmittedData] = useState<SubmitFormData>(null);
 
   const handleUserSubmit = (data: UserFormProps) => {
-    const dataMerged: Partial<User> = { ...data, ...user };
-    console.log("User Updated:", dataMerged);
-    setSubmittedData(dataMerged);
-    setShowPreview(true);
+    onSubmitUser(data, user);
   };
 
   const handleProfileSubmit = (data: ProfileFormProps) => {
-    const dataMerged: Partial<Profile> = { ...data, ...profile };
-    console.log("Profile Updated:", dataMerged);
-    setSubmittedData(dataMerged);
-    setShowPreview(true);
+    profile && onSubmitProfile(data, profile);
   };
 
   return (
@@ -78,11 +76,6 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
         <Tab label="Profile" />
       </Tabs>
       <Box p={2}>
-        <PreviewModal
-          open={showPreview}
-          onClose={() => setShowPreview(false)}
-          data={submittedData}
-        />
         {tabIndex === 0 && <UserForm user={user} onSubmit={handleUserSubmit} />}
         {tabIndex === 1 && (
           <ProfileForm profile={profile} onSubmit={handleProfileSubmit} />
@@ -245,21 +238,6 @@ const ProfileForm: React.FC<{
         </Typography>
       )}
     </>
-  );
-};
-
-const PreviewModal: React.FC<{
-  open: boolean;
-  onClose: () => void;
-  data: SubmitFormData | null;
-}> = ({ open, onClose, data }) => {
-  return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Form Submission Preview</DialogTitle>
-      <Box p={2}>
-        <pre>{JSON.stringify(data, null, 2)}</pre> {/* Pretty-print JSON */}
-      </Box>
-    </Dialog>
   );
 };
 
