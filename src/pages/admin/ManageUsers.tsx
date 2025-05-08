@@ -5,6 +5,7 @@ import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
 import SearchIcon from "@mui/icons-material/Search";
 import {
+  Avatar,
   Box,
   Button,
   Checkbox,
@@ -31,57 +32,63 @@ import {
 } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { visuallyHidden } from "@mui/utils";
-import React, { useState } from "react";
+import { ChangeEvent, FC, MouseEvent, ReactNode, useMemo, useState } from "react";
 import EditUserModal from "../../components/admin/modal/EditUserModal";
 import { mockData } from "../../mock/data";
 import { User } from "../../types";
 
-interface UserTableColumns {
-  id: string;
-  name: string;
-  email: string;
-}
+type UserTableColumnNames = Pick<
+  User,
+  "id" | "name" | "email" | "createdAt" | "profileImageUrl"
+>;
 
-const userTableColumnNames: { id: keyof UserTableColumns; label: string }[] = [
-  { id: "id", label: "ID" },
-  { id: "name", label: "Name" },
-  { id: "email", label: "Email" },
-];
+// Define which columns to show and how to render them
+const userTableColumns = [
+  { id: "id", label: "ID", sortable: true },
+  { id: "name", label: "Name", sortable: true },
+  { id: "email", label: "Email", sortable: true },
+  {
+    id: "createdAt",
+    label: "Join Date",
+    sortable: true,
+    render: (value) => new Date(value.createdAt).toLocaleDateString(),
+  },
+  {
+    id: "profileImageUrl",
+    label: "Avatar",
+    sortable: false,
+    render: (value) => value && <Avatar src={value.profileImageUrl} />,
+  },
+] satisfies Array<{
+  id: keyof UserTableColumnNames;
+  label: string;
+  sortable: boolean;
+  render?: (value: User) => ReactNode;
+}>;
 
 interface TablePaginationActionsProps {
   count: number;
   page: number;
   rowsPerPage: number;
-  onPageChange: (
-    event: React.MouseEvent<HTMLButtonElement>,
-    newPage: number
-  ) => void;
+  onPageChange: (event: MouseEvent<HTMLButtonElement>, newPage: number) => void;
 }
 
 function TablePaginationActions(props: TablePaginationActionsProps) {
   const { count, page, rowsPerPage, onPageChange } = props;
 
-  const handleFirstPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleFirstPageButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     onPageChange(event, 0);
   };
 
-  const handleBackButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleBackButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     onPageChange(event, page - 1);
   };
 
-  const handleNextButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleNextButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     onPageChange(event, page + 1);
   };
 
-  const handleLastPageButtonClick = (
-    event: React.MouseEvent<HTMLButtonElement>
-  ) => {
+  const handleLastPageButtonClick = (event: MouseEvent<HTMLButtonElement>) => {
     onPageChange(event, Math.max(0, Math.ceil(count / rowsPerPage) - 1));
   };
 
@@ -125,7 +132,7 @@ interface EnhancedTableToolbarProps {
   selected: string[];
 }
 
-const EnhancedTableToolbar: React.FC<EnhancedTableToolbarProps> = (props) => {
+const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
   const { numSelected, onDelete, selected } = props;
   const [open, setOpen] = useState(false);
 
@@ -231,6 +238,107 @@ const SortableTableHeaderLabel = <T,>({
   );
 };
 
+interface GenericTableRowProps<
+  T extends { [key: string]: any },
+  K extends keyof T
+> {
+  data: T;
+  columns: Array<{
+    id: keyof T;
+    label: string;
+    render?: (value: T) => ReactNode;
+  }>;
+  idKey: K; // The key to use as unique identifier
+  isSelected?: boolean;
+  onSelect?: (id: T[K], isSelected: boolean) => void;
+  actions?: Array<{
+    label: string;
+    onClick: (row: T) => void;
+  }>;
+}
+
+const GenericTableRow = <T extends { [key: string]: any }, K extends keyof T>({
+  data,
+  columns,
+  idKey,
+  isSelected = false,
+  onSelect,
+  actions = [],
+}: GenericTableRowProps<T, K>) => {
+  return (
+    <TableRow hover role="checkbox" key={String(data[idKey])}>
+      {onSelect && (
+        <TableCell padding="checkbox">
+          <Checkbox
+            checked={isSelected}
+            onChange={(event) => onSelect(data[idKey], event.target.checked)}
+          />
+        </TableCell>
+      )}
+
+      {columns.map((column) => (
+        <TableCell key={String(column.id)}>
+          {column.render ? column.render(data) : String(data[column.id])}
+        </TableCell>
+      ))}
+
+      {actions.length > 0 && (
+        <TableCell>
+          {actions.map((action, index) => (
+            <Button key={index} onClick={() => action.onClick(data)}>
+              {action.label}
+            </Button>
+          ))}
+        </TableCell>
+      )}
+    </TableRow>
+  );
+};
+
+interface GenericTableRowActionEditProps<
+  T extends { [key: string]: any },
+  K extends keyof T
+> {
+  data: T;
+  columns: Array<{
+    id: keyof T;
+    label: string;
+    render?: (value: T) => ReactNode;
+  }>;
+  idKey: K;
+  isSelected?: boolean;
+  onSelect?: (id: T[K], isSelected: boolean) => void;
+  onEdit: (row: T) => void; // Edit-specific callback
+}
+
+const GenericTableRowActionEdit = <
+  T extends { [key: string]: any },
+  K extends keyof T
+>({
+  data,
+  columns,
+  idKey,
+  isSelected = false,
+  onSelect,
+  onEdit,
+}: GenericTableRowActionEditProps<T, K>) => {
+  return (
+    <GenericTableRow<T, K>
+      data={data}
+      columns={columns}
+      idKey={idKey}
+      isSelected={isSelected}
+      onSelect={onSelect}
+      actions={[
+        {
+          label: "Edit",
+          onClick: () => onEdit(data),
+        },
+      ]}
+    />
+  );
+};
+
 interface UserTableRowProps {
   user: User;
   onSelect: (id: string, isSelected: boolean) => void;
@@ -238,27 +346,21 @@ interface UserTableRowProps {
   onEdit: (user: User) => void;
 }
 
-const UserTableRow: React.FC<UserTableRowProps> = ({
+const UserTableRow: FC<UserTableRowProps> = ({
   user,
   onSelect,
   isSelected,
   onEdit,
 }) => {
   return (
-    <TableRow hover role="checkbox" tabIndex={-1} key={user.id}>
-      <TableCell padding="checkbox">
-        <Checkbox
-          checked={isSelected}
-          onChange={(event) => onSelect(user.id, event.target.checked)}
-        />
-      </TableCell>
-      <TableCell>{user.id}</TableCell>
-      <TableCell>{user.name}</TableCell>
-      <TableCell>{user.email}</TableCell>
-      <TableCell>
-        <Button onClick={() => onEdit(user)}>Edit</Button>
-      </TableCell>
-    </TableRow>
+    <GenericTableRowActionEdit<User, "id">
+      data={user}
+      columns={userTableColumns}
+      idKey="id"
+      isSelected={isSelected}
+      onSelect={onSelect}
+      onEdit={onEdit} // Overrides actions to only "Edit"
+    />
   );
 };
 
@@ -271,9 +373,9 @@ const ManageUsers = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
   const [columnSortOrderBy, setColumnSortOrderBy] =
-    useState<keyof UserTableColumns>("name");
+    useState<keyof UserTableColumnNames>("name");
 
-  const filteredUsers = React.useMemo(() => {
+  const filteredUsers = useMemo(() => {
     return mockData.users.filter((user) =>
       Object.keys(user).some((key) =>
         String(user[key as keyof User])
@@ -283,13 +385,13 @@ const ManageUsers = () => {
     );
   }, [search, mockData.users]);
 
-  const handleRequestSort = (property: keyof UserTableColumns) => {
+  const handleRequestSort = (property: keyof UserTableColumnNames) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
     setColumnSortOrder(isAsc ? "desc" : "asc");
     setColumnSortOrderBy(property);
   };
 
-  const sortedUsers = React.useMemo(() => {
+  const sortedUsers = useMemo(() => {
     const stabilizedThis = filteredUsers.map(
       (el, index) => [el, index] as const
     );
@@ -314,7 +416,7 @@ const ManageUsers = () => {
     return stabilizedThis.map((el) => el[0]);
   }, [filteredUsers, columnSortOrder, columnSortOrderBy]);
 
-  const handleSelectAllClick = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleSelectAllClick = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.checked) {
       const newSelecteds = sortedUsers
         .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
@@ -338,21 +440,20 @@ const ManageUsers = () => {
   const isItemSelected = (id: string) => selectedItems.indexOf(id) !== -1;
 
   const handleChangePage = (
-    _: React.MouseEvent<HTMLButtonElement> | null,
+    _: MouseEvent<HTMLButtonElement> | null,
     newPage: number
   ) => {
     setPage(newPage);
   };
 
   const handleChangeRowsPerPage = (
-    event: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    event: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
     setRowsPerPage(parseInt(event.target.value, 10));
     setPage(0);
   };
 
   const handleDeleteUsers = (selectedIds: string[]) => {
-    // In a real application, you'd send a request to your backend to delete the users.
     console.log("Deleting users with IDs:", selectedIds);
     setSelectedItems([]); // Clear selection after deletion
   };
@@ -413,9 +514,9 @@ const ManageUsers = () => {
                       }}
                     />
                   </TableCell>
-                  {userTableColumnNames.map((column) => (
+                  {userTableColumns.map((column) => (
                     <TableCell key={column.id}>
-                      <SortableTableHeaderLabel<UserTableColumns>
+                      <SortableTableHeaderLabel<UserTableColumnNames>
                         columnId={column.id}
                         label={column.label}
                         orderBy={columnSortOrderBy}
