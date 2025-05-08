@@ -3,7 +3,6 @@ import FirstPageIcon from "@mui/icons-material/FirstPage";
 import KeyboardArrowLeft from "@mui/icons-material/KeyboardArrowLeft";
 import KeyboardArrowRight from "@mui/icons-material/KeyboardArrowRight";
 import LastPageIcon from "@mui/icons-material/LastPage";
-import { mergeSx } from "merge-sx";
 import {
   alpha,
   Box,
@@ -32,6 +31,7 @@ import {
   Typography,
 } from "@mui/material";
 import { visuallyHidden } from "@mui/utils";
+import { mergeSx } from "merge-sx";
 import { FC, MouseEvent, ReactNode, useState } from "react";
 
 export type RowId = string | number;

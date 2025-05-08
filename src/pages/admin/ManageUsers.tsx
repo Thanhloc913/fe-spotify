@@ -1,11 +1,14 @@
+import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import { Avatar, Stack, TextField } from "@mui/material";
+import { Avatar, Button, Stack, TextField } from "@mui/material";
 import { FC, useMemo, useState } from "react";
+import AddUserModal from "../../components/admin/AddUserModal";
 import EditUserModal from "../../components/admin/EditUserModal";
 import GenericTableActionEdit, {
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";
+import { PreviewModal } from "../../components/admin/PreviewModal";
 import { mockData } from "../../mock/data";
 import { User } from "../../types";
 
@@ -113,6 +116,10 @@ const ManageUsers = () => {
   const [columnSortOrderBy, setColumnSortOrderBy] =
     useState<keyof UserTableColumnNames>("name");
 
+  const [openPreviewModal, setOpenPreviewModal] = useState(false);
+  const [submittedData, setSubmittedData] = useState<object | null>(null);
+  const [openAddModal, setOpenAddModal] = useState(false);
+
   const filteredUsers = useMemo(() => {
     return mockData.users.filter((user) =>
       Object.keys(user).some((key) =>
@@ -214,49 +221,74 @@ const ManageUsers = () => {
   );
 
   return (
-    <Stack className="h-full">
-      <div
-        className="flex-none"
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "10px",
-          marginBottom: "1rem",
-        }}
-      >
-        <SearchIcon />
-        <TextField
-          label="Search"
-          variant="outlined"
-          fullWidth
-          onChange={(e) => setSearch(e.target.value)}
+    <>
+      <Stack className="h-full">
+        <Stack
+          direction="row"
+          spacing={2}
+          alignItems="center"
+          sx={{ marginBottom: "1rem" }}
+        >
+          <SearchIcon />
+          <TextField
+            label="Search"
+            variant="outlined"
+            fullWidth
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          <Button variant="contained" onClick={() => setOpenAddModal(true)}>
+            <AddIcon />
+          </Button>
+        </Stack>
+        <UserTableActionEdit
+          data={displayingUsers}
+          selectedIds={selectedItems}
+          onSelect={handleClick}
+          onSelectAll={handleSelectAllClick}
+          onEdit={handleEditUser}
+          onDelete={handleDeleteUsers}
+          onRequestSort={handleRequestSort}
+          onRequestPageChange={handleChangePage}
+          onRequestRowsPerPageChange={handleChangeRowsPerPage}
+          order={columnSortOrder}
+          orderBy={columnSortOrderBy}
+          page={page}
+          rowsPerPage={rowsPerPage}
+          totalCount={sortedUsers.length}
         />
-      </div>
-      <UserTableActionEdit
-        data={displayingUsers}
-        selectedIds={selectedItems}
-        onSelect={handleClick}
-        onSelectAll={handleSelectAllClick}
-        onEdit={handleEditUser}
-        onDelete={handleDeleteUsers}
-        onRequestSort={handleRequestSort}
-        onRequestPageChange={handleChangePage}
-        onRequestRowsPerPageChange={handleChangeRowsPerPage}
-        order={columnSortOrder}
-        orderBy={columnSortOrderBy}
-        page={page}
-        rowsPerPage={rowsPerPage}
-        totalCount={sortedUsers.length}
-      />
-      {editingUser && (
-        <EditUserModal
-          open={openEditModal}
-          onClose={() => setOpenEditModal(false)}
-          user={editingUser}
-          profile={editingProfile || null}
+        {editingUser && (
+          <EditUserModal
+            open={openEditModal}
+            onClose={() => setOpenEditModal(false)}
+            onSubmitUser={(data, user) => {
+              setSubmittedData({ ...data, ...user });
+              setOpenPreviewModal(true);
+            }}
+            onSubmitProfile={(data, profile) => {
+              setSubmittedData({ ...data, ...profile });
+              setOpenPreviewModal(true);
+            }}
+            user={editingUser}
+            profile={editingProfile || null}
+          />
+        )}
+      </Stack>
+      {openAddModal && (
+        <AddUserModal
+          open={openAddModal}
+          onClose={() => setOpenAddModal(false)}
+          onSubmit={(data) => {
+            setSubmittedData(data);
+            setOpenPreviewModal(true);
+          }}
         />
       )}
-    </Stack>
+      <PreviewModal
+        open={openPreviewModal}
+        onClose={() => setOpenPreviewModal(false)}
+        data={submittedData}
+      />
+    </>
   );
 };
 
