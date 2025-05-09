@@ -12,6 +12,16 @@ export interface User {
   createdAt: string;
 }
 
+export interface Profile {
+  id: string;
+  accountID: string;
+  fullName?: string;
+  avatarUrl?: string;
+  bio?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
+}
+
 // Artist type definition
 export interface Artist {
   id: string;
@@ -43,7 +53,7 @@ export interface Album {
   coverUrl: string;
   releaseDate: string;
   tracks: string[];
-  type: 'album' | 'single' | 'EP';
+  type: "album" | "single" | "EP";
   totalTracks: number;
   durationMs: number;
 }
@@ -104,7 +114,7 @@ export interface PlayerState {
   queue: Track[];
   isPlaying: boolean;
   volume: number;
-  repeat: 'off' | 'track' | 'context';
+  repeat: "off" | "track" | "context";
   shuffle: boolean;
   progress: number;
 }
