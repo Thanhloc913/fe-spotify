@@ -76,6 +76,18 @@ export interface Track {
   videoUrl?: string;
 }
 
+export interface Genre {
+  id: string; // UUID
+  name: string;
+  description: string;
+}
+
+export interface Role {
+  id: string; // UUID
+  name: string;
+  description: string;
+}
+
 // Playlist type definition
 export interface Playlist {
   id: string;

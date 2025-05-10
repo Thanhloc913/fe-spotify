@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { Profile, User } from "../../types";
+import { Genre, Profile, Role, User } from "../../types";
 
 const generateProfile = (): Profile => ({
   id: faker.string.uuid(),
@@ -31,3 +31,66 @@ const generateUser = (): User => ({
 export const getUser = generateUser;
 export const getUsers = (count: number = 10): User[] =>
   Array.from({ length: count }, generateUser);
+
+// Custom genre names (since faker doesn't have music genre-specific data)
+const MUSIC_GENRES = [
+  "Rock",
+  "Pop",
+  "Hip Hop",
+  "Jazz",
+  "Classical",
+  "Electronic",
+  "R&B",
+  "Country",
+  "Metal",
+  "Folk",
+  "Reggae",
+  "Punk",
+  "Blues",
+  "Soul",
+  "Funk",
+  "Disco",
+  "House",
+  "Techno",
+  "Indie",
+  "Alternative",
+  "Gospel",
+  "K-Pop",
+  "J-Pop",
+  "Latin",
+];
+
+// Generate a single Genre
+const generateGenre = (): Genre => ({
+  id: faker.string.uuid(),
+  name: faker.helpers.arrayElement(MUSIC_GENRES),
+  description: faker.lorem.sentence(),
+});
+
+export const getGenre = generateGenre;
+export const getGenres = (count: number = 10): Genre[] =>
+  Array.from({ length: count }, generateGenre);
+
+// Custom role codes (single word)
+const ROLE_CODES = [
+  "admin",
+  "artist",
+  "listener",
+  "moderator",
+  "producer",
+  "editor",
+  "curator",
+  "analyst",
+  "supporter",
+  "vip",
+];
+
+// Generate a single Role
+const generateRole = (): Role => ({
+  id: faker.string.uuid(),
+  name: faker.helpers.arrayElement(ROLE_CODES),
+  description: faker.lorem.sentence(),
+});
+export const getRole = generateRole;
+export const getRoles = (count: number = 10): Role[] =>
+  Array.from({ length: count }, generateRole);

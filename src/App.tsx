@@ -85,6 +85,8 @@ function App() {
               <Route path="tracks" element={<div>(Coming Soon)</div>} />
               <Route path="playlists" element={<div>(Coming Soon)</div>} />
               <Route path="categories" element={<div>(Coming Soon)</div>} />
+              <Route path="genres" element={<div>(Coming Soon)</div>} />
+              <Route path="roles" element={<div>(Coming Soon)</div>} />
             </Route>
           </Routes>
         </Router>

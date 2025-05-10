@@ -1,4 +1,4 @@
-import { Artist, Album, Track, User, Profile } from "../types";
+import { Artist, Album, Track, User, Profile, Genre, Role } from "../types";
 
 export const mockArtists: Artist[] = [
   {
@@ -941,6 +941,63 @@ export const mockProfiles: Profile[] = [
   },
 ];
 
+const mockGenres: Genre[] = [
+  {
+    id: "9bd7d5e7-b00b-4e0b-8a2c-db03a1159908",
+    name: "Pop",
+    description: "Popular music with catchy melodies and rhythms.",
+  },
+  {
+    id: "9114d77e-1283-4017-bf15-a7797ce7cb98",
+    name: "Hip Hop",
+    description: "Music characterized by rhythmic speech and beats.",
+  },
+  {
+    id: "c7335350-489f-4151-9fc7-fed5172b6b45",
+    name: "Jazz",
+    description: "Music known for improvisation and complex harmonies.",
+  },
+  {
+    id: "021db75c-3189-4191-8a0f-08a06ad94111",
+    name: "Classical",
+    description: "Traditional music rooted in Western liturgical traditions.",
+  },
+  {
+    id: "1eaddde1-f00e-4276-8f80-72947dcf3cd7",
+    name: "Electronic Dance",
+    description:
+      "Upbeat music produced primarily for dance-based environments.",
+  },
+];
+
+const mockRoles: Role[] = [
+  {
+    id: "a87f3402-6ebc-42ea-a8b3-cfb3ac3525e4",
+    name: "admin",
+    description: "Administrator with full access rights.",
+  },
+  {
+    id: "27850b91-2ff7-4a40-9cb5-6f7a628a22f8",
+    name: "editor",
+    description: "User who can edit content.",
+  },
+  {
+    id: "0d41140e-8dc6-4d41-aace-7a84f49fd519",
+    name: "viewer",
+    description: "User with read-only access.",
+  },
+  {
+    id: "2aeca112-9aee-45cf-853f-3d5349d4da6b",
+    name: "moderator",
+    description: "User who can manage user-generated content.",
+  },
+  {
+    id: "eabfefb8-afca-4290-9ac2-cf76b1c5f8db",
+    name: "guest",
+    description: "Temporary user with limited access.",
+  },
+];
+
 export const mockData = {
   artists: mockArtists,
   albums: mockAlbums,
@@ -949,4 +1006,6 @@ export const mockData = {
   categories: [],
   users: mockUsers,
   profiles: mockProfiles,
+  genres: mockGenres,
+  roles: mockRoles,
 };
