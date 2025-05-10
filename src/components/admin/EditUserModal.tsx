@@ -18,7 +18,7 @@ import TextFieldArray from "./TextFieldArray";
 import ModalSection from "./ModalSection";
 
 // editable form props
-interface UserFormProps {
+interface EditUserFormProps {
   name?: string;
   email?: string;
   playlists: string[];
@@ -29,7 +29,7 @@ interface UserFormProps {
 }
 
 // editable form props
-interface ProfileFormProps {
+interface EditProfileFormProps {
   fullName?: string;
   avatarUrl?: string;
   bio?: string;
@@ -40,8 +40,8 @@ interface ProfileFormProps {
 interface EditUserModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmitUser: (data: UserFormProps, user: User) => void;
-  onSubmitProfile: (data: ProfileFormProps, profile: Profile) => void;
+  onSubmitUser: (data: EditUserFormProps, user: User) => void;
+  onSubmitProfile: (data: EditProfileFormProps, profile: Profile) => void;
   user: User;
   profile: Profile | null;
 }
@@ -60,17 +60,22 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
-  const handleUserSubmit = (data: UserFormProps) => {
+  const handleUserSubmit = (data: EditUserFormProps) => {
     onSubmitUser(data, user);
   };
 
-  const handleProfileSubmit = (data: ProfileFormProps) => {
+  const handleProfileSubmit = (data: EditProfileFormProps) => {
     profile && onSubmitProfile(data, profile);
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit User {user.id}</DialogTitle>
+      <DialogTitle>Editing User {user.id}</DialogTitle>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+        <Button onClick={onClose} sx={{ mr: 1 }}>
+          Cancel
+        </Button>
+      </Box>
       <Tabs value={tabIndex} onChange={(_, newIndex) => setTabIndex(newIndex)}>
         <Tab label="User" />
         <Tab label="Profile" />
@@ -87,9 +92,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
 const UserForm: React.FC<{
   user: User;
-  onSubmit: (data: UserFormProps) => void;
+  onSubmit: (data: EditUserFormProps) => void;
 }> = ({ user, onSubmit }) => {
-  const { register, control, handleSubmit } = useForm<UserFormProps>({
+  const { register, control, handleSubmit } = useForm<EditUserFormProps>({
     defaultValues: {
       name: user.name,
       email: user.email,
@@ -102,14 +107,11 @@ const UserForm: React.FC<{
     <>
       <Typography variant="subtitle1">User Info</Typography>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-        >
-          Save User
-        </Button>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+          <Button type="submit" variant="contained" color="primary">
+            Save User
+          </Button>
+        </Box>
         <TextField
           label="ID"
           value={user.id}
@@ -165,10 +167,10 @@ const UserForm: React.FC<{
 
 const ProfileForm: React.FC<{
   profile: Profile | null;
-  onSubmit: (data: ProfileFormProps) => void;
+  onSubmit: (data: EditProfileFormProps) => void;
 }> = ({ profile, onSubmit }) => {
-  const { register, handleSubmit, watch, setValue } = useForm<ProfileFormProps>(
-    {
+  const { register, handleSubmit, watch, setValue } =
+    useForm<EditProfileFormProps>({
       defaultValues: {
         fullName: profile?.fullName,
         avatarUrl: profile?.avatarUrl,
@@ -176,22 +178,18 @@ const ProfileForm: React.FC<{
         dateOfBirth: profile?.dateOfBirth,
         phoneNumber: profile?.phoneNumber,
       },
-    }
-  );
+    });
 
   return (
     <>
       <Typography variant="subtitle1">Profile Info</Typography>
       {profile ? (
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-          >
-            Save Profile
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button type="submit" variant="contained" color="primary">
+              Save Profile
+            </Button>
+          </Box>
           <TextField
             label="Account ID"
             value={profile?.accountID}

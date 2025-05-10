@@ -23,6 +23,7 @@ import Search from "./pages/Search";
 import AdminLayout from "./components/AdminLayout";
 import ManageUsers from "./pages/admin/ManageUsers";
 import GlobalProvider from "./GlobalProvider";
+import ManageGenres from "./pages/admin/ManageGenres";
 
 document.body.classList.add("dark");
 
@@ -85,7 +86,7 @@ function App() {
               <Route path="tracks" element={<div>(Coming Soon)</div>} />
               <Route path="playlists" element={<div>(Coming Soon)</div>} />
               <Route path="categories" element={<div>(Coming Soon)</div>} />
-              <Route path="genres" element={<div>(Coming Soon)</div>} />
+              <Route path="genres" element={<ManageGenres />} />
               <Route path="roles" element={<div>(Coming Soon)</div>} />
             </Route>
           </Routes>

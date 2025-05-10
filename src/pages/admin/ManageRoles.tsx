@@ -7,6 +7,7 @@ import EditUserModal from "../../components/admin/EditUserModal";
 import GenericTableActionEdit, {
   RowId,
   SortOrder,
+  TableColumnDefinitions,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
 import { mockData } from "../../mock/data";
@@ -17,15 +18,8 @@ type UserTableColumnNames = Pick<
   "id" | "name" | "email" | "createdAt" | "profileImageUrl"
 >;
 
-type UserTableColumnDefinition = {
-  id: keyof UserTableColumnNames;
-  label: string;
-  sortable: boolean;
-  render?: (value: User) => React.ReactNode;
-};
-
 // Define which columns to show and how to render them
-const userTableColumnDefinitions: UserTableColumnDefinition[] = [
+const userTableColumnDefinitions: TableColumnDefinitions<UserTableColumnNames>[] = [
   { id: "id", label: "ID", sortable: true },
   { id: "name", label: "Name", sortable: true },
   { id: "email", label: "Email", sortable: true },
@@ -80,7 +74,6 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
   return (
     <GenericTableActionEdit<User, "id">
       label="Users"
-      pluralEntityName="Users"
       data={data}
       columnDefinitions={userTableColumnDefinitions}
       idKey="id"

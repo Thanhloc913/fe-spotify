@@ -9,7 +9,7 @@ import {
 import { useForm } from "react-hook-form";
 
 // chi can nhap thong tin toi thieu, add xong mo modal edit cung dc
-interface UserFormProps {
+interface AddUserFormProps {
   name: string;
   email: string;
 }
@@ -17,7 +17,7 @@ interface UserFormProps {
 interface AddUserModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: UserFormProps) => void;
+  onSubmit: (data: AddUserFormProps) => void;
 }
 
 const AddUserModal: React.FC<AddUserModalProps> = ({
@@ -25,7 +25,7 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit } = useForm<UserFormProps>({
+  const { register, handleSubmit } = useForm<AddUserFormProps>({
     defaultValues: {
       name: "",
       email: "",
@@ -38,14 +38,14 @@ const AddUserModal: React.FC<AddUserModalProps> = ({
       <Box p={2}>
         <Typography variant="subtitle1">Enter User Details</Typography>
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-          >
-            Add User
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button onClick={onClose} sx={{ mr: 1 }}>
+              Cancel
+            </Button>
+            <Button type="submit" variant="contained" color="primary">
+              Add User
+            </Button>
+          </Box>
           <TextField
             label="Name"
             {...register("name")}
