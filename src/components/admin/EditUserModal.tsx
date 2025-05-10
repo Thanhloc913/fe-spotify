@@ -3,7 +3,6 @@ import {
   Button,
   Dialog,
   DialogTitle,
-  Paper,
   Tab,
   Tabs,
   TextField,
@@ -16,6 +15,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Profile, User } from "./../../types";
 import TextFieldArray from "./TextFieldArray";
+import ModalSection from "./ModalSection";
 
 // editable form props
 interface UserFormProps {
@@ -135,18 +135,16 @@ const UserForm: React.FC<{
           margin="dense"
         />
         {/* Playlists Section */}
-        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-          <Typography variant="subtitle1">Playlists</Typography>
+        <ModalSection title="Playlists">
           <TextFieldArray
             name="playlists"
             register={register}
             control={control}
             label="Playlist"
           />
-        </Paper>
+        </ModalSection>
         {/* Following Section - Editable */}
-        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-          <Typography variant="subtitle1">Following</Typography>
+        <ModalSection title="Following">
           <TextFieldArray
             name="following.artists"
             register={register}
@@ -159,7 +157,7 @@ const UserForm: React.FC<{
             control={control}
             label="Users Followed"
           />
-        </Paper>
+        </ModalSection>
       </form>
     </>
   );
