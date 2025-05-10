@@ -24,7 +24,7 @@ api.interceptors.request.use(
 // Lấy CSRF token
 const getCsrfToken = async (): Promise<string> => {
   try {
-    const { data } = await api.get("/csrf");
+    const { data } = await api.get("/auth/csrf");
     const csrfToken = data?.data?.token;
     if (!csrfToken) throw new Error("Không có token trong phản hồi");
     return csrfToken;
@@ -48,7 +48,7 @@ export const login = async (
     const csrfToken = await getCsrfToken();
 
     const response = await api.post(
-      "/login",
+      "/auth/login",
       payload,
       {
         headers: {
@@ -98,7 +98,7 @@ export const register = async (registerData: {
           ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8WOsLxlKgTXh7gry1qONjjpnozv1IwdHf165tgttVd5FiaWx4G8yOo4LCWt9uPt6y0EWxE89oyHdEPbgre41s8Q"
           : registerData.avatarUrl,
     };
-    const response = await api.post("/register", dataToSend, {
+    const response = await api.post("/auth/register", dataToSend, {
       headers: {
         "X-CSRFToken": csrfToken,
       },
@@ -135,7 +135,7 @@ export const verifyCurrentPassword = async (email: string, currentPassword: stri
   try {
     const csrfToken = await getCsrfToken();
     const response = await api.post(
-      '/login',
+      '/auth/login',
       { email, password: currentPassword },
       {
         headers: {
