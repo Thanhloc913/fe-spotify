@@ -5,22 +5,26 @@
   // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
   "image": "mcr.microsoft.com/devcontainers/typescript-node:1-22-bookworm",
   "features": {
-    "ghcr.io/devcontainers/features/git:1": {
-      "ppa": true,
-      "version": "latest"
-    },
+    // "ghcr.io/devcontainers/features/git:1": {
+    //   "ppa": true,
+    //   "version": "latest"
+    // },
+    "ghcr.io/devcontainers-extra/features/corepack:1": { "version": "latest" },
     "ghcr.io/devcontainers/features/github-cli:1": {
       "installDirectlyFromGitHubRelease": true,
       "version": "latest"
     },
     "ghcr.io/devcontainers/features/node:1": {
       "nodeGypDependencies": true,
-      "installYarnUsingApt": true,
+      "installYarnUsingApt": false,
       "version": "lts",
       "pnpmVersion": "latest",
       "nvmVersion": "latest"
     },
     "ghcr.io/r3dpoint/devcontainer-features/tailwindcss-standalone-cli:1": {
+      "version": "latest"
+    },
+    "ghcr.io/devcontainers-extra/features/typescript:2": {
       "version": "latest"
     },
     "ghcr.io/devcontainers-community/npm-features/typescript:1": {
@@ -29,16 +33,26 @@
     "ghcr.io/devcontainers-extra/features/ts-node:1": {
       "version": "latest"
     }
-  }
+  },
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
 
   // Use 'forwardPorts' to make a list of ports inside the container available locally.
-  // "forwardPorts": [],
+  "forwardPorts": [4000, 5173],
 
   // Use 'postCreateCommand' to run commands after the container is created.
-  // "postCreateCommand": "yarn install",
+  "postCreateCommand": "export COREPACK_ENABLE_DOWNLOAD_PROMPT=0 && corepack enable && yarn set version berry && yarn install && yarn cache clean && git config --global core.autocrlf true",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "antfu.vite",
+        "dbaeumer.vscode-eslint",
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
 
   // Configure tool-specific properties.
   // "customizations": {},
