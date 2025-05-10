@@ -245,7 +245,7 @@ const ManageGenres = () => {
             open={openEditModal}
             onClose={() => setOpenEditModal(false)}
             onSubmit={(data, genre) => {
-              setSubmittedData({ ...data, ...genre });
+              setSubmittedData({ ...genre, ...data });
               setOpenPreviewModal(true);
             }}
             genre={editingGenre}

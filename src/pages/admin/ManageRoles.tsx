@@ -240,7 +240,7 @@ const ManageRoles = () => {
             open={openEditModal}
             onClose={() => setOpenEditModal(false)}
             onSubmit={(data, role) => {
-              setSubmittedData({ ...data, ...role });
+              setSubmittedData({ ...role, ...data });
               setOpenPreviewModal(true);
             }}
             role={editingRole}

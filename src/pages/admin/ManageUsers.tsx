@@ -262,11 +262,11 @@ const ManageUsers = () => {
             open={openEditModal}
             onClose={() => setOpenEditModal(false)}
             onSubmitUser={(data, user) => {
-              setSubmittedData({ ...data, ...user });
+              setSubmittedData({ ...user, ...data });
               setOpenPreviewModal(true);
             }}
             onSubmitProfile={(data, profile) => {
-              setSubmittedData({ ...data, ...profile });
+              setSubmittedData({ ...profile, ...data });
               setOpenPreviewModal(true);
             }}
             user={editingUser}

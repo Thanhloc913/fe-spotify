@@ -34,14 +34,14 @@ export interface Artist {
   singles: string[];
   topTracks: string[];
   related: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string | null;
-  isActive?: boolean;
-  accountID?: string;
-  fullName?: string;
-  dateOfBirth?: string;
-  phoneNumber?: string;
+  createdAt: string | null;
+  updatedAt: string | null;
+  deletedAt: string | null;
+  isActive: boolean;
+  accountID: string | null;
+  fullName: string | null;
+  dateOfBirth: string | null;
+  phoneNumber: string | null;
 }
 
 // Album type definition
