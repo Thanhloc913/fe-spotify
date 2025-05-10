@@ -30,7 +30,7 @@ const genreTableColumnDefinitions: GenreTableColumnDefinition[] = [
 
 interface GenreTableActionEditProps {
   data: Genre[]; // Only the current page rows
-  selectedIds: RowId[]; // Selection now handled externally
+  selectedIds: RowId[];
   onSelect: (id: RowId, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
   onEdit: (id: RowId) => void;
@@ -180,8 +180,6 @@ const ManageGenres = () => {
     });
   };
 
-  // const isItemSelected = (id: RowId) => selectedItems.indexOf(id) !== -1;
-
   const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
@@ -198,7 +196,7 @@ const ManageGenres = () => {
 
   const handleDeleteGenres = (selectedIds: RowId[]) => {
     console.log("Deleting genres with IDs:", selectedIds);
-    setSelectedItems([]); // Clear selection after deletion
+    setSelectedItems([]); // Clear selection after deletion for now
   };
 
   const editingGenre = useMemo(

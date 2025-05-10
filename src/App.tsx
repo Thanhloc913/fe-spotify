@@ -24,6 +24,7 @@ import AdminLayout from "./components/AdminLayout";
 import ManageUsers from "./pages/admin/ManageUsers";
 import GlobalProvider from "./GlobalProvider";
 import ManageGenres from "./pages/admin/ManageGenres";
+import ManageRoles from "./pages/admin/ManageRoles";
 
 document.body.classList.add("dark");
 
@@ -79,7 +80,7 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/admin/users" replace />} />
+              <Route index element={<Navigate to="users" replace />} />
               <Route path="users" element={<ManageUsers />} />
               <Route path="artists" element={<div>(Coming Soon)</div>} />
               <Route path="albums" element={<div>(Coming Soon)</div>} />
@@ -87,7 +88,7 @@ function App() {
               <Route path="playlists" element={<div>(Coming Soon)</div>} />
               <Route path="categories" element={<div>(Coming Soon)</div>} />
               <Route path="genres" element={<ManageGenres />} />
-              <Route path="roles" element={<div>(Coming Soon)</div>} />
+              <Route path="roles" element={<ManageRoles />} />
             </Route>
           </Routes>
         </Router>
