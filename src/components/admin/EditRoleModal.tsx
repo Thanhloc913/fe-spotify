@@ -22,6 +22,10 @@ export const EditRoleModal: React.FC<EditRoleModalProps> = ({
 }) => {
   const { register, handleSubmit } = useForm<EditRoleFormProps>({
     defaultValues: {
+      name: "",
+      description: "",
+    },
+    values: {
       name: role.name,
       description: role.description,
     },

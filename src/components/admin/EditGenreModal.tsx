@@ -22,6 +22,10 @@ export const EditGenreModal: React.FC<EditGenreModalProps> = ({
 }) => {
   const { register, handleSubmit } = useForm<EditGenreFormProps>({
     defaultValues: {
+      name: "",
+      description: "",
+    },
+    values: {
       name: genre.name,
       description: genre.description,
     },

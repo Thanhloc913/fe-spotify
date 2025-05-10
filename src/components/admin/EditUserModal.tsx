@@ -96,6 +96,15 @@ const UserForm: React.FC<{
 }> = ({ user, onSubmit }) => {
   const { register, control, handleSubmit } = useForm<EditUserFormProps>({
     defaultValues: {
+      name: "",
+      email: "",
+      playlists: [],
+      following: {
+        artists: [],
+        users: [],
+      },
+    },
+    values: {
       name: user.name,
       email: user.email,
       playlists: user.playlists,
@@ -172,6 +181,13 @@ const ProfileForm: React.FC<{
   const { register, handleSubmit, watch, setValue } =
     useForm<EditProfileFormProps>({
       defaultValues: {
+        fullName: "",
+        avatarUrl: "",
+        bio: "",
+        dateOfBirth: "",
+        phoneNumber: "",
+      },
+      values: {
         fullName: profile?.fullName,
         avatarUrl: profile?.avatarUrl,
         bio: profile?.bio,
