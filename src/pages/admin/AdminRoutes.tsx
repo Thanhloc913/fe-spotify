@@ -4,6 +4,7 @@ import ManageRoles from "./ManageRoles";
 import ManageUsers from "./ManageUsers";
 import ManageArtists from "./ManageArtists";
 import ManageAlbums from "./ManageAlbums";
+import ManageTracks from "./ManageTracks";
 
 export const AdminRoutes = (
   <>
@@ -11,7 +12,7 @@ export const AdminRoutes = (
     <Route path="users" element={<ManageUsers />} />
     <Route path="artists" element={<ManageArtists />} />
     <Route path="albums" element={<ManageAlbums />} />
-    <Route path="tracks" element={<div>(Coming Soon)</div>} />
+    <Route path="tracks" element={<ManageTracks />} />
     <Route path="playlists" element={<div>(Coming Soon)</div>} />
     <Route path="categories" element={<div>(Coming Soon)</div>} />
     <Route path="genres" element={<ManageGenres />} />
