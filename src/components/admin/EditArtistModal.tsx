@@ -12,7 +12,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { DateTimePicker } from "@mui/x-date-pickers/DateTimePicker";
 import dayjs from "dayjs";
 import { MuiTelInput } from "mui-tel-input";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Artist } from "../../types";
 import ModalSection from "./ModalSection";
 import TextFieldArray from "./TextFieldArray";
@@ -31,9 +31,6 @@ interface EditArtistFormProps {
   dateOfBirth: string | null;
   phoneNumber: string | null;
   isActive: boolean;
-  createdAt: string | null;
-  updatedAt: string | null;
-  deletedAt: string | null;
 }
 
 interface EditArtistModalProps {
@@ -65,9 +62,6 @@ export const EditArtistModal: React.FC<EditArtistModalProps> = ({
         dateOfBirth: "",
         phoneNumber: "",
         isActive: false,
-        createdAt: "",
-        updatedAt: "",
-        deletedAt: "",
       },
       values: {
         name: artist.name,
@@ -83,9 +77,6 @@ export const EditArtistModal: React.FC<EditArtistModalProps> = ({
         dateOfBirth: artist.dateOfBirth,
         phoneNumber: artist.phoneNumber,
         isActive: artist.isActive ?? false,
-        createdAt: artist.createdAt,
-        updatedAt: artist.updatedAt,
-        deletedAt: artist.deletedAt,
       },
     });
 
@@ -228,8 +219,19 @@ export const EditArtistModal: React.FC<EditArtistModalProps> = ({
         <ModalSection title="Status">
           <FormGroup>
             <FormControlLabel
-              control={<Checkbox {...register("isActive")} />}
               label="Is active"
+              control={
+                <Controller
+                  name="isActive"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+              }
             />
           </FormGroup>
         </ModalSection>

@@ -9,7 +9,7 @@ import {
   FormControlLabel,
   Checkbox,
 } from "@mui/material";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { Track } from "../../types";
 import ModalSection from "./ModalSection";
 
@@ -42,7 +42,7 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
   onSubmit,
   track,
 }) => {
-  const { register, handleSubmit } = useForm<EditTrackFormProps>({
+  const { register, handleSubmit, control } = useForm<EditTrackFormProps>({
     defaultValues: {
       title: "",
       artistId: "",
@@ -203,15 +203,36 @@ export const EditTrackModal: React.FC<EditTrackModalProps> = ({
 
           <FormGroup>
             <FormControlLabel
-              control={<Checkbox {...register("explicit")} />}
               label="Explicit"
+              control={
+                <Controller
+                  name="explicit"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+              }
             />
           </FormGroup>
-
           <FormGroup>
             <FormControlLabel
-              control={<Checkbox {...register("isPlayable")} />}
               label="Is Playable"
+              control={
+                <Controller
+                  name="isPlayable"
+                  control={control}
+                  render={({ field }) => (
+                    <Checkbox
+                      checked={field.value}
+                      onChange={(e) => field.onChange(e.target.checked)}
+                    />
+                  )}
+                />
+              }
             />
           </FormGroup>
         </ModalSection>
