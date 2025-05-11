@@ -17,7 +17,7 @@ export const AddGenreModal: React.FC<AddGenreModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit, reset } = useForm<AddGenreFormProps>({
+  const { register, handleSubmit } = useForm<AddGenreFormProps>({
     defaultValues: {
       name: "",
       description: "",
@@ -26,7 +26,7 @@ export const AddGenreModal: React.FC<AddGenreModalProps> = ({
 
   const handleFormSubmit = (data: AddGenreFormProps) => {
     onSubmit(data);
-    reset(); // Reset form after submission
+    ; // Reset form after submission
   };
 
   return (

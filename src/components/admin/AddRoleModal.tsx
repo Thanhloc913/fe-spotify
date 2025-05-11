@@ -17,7 +17,7 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit, reset } = useForm<AddRoleFormProps>({
+  const { register, handleSubmit } = useForm<AddRoleFormProps>({
     defaultValues: {
       name: "",
       description: "",
@@ -25,8 +25,7 @@ export const AddRoleModal: React.FC<AddRoleModalProps> = ({
   });
 
   const handleFormSubmit = (data: AddRoleFormProps) => {
-    onSubmit(data);
-    reset(); // Reset form after submission
+    onSubmit(data); // Reset form after submission
   };
 
   return (

@@ -17,7 +17,7 @@ export const AddArtistModal: React.FC<AddArtistModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit, reset } = useForm<AddArtistFormProps>({
+  const { register, handleSubmit } = useForm<AddArtistFormProps>({
     defaultValues: {
       name: "",
       accountID: "",
@@ -26,7 +26,6 @@ export const AddArtistModal: React.FC<AddArtistModalProps> = ({
 
   const handleFormSubmit = (data: AddArtistFormProps) => {
     onSubmit(data);
-    reset();
   };
 
   return (
