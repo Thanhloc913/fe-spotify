@@ -21,8 +21,8 @@ import LikedSongs from "./pages/LikedSongs";
 import { UserProvider } from "./contexts/UserContext";
 import Search from "./pages/Search";
 import AdminLayout from "./components/AdminLayout";
-import ManageUsers from "./pages/admin/ManageUsers";
 import GlobalProvider from "./GlobalProvider";
+import { AdminRoutes } from "./pages/admin/AdminRoutes";
 
 document.body.classList.add("dark");
 
@@ -78,13 +78,7 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<Navigate to="/admin/users" replace />} />
-              <Route path="users" element={<ManageUsers />} />
-              <Route path="artists" element={<div>(Coming Soon)</div>} />
-              <Route path="albums" element={<div>(Coming Soon)</div>} />
-              <Route path="tracks" element={<div>(Coming Soon)</div>} />
-              <Route path="playlists" element={<div>(Coming Soon)</div>} />
-              <Route path="categories" element={<div>(Coming Soon)</div>} />
+              {AdminRoutes}
             </Route>
           </Routes>
         </Router>

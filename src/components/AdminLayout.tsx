@@ -7,6 +7,8 @@ import {
   MdQueueMusic,
   MdPlaylistPlay,
   MdCategory,
+  MdMusicNote,
+  MdSecurity,
 } from "react-icons/md";
 import { useState } from "react";
 
@@ -16,6 +18,8 @@ const links = [
   { path: "albums", label: "Albums", icon: <MdAlbum /> },
   { path: "tracks", label: "Tracks", icon: <MdQueueMusic /> },
   { path: "playlists", label: "Playlists", icon: <MdPlaylistPlay /> },
+  { path: "genres", label: "Genres", icon: <MdMusicNote /> },
+  { path: "roles", label: "Roles", icon: <MdSecurity /> },
   ...Array.from({ length: 20 }, (_, index) => ({
     path: `playlists`,
     label: `Test Overflow ${index + 1}`,

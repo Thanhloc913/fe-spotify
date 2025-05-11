@@ -113,13 +113,21 @@ function TablePaginationActions(props: TablePaginationActionsProps) {
 
 interface EnhancedTableToolbarProps extends ToolbarProps {
   label: string;
+  pluralEntityName: string;
   numSelected: number;
   onDelete: (selectedIds: RowId[]) => void;
   selectedIds: RowId[];
 }
 
 const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
-  const { label, numSelected, onDelete, selectedIds, ...rest } = props;
+  const {
+    label,
+    pluralEntityName,
+    numSelected,
+    onDelete,
+    selectedIds,
+    ...rest
+  } = props;
   const [open, setOpen] = useState(false);
 
   const handleDelete = () => {
@@ -178,10 +186,10 @@ const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
       >
-        <DialogTitle id="alert-dialog-title">{"Delete Users"}</DialogTitle>
+        <DialogTitle id="alert-dialog-title">{`Delete ${pluralEntityName}`}</DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
-            Are you sure you want to delete the selected users (ID:{" "}
+            Are you sure you want to delete the selected {pluralEntityName} (ID:{" "}
             {selectedIds.join(", ")})? This action cannot be undone.
           </DialogContentText>
         </DialogContent>
@@ -330,6 +338,7 @@ export interface GenericTableActionEditProps<
   K extends keyof T
 > {
   label: string;
+  pluralEntityName: string;
   rowsPerPageOptions?: number[];
   data: T[]; // Only the current page rows
   columnDefinitions: TableColumnDefinitions<T>;
@@ -354,6 +363,7 @@ export const GenericTableActionEdit = <
   K extends keyof T
 >({
   label,
+  pluralEntityName,
   rowsPerPageOptions = [5, 10, 25],
   data,
   columnDefinitions,
@@ -377,7 +387,8 @@ export const GenericTableActionEdit = <
       <Stack className="h-full">
         <EnhancedTableToolbar
           className="flex-none"
-          label="Users"
+          label={label}
+          pluralEntityName={pluralEntityName}
           numSelected={selectedIds.length}
           onDelete={onDelete}
           selectedIds={selectedIds}
