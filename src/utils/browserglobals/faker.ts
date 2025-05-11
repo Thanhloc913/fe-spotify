@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { Genre, Playlist, Profile, Role, User } from "../../types";
+import { Category, Genre, Playlist, Profile, Role, User } from "../../types";
 
 const generateProfile = (): Profile => ({
   id: faker.string.uuid(),
@@ -116,3 +116,14 @@ const generatePlaylist = (): Playlist => {
 export const getPlaylist = generatePlaylist;
 export const getPlaylists = (count: number = 10): Playlist[] =>
   Array.from({ length: count }, generatePlaylist);
+
+const generateCategory = (): Category => ({
+  id: faker.string.uuid(),
+  name: faker.commerce.department(),
+  imageUrl: faker.image.urlLoremFlickr({ category: "abstract" }),
+  description: faker.lorem.sentence(),
+});
+
+export const getCategory = generateCategory;
+export const getCategories = (count: number = 10): Category[] =>
+  Array.from({ length: count }, generateCategory);

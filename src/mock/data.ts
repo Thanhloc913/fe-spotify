@@ -1461,12 +1461,60 @@ const mockPlaylists = [
   },
 ];
 
+const mockCategories = [
+  {
+    id: "ee526f0d-9a1d-4cf0-a82a-912d97e1dc9e",
+    name: "Movies",
+    imageUrl:
+      "https://loremflickr.com/3747/2194/abstract?lock=2212466244918108",
+    description: "Cibus spes victus speciosus fugit uter fugiat annus aestas.",
+  },
+  {
+    id: "7a37d3be-a3a1-4b53-acdb-5cf629706a42",
+    name: "Garden",
+    imageUrl: "https://loremflickr.com/3384/931/abstract?lock=5625628209150176",
+    description: "Voluptate valde cinis vigilo.",
+  },
+  {
+    id: "c88c2ed4-04c2-4bda-a008-1ceb13b1464d",
+    name: "Games",
+    imageUrl:
+      "https://loremflickr.com/2588/2891/abstract?lock=1863228038045535",
+    description: "Sequi vapulus clementia.",
+  },
+  {
+    id: "08f30f22-8290-4ca4-b1f7-5d51712777d7",
+    name: "Beauty",
+    imageUrl: "https://loremflickr.com/190/2017/abstract?lock=7425025832714234",
+    description:
+      "Iusto artificiose audeo volubilis tollo similique sufficio turbo sumo stipes.",
+  },
+  {
+    id: "32c742b2-859b-4013-bacc-7aef488a2f55",
+    name: "Health",
+    imageUrl: "https://loremflickr.com/550/2827/abstract?lock=5821454647147449",
+    description: "Admitto curvo callide volubilis delectatio desidero.",
+  },
+  {
+    id: "83157402-00ba-4ca8-b5b6-091956d9bc8b",
+    name: "Electronics",
+    imageUrl: "https://loremflickr.com/2389/946/abstract?lock=6744113707674397",
+    description: "Comminor calco veritatis.",
+  },
+  {
+    id: "d8027854-e255-40da-892c-fa7248377c0b",
+    name: "Toys",
+    imageUrl: "https://loremflickr.com/995/324/abstract?lock=285991397015094",
+    description: "Recusandae voluptates teneo.",
+  },
+];
+
 export const mockData = {
   artists: mockArtists,
   albums: mockAlbums,
   tracks: mockTracks,
   playlists: mockPlaylists,
-  categories: [],
+  categories: mockCategories,
   users: mockUsers,
   profiles: mockProfiles,
   genres: mockGenres,
