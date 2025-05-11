@@ -19,12 +19,13 @@ const links = [
   { path: "tracks", label: "Tracks", icon: <MdQueueMusic /> },
   { path: "playlists", label: "Playlists", icon: <MdPlaylistPlay /> },
   { path: "genres", label: "Genres", icon: <MdMusicNote /> },
+  { path: "categories", label: "Categories", icon: <MdCategory /> },
   { path: "roles", label: "Roles", icon: <MdSecurity /> },
-  ...Array.from({ length: 20 }, (_, index) => ({
-    path: `playlists`,
-    label: `Test Overflow ${index + 1}`,
-    icon: <MdCategory />,
-  })), // Add 20 test links dynamically
+  // ...Array.from({ length: 20 }, (_, index) => ({
+  //   path: `playlists`,
+  //   label: `Test Overflow ${index + 1}`,
+  //   icon: <MdCategory />,
+  // })), // Add 20 test links dynamically
 ];
 
 const AdminLayout = () => {

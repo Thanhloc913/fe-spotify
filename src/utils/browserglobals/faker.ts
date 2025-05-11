@@ -1,5 +1,5 @@
 import { faker } from "@faker-js/faker";
-import { Genre, Profile, Role, User } from "../../types";
+import { Category, Genre, Playlist, Profile, Role, User } from "../../types";
 
 const generateProfile = (): Profile => ({
   id: faker.string.uuid(),
@@ -94,3 +94,36 @@ const generateRole = (): Role => ({
 export const getRole = generateRole;
 export const getRoles = (count: number = 10): Role[] =>
   Array.from({ length: count }, generateRole);
+
+const generatePlaylist = (): Playlist => {
+  const totalTracks = faker.number.int({ min: 5, max: 30 });
+  return {
+    id: faker.string.uuid(),
+    name: faker.music.songName(),
+    description: faker.lorem.sentence(),
+    coverUrl: faker.image.urlLoremFlickr({ category: "music" }),
+    ownerId: faker.string.uuid(),
+    ownerName: faker.person.fullName(),
+    isPublic: faker.datatype.boolean(),
+    isCollaborative: faker.datatype.boolean(),
+    tracks: Array.from({ length: totalTracks }, () => faker.string.uuid()),
+    totalTracks,
+    followers: faker.number.int({ min: 0, max: 10000 }),
+    createdAt: faker.date.past().toISOString(),
+  };
+};
+
+export const getPlaylist = generatePlaylist;
+export const getPlaylists = (count: number = 10): Playlist[] =>
+  Array.from({ length: count }, generatePlaylist);
+
+const generateCategory = (): Category => ({
+  id: faker.string.uuid(),
+  name: faker.commerce.department(),
+  imageUrl: faker.image.urlLoremFlickr({ category: "abstract" }),
+  description: faker.lorem.sentence(),
+});
+
+export const getCategory = generateCategory;
+export const getCategories = (count: number = 10): Category[] =>
+  Array.from({ length: count }, generateCategory);

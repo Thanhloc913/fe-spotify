@@ -7,6 +7,10 @@ import {
   getGenres,
   getRole,
   getRoles,
+  getPlaylist,
+  getPlaylists,
+  getCategory,
+  getCategories,
 } from "./faker";
 import { TokenManager, ITokenManager } from "./tokenManager";
 
@@ -24,6 +28,10 @@ declare global {
         getGenres: (count: number) => object[];
         getRole: () => object;
         getRoles: (count: number) => object[];
+        getPlaylist: () => object;
+        getPlaylists: (count: number) => object[];
+        getCategory: () => object;
+        getCategories: (count: number) => object[];
       };
     };
   }
@@ -54,6 +62,10 @@ declare global {
       getGenres,
       getRole,
       getRoles,
+      getPlaylist,
+      getPlaylists,
+      getCategory,
+      getCategories,
     };
   }
 })();

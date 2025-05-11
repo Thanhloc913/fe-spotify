@@ -73,7 +73,7 @@ export interface Track {
   popularity: number;
   trackNumber: number;
   isPlayable: boolean;
-  videoUrl?: string;
+  videoUrl: string | null;
 }
 
 export interface Genre {

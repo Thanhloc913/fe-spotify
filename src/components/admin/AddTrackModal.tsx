@@ -1,60 +1,51 @@
 import { Dialog, DialogTitle, TextField, Button, Box } from "@mui/material";
 import { useForm } from "react-hook-form";
 
-interface AddGenreFormProps {
-  name: string;
-  description: string;
+interface AddTrackFormProps {
+  title: string;
 }
 
-interface AddGenreModalProps {
+interface AddTrackModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: AddGenreFormProps) => void;
+  onSubmit: (data: AddTrackFormProps) => void;
 }
 
-export const AddGenreModal: React.FC<AddGenreModalProps> = ({
+export const AddTrackModal: React.FC<AddTrackModalProps> = ({
   open,
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit } = useForm<AddGenreFormProps>({
+  const { register, handleSubmit, reset } = useForm<AddTrackFormProps>({
     defaultValues: {
-      name: "",
-      description: "",
+      title: "",
     },
   });
 
-  const handleFormSubmit = (data: AddGenreFormProps) => {
+  const handleFormSubmit = (data: AddTrackFormProps) => {
     onSubmit(data);
-    ; // Reset form after submission
+    reset();
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add New Genre</DialogTitle>
+      <DialogTitle>Add New Track</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(handleFormSubmit)} p={2}>
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
           <Button onClick={onClose} sx={{ mr: 1 }}>
             Cancel
           </Button>
           <Button type="submit" variant="contained" color="primary">
-            Add Genre
+            Add Track
           </Button>
         </Box>
+
         <TextField
-          label="Name"
-          {...register("name", { required: true })}
+          label="Title"
+          {...register("title", { required: true })}
           fullWidth
           margin="normal"
           required
-        />
-        <TextField
-          label="Description"
-          {...register("description")}
-          fullWidth
-          margin="normal"
-          multiline
-          rows={3}
         />
       </Box>
     </Dialog>

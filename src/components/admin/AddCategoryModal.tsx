@@ -1,46 +1,48 @@
 import { Dialog, DialogTitle, TextField, Button, Box } from "@mui/material";
 import { useForm } from "react-hook-form";
 
-interface AddGenreFormProps {
+interface AddCategoryFormProps {
   name: string;
+  imageUrl: string;
   description: string;
 }
 
-interface AddGenreModalProps {
+interface AddCategoryModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: AddGenreFormProps) => void;
+  onSubmit: (data: AddCategoryFormProps) => void;
 }
 
-export const AddGenreModal: React.FC<AddGenreModalProps> = ({
+export const AddCategoryModal: React.FC<AddCategoryModalProps> = ({
   open,
   onClose,
   onSubmit,
 }) => {
-  const { register, handleSubmit } = useForm<AddGenreFormProps>({
+  const { register, handleSubmit } = useForm<AddCategoryFormProps>({
     defaultValues: {
       name: "",
+      imageUrl: "",
       description: "",
     },
   });
 
-  const handleFormSubmit = (data: AddGenreFormProps) => {
+  const handleFormSubmit = (data: AddCategoryFormProps) => {
     onSubmit(data);
-    ; // Reset form after submission
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Add New Genre</DialogTitle>
+      <DialogTitle>Add New Category</DialogTitle>
       <Box component="form" onSubmit={handleSubmit(handleFormSubmit)} p={2}>
         <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
           <Button onClick={onClose} sx={{ mr: 1 }}>
             Cancel
           </Button>
           <Button type="submit" variant="contained" color="primary">
-            Add Genre
+            Add Category
           </Button>
         </Box>
+
         <TextField
           label="Name"
           {...register("name", { required: true })}
@@ -48,6 +50,14 @@ export const AddGenreModal: React.FC<AddGenreModalProps> = ({
           margin="normal"
           required
         />
+
+        <TextField
+          label="Image URL"
+          {...register("imageUrl")}
+          fullWidth
+          margin="normal"
+        />
+
         <TextField
           label="Description"
           {...register("description")}
