@@ -39,7 +39,7 @@ export const mockArtists: Artist[] = [
     id: "3",
     name: "Billie Eilish",
     avatarUrl:
-      "https://i.scdn.co/image/ab6761610000e5eb4b3beaef36de8f3fb15978ce",
+      "https://image.tienphong.vn/w890/Uploaded/2025/zaugtn/2021_06_22/tien-phong-billieeilish-6083.jpeg",
     bio: "Billie Eilish is an American singer-songwriter known for her unique vocal style and dark themes.",
     genres: ["Pop", "Alternative", "Electropop"],
     monthlyListeners: 60000000,
@@ -65,7 +65,7 @@ export const mockArtists: Artist[] = [
     id: "5",
     name: "Dua Lipa",
     avatarUrl:
-      "https://i.scdn.co/image/ab6761610000e5eb54aefdcdafb6617c3070a100",
+      "https://product.hstatic.net/1000304920/product/dua-lipa-complete-editon_6371d2bbafab46bd895a6ba0402bb3f4_master.jpg",
     bio: "Dua Lipa is an English singer and songwriter known for her disco-influenced pop music.",
     genres: ["Pop", "Dance", "Disco"],
     monthlyListeners: 65000000,
@@ -423,7 +423,7 @@ export const mockTracks: Track[] = [
     albumId: "16",
     albumName: "Sky Tour",
     coverUrl:
-      "https://i.scdn.co/image/ab67616d0000b273e5ef879c132d65e0e3a1cb6a",
+      "https://media-cdn-v2.laodong.vn/Storage/NewsPortal/2019/7/1/741911/Hay-Trao-Cho-Anh.jpg",
     previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3",
     durationMs: 242000,
     explicit: false,
