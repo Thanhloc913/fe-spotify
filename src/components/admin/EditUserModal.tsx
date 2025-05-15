@@ -3,7 +3,6 @@ import {
   Button,
   Dialog,
   DialogTitle,
-  Paper,
   Tab,
   Tabs,
   TextField,
@@ -16,9 +15,10 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Profile, User } from "./../../types";
 import TextFieldArray from "./TextFieldArray";
+import ModalSection from "./ModalSection";
 
 // editable form props
-interface UserFormProps {
+interface EditUserFormProps {
   name?: string;
   email?: string;
   playlists: string[];
@@ -29,7 +29,7 @@ interface UserFormProps {
 }
 
 // editable form props
-interface ProfileFormProps {
+interface EditProfileFormProps {
   fullName?: string;
   avatarUrl?: string;
   bio?: string;
@@ -40,8 +40,8 @@ interface ProfileFormProps {
 interface EditUserModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmitUser: (data: UserFormProps, user: User) => void;
-  onSubmitProfile: (data: ProfileFormProps, profile: Profile) => void;
+  onSubmitUser: (data: EditUserFormProps, user: User) => void;
+  onSubmitProfile: (data: EditProfileFormProps, profile: Profile) => void;
   user: User;
   profile: Profile | null;
 }
@@ -60,17 +60,22 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 }) => {
   const [tabIndex, setTabIndex] = useState(0);
 
-  const handleUserSubmit = (data: UserFormProps) => {
+  const handleUserSubmit = (data: EditUserFormProps) => {
     onSubmitUser(data, user);
   };
 
-  const handleProfileSubmit = (data: ProfileFormProps) => {
+  const handleProfileSubmit = (data: EditProfileFormProps) => {
     profile && onSubmitProfile(data, profile);
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Edit User {user.id}</DialogTitle>
+      <DialogTitle>Editing User {user.id}</DialogTitle>
+      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+        <Button onClick={onClose} sx={{ mr: 1 }}>
+          Cancel
+        </Button>
+      </Box>
       <Tabs value={tabIndex} onChange={(_, newIndex) => setTabIndex(newIndex)}>
         <Tab label="User" />
         <Tab label="Profile" />
@@ -87,10 +92,19 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
 
 const UserForm: React.FC<{
   user: User;
-  onSubmit: (data: UserFormProps) => void;
+  onSubmit: (data: EditUserFormProps) => void;
 }> = ({ user, onSubmit }) => {
-  const { register, control, handleSubmit } = useForm<UserFormProps>({
+  const { register, control, handleSubmit } = useForm<EditUserFormProps>({
     defaultValues: {
+      name: "",
+      email: "",
+      playlists: [],
+      following: {
+        artists: [],
+        users: [],
+      },
+    },
+    values: {
       name: user.name,
       email: user.email,
       playlists: user.playlists,
@@ -102,14 +116,11 @@ const UserForm: React.FC<{
     <>
       <Typography variant="subtitle1">User Info</Typography>
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Button
-          type="submit"
-          variant="contained"
-          color="primary"
-          sx={{ mt: 2 }}
-        >
-          Save User
-        </Button>
+        <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+          <Button type="submit" variant="contained" color="primary">
+            Save User
+          </Button>
+        </Box>
         <TextField
           label="ID"
           value={user.id}
@@ -135,18 +146,16 @@ const UserForm: React.FC<{
           margin="dense"
         />
         {/* Playlists Section */}
-        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-          <Typography variant="subtitle1">Playlists</Typography>
+        <ModalSection title="Playlists">
           <TextFieldArray
             name="playlists"
             register={register}
             control={control}
             label="Playlist"
           />
-        </Paper>
+        </ModalSection>
         {/* Following Section - Editable */}
-        <Paper elevation={3} sx={{ p: 2, mt: 2 }}>
-          <Typography variant="subtitle1">Following</Typography>
+        <ModalSection title="Following">
           <TextFieldArray
             name="following.artists"
             register={register}
@@ -159,7 +168,7 @@ const UserForm: React.FC<{
             control={control}
             label="Users Followed"
           />
-        </Paper>
+        </ModalSection>
       </form>
     </>
   );
@@ -167,33 +176,36 @@ const UserForm: React.FC<{
 
 const ProfileForm: React.FC<{
   profile: Profile | null;
-  onSubmit: (data: ProfileFormProps) => void;
+  onSubmit: (data: EditProfileFormProps) => void;
 }> = ({ profile, onSubmit }) => {
-  const { register, handleSubmit, watch, setValue } = useForm<ProfileFormProps>(
-    {
+  const { register, handleSubmit, watch, setValue } =
+    useForm<EditProfileFormProps>({
       defaultValues: {
+        fullName: "",
+        avatarUrl: "",
+        bio: "",
+        dateOfBirth: "",
+        phoneNumber: "",
+      },
+      values: {
         fullName: profile?.fullName,
         avatarUrl: profile?.avatarUrl,
         bio: profile?.bio,
         dateOfBirth: profile?.dateOfBirth,
         phoneNumber: profile?.phoneNumber,
       },
-    }
-  );
+    });
 
   return (
     <>
       <Typography variant="subtitle1">Profile Info</Typography>
       {profile ? (
         <form onSubmit={handleSubmit(onSubmit)}>
-          <Button
-            type="submit"
-            variant="contained"
-            color="primary"
-            sx={{ mt: 2 }}
-          >
-            Save Profile
-          </Button>
+          <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
+            <Button type="submit" variant="contained" color="primary">
+              Save Profile
+            </Button>
+          </Box>
           <TextField
             label="Account ID"
             value={profile?.accountID}

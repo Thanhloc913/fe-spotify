@@ -1,0 +1,10 @@
+version: "3.8"
+
+services:
+  react:
+    build:
+      context: .
+    volumes:
+      - ./:/react
+    ports:
+      - "5173:5173"

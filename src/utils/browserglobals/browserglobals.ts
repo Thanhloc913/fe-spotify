@@ -1,4 +1,17 @@
-import { getUser, getUsers, getProfile, getProfiles } from "./faker";
+import {
+  getUser,
+  getUsers,
+  getProfile,
+  getProfiles,
+  getGenre,
+  getGenres,
+  getRole,
+  getRoles,
+  getPlaylist,
+  getPlaylists,
+  getCategory,
+  getCategories,
+} from "./faker";
 import { TokenManager, ITokenManager } from "./tokenManager";
 
 // Expose to global scope for debugging
@@ -11,6 +24,14 @@ declare global {
         getUsers: (count: number) => object[];
         getProfile: () => object;
         getProfiles: (count: number) => object[];
+        getGenre: () => object;
+        getGenres: (count: number) => object[];
+        getRole: () => object;
+        getRoles: (count: number) => object[];
+        getPlaylist: () => object;
+        getPlaylists: (count: number) => object[];
+        getCategory: () => object;
+        getCategories: (count: number) => object[];
       };
     };
   }
@@ -37,6 +58,14 @@ declare global {
       getUsers,
       getProfile,
       getProfiles,
+      getGenre,
+      getGenres,
+      getRole,
+      getRoles,
+      getPlaylist,
+      getPlaylists,
+      getCategory,
+      getCategories,
     };
   }
 })();

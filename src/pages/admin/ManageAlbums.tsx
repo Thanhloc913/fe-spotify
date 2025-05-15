@@ -1,67 +1,81 @@
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import { Avatar, Button, Stack, TextField } from "@mui/material";
+import {
+  Avatar,
+  Button,
+  MenuItem,
+  Select,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { FC, useMemo, useState } from "react";
-import AddUserModal from "../../components/admin/AddUserModal";
-import EditUserModal from "../../components/admin/EditUserModal";
+import { AddAlbumModal } from "../../components/admin/AddAlbumModal";
+import { EditAlbumModal } from "../../components/admin/EditAlbumModal";
 import GenericTableActionEdit, {
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
 import { mockData } from "../../mock/data";
-import { User } from "../../types";
+import { Album } from "../../types";
 
-type UserTableColumnNames = Pick<
-  User,
-  "id" | "name" | "email" | "createdAt" | "profileImageUrl"
+type AlbumTableColumnNames = Pick<
+  Album,
+  "id" | "title" | "artistName" | "coverUrl" | "type"
 >;
 
-type UserTableColumnDefinition = {
-  id: keyof UserTableColumnNames;
+type AlbumTableColumnDefinition = {
+  id: keyof AlbumTableColumnNames;
   label: string;
   sortable: boolean;
-  render?: (value: User) => React.ReactNode;
+  render?: (value: Album) => React.ReactNode;
 };
 
 // Define which columns to show and how to render them
-const userTableColumnDefinitions: UserTableColumnDefinition[] = [
+const albumTableColumnDefinitions: AlbumTableColumnDefinition[] = [
   { id: "id", label: "ID", sortable: true },
-  { id: "name", label: "Name", sortable: true },
-  { id: "email", label: "Email", sortable: true },
+  { id: "title", label: "Title", sortable: true },
+  { id: "artistName", label: "Artist name", sortable: true },
   {
-    id: "createdAt",
-    label: "Join Date",
-    sortable: true,
-    render: (value: User) => new Date(value.createdAt).toLocaleDateString(),
+    id: "coverUrl",
+    label: "Cover art",
+    sortable: false,
+    render: (value: Album) =>
+      value.coverUrl ? <Avatar src={value.coverUrl} /> : null,
   },
   {
-    id: "profileImageUrl",
-    label: "Avatar",
-    sortable: false,
-    render: (value: User) =>
-      value.profileImageUrl ? <Avatar src={value.profileImageUrl} /> : null,
+    id: "type",
+    label: "Type",
+    sortable: true,
+    render: (value: Album) => (
+      <Select value={value.type} disabled>
+        <MenuItem value={value.type}>{value.type}</MenuItem>
+      </Select>
+    ),
   },
 ] as const;
 
-interface UserTableActionEditProps {
-  data: User[]; // Only the current page rows
-  selectedIds: RowId[]; // Selection now handled externally
+interface AlbumTableActionEditProps {
+  data: Album[]; // Only the current page rows
+  selectedIds: RowId[];
   onSelect: (id: RowId, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
   onEdit: (id: RowId) => void;
   onDelete: (selectedIds: RowId[]) => void;
-  onRequestSort: (column: keyof UserTableColumnNames, order: SortOrder) => void;
+  onRequestSort: (
+    column: keyof AlbumTableColumnNames,
+    order: SortOrder
+  ) => void;
   onRequestPageChange: (newPage: number) => void;
   onRequestRowsPerPageChange: (rowsPerPage: number) => void;
   order: SortOrder;
-  orderBy: keyof UserTableColumnNames;
+  orderBy: keyof AlbumTableColumnNames;
   page: number;
   rowsPerPage: number;
   totalCount: number;
 }
 
-const UserTableActionEdit: FC<UserTableActionEditProps> = ({
+const AlbumTableActionEdit: FC<AlbumTableActionEditProps> = ({
   data,
   selectedIds,
   onSelect,
@@ -78,11 +92,11 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
   totalCount,
 }) => {
   return (
-    <GenericTableActionEdit<User, "id">
-      label="Users"
-      pluralEntityName="Users"
+    <GenericTableActionEdit<Album, "id">
+      label="Albums"
+      pluralEntityName="Albums"
       data={data}
-      columnDefinitions={userTableColumnDefinitions}
+      columnDefinitions={albumTableColumnDefinitions}
       idKey="id"
       selectedIds={selectedIds}
       onSelect={onSelect}
@@ -90,7 +104,9 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
       onEdit={onEdit}
       onDelete={onDelete}
       onRequestSort={(column, order) => {
-        const def = userTableColumnDefinitions.find((def) => def.id === column);
+        const def = albumTableColumnDefinitions.find(
+          (def) => def.id === column
+        );
         if (def) {
           onRequestSort(def.id, order);
         }
@@ -106,51 +122,74 @@ const UserTableActionEdit: FC<UserTableActionEditProps> = ({
   );
 };
 
-const ManageUsers = () => {
+const ManageAlbums = () => {
   const [search, setSearch] = useState("");
   const [openEditModal, setOpenEditModal] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<RowId | null>(null);
+  const [editingAlbumId, setEditingAlbumId] = useState<RowId | null>(null);
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedItems, setSelectedItems] = useState<RowId[]>([]);
   const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
   const [columnSortOrderBy, setColumnSortOrderBy] =
-    useState<keyof UserTableColumnNames>("name");
+    useState<keyof AlbumTableColumnNames>("title");
 
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
   const [submittedData, setSubmittedData] = useState<object | null>(null);
   const [openAddModal, setOpenAddModal] = useState(false);
 
-  const filteredUsers = useMemo(() => {
-    return mockData.users.filter((user) =>
-      Object.keys(user).some((key) =>
-        String(user[key as keyof User])
+  const filteredAlbums = useMemo(() => {
+    return mockData.albums.filter((album) =>
+      Object.keys(album).some((key) =>
+        String(album[key as keyof Album])
           .toLowerCase()
           .includes(search.toLowerCase())
       )
     );
   }, [search]);
 
-  const handleRequestSort = (property: keyof UserTableColumnNames) => {
+  const handleRequestSort = (property: keyof AlbumTableColumnNames) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
     setColumnSortOrder(isAsc ? "desc" : "asc");
     setColumnSortOrderBy(property);
   };
 
-  const sortedUsers = useMemo(() => {
-    const stabilizedThis = filteredUsers.map(
+  const sortedAlbums = useMemo(() => {
+    const stabilizedThis = filteredAlbums.map(
       (el, index) => [el, index] as const
     );
     stabilizedThis.sort((a, b) => {
-      const orderFn = (objA: User, objB: User, property: keyof User) => {
+      const orderFn = (objA: Album, objB: Album, property: keyof Album) => {
         const valA = objA[property];
         const valB = objB[property];
-        if (valA < valB) {
-          return -1;
+
+        // Handle null/undefined
+        if (valA == null && valB == null) return 0;
+        if (valA == null) return -1;
+        if (valB == null) return 1;
+
+        // Handle arrays
+        if (Array.isArray(valA) && Array.isArray(valB)) {
+          const minLen = Math.min(valA.length, valB.length);
+          for (let i = 0; i < minLen; i++) {
+            if (valA[i] == null && valB[i] == null) continue;
+            if (valA[i] == null) return -1;
+            if (valB[i] == null) return 1;
+            if (valA[i] < valB[i]) return -1;
+            if (valA[i] > valB[i]) return 1;
+          }
+          // If all elements so far are equal, shorter array is smaller
+          if (valA.length < valB.length) return -1;
+          if (valA.length > valB.length) return 1;
+          return 0;
         }
-        if (valA > valB) {
-          return 1;
-        }
+
+        // If only one is array, treat array as greater
+        if (Array.isArray(valA)) return 1;
+        if (Array.isArray(valB)) return -1;
+
+        // Normal comparison
+        if (valA < valB) return -1;
+        if (valA > valB) return 1;
         return 0;
       };
       const value = orderFn(a[0], b[0], columnSortOrderBy);
@@ -160,18 +199,18 @@ const ManageUsers = () => {
       return a[1] - b[1];
     });
     return stabilizedThis.map((el) => el[0]);
-  }, [filteredUsers, columnSortOrder, columnSortOrderBy]);
+  }, [filteredAlbums, columnSortOrder, columnSortOrderBy]);
 
-  const displayingUsers = useMemo(() => {
-    return sortedUsers.slice(
+  const displayingAlbums = useMemo(() => {
+    return sortedAlbums.slice(
       page * rowsPerPage,
       page * rowsPerPage + rowsPerPage
     );
-  }, [page, rowsPerPage, sortedUsers]);
+  }, [page, rowsPerPage, sortedAlbums]);
 
   const handleSelectAllClick = (isSelected: boolean) => {
     if (isSelected) {
-      const newSelecteds = sortedUsers
+      const newSelecteds = sortedAlbums
         // uncomment to select all current page only
         // .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
         .map((n) => n.id);
@@ -191,8 +230,6 @@ const ManageUsers = () => {
     });
   };
 
-  // const isItemSelected = (id: RowId) => selectedItems.indexOf(id) !== -1;
-
   const handleChangePage = (newPage: number) => {
     setPage(newPage);
   };
@@ -202,23 +239,19 @@ const ManageUsers = () => {
     setPage(0);
   };
 
-  const handleEditUser = (selectedId: RowId) => {
-    setEditingUserId(selectedId);
+  const handleEditAlbum = (selectedId: RowId) => {
+    setEditingAlbumId(selectedId);
     setOpenEditModal(true);
   };
 
-  const handleDeleteUsers = (selectedIds: RowId[]) => {
-    console.log("Deleting users with IDs:", selectedIds);
-    setSelectedItems([]); // Clear selection after deletion
+  const handleDeleteAlbums = (selectedIds: RowId[]) => {
+    console.log("Deleting albums with IDs:", selectedIds);
+    setSelectedItems([]); // Clear selection after deletion for now
   };
 
-  const editingUser = useMemo(
-    () => mockData.users.find((u) => u.id === editingUserId),
-    [editingUserId]
-  );
-  const editingProfile = useMemo(
-    () => mockData.profiles.find((p) => p.accountID === editingUserId),
-    [editingUserId]
+  const editingAlbum = useMemo(
+    () => mockData.albums.find((u) => u.id === editingAlbumId),
+    [editingAlbumId]
   );
 
   return (
@@ -241,13 +274,13 @@ const ManageUsers = () => {
             <AddIcon />
           </Button>
         </Stack>
-        <UserTableActionEdit
-          data={displayingUsers}
+        <AlbumTableActionEdit
+          data={displayingAlbums}
           selectedIds={selectedItems}
           onSelect={handleClick}
           onSelectAll={handleSelectAllClick}
-          onEdit={handleEditUser}
-          onDelete={handleDeleteUsers}
+          onEdit={handleEditAlbum}
+          onDelete={handleDeleteAlbums}
           onRequestSort={handleRequestSort}
           onRequestPageChange={handleChangePage}
           onRequestRowsPerPageChange={handleChangeRowsPerPage}
@@ -255,27 +288,22 @@ const ManageUsers = () => {
           orderBy={columnSortOrderBy}
           page={page}
           rowsPerPage={rowsPerPage}
-          totalCount={sortedUsers.length}
+          totalCount={sortedAlbums.length}
         />
-        {editingUser && (
-          <EditUserModal
+        {editingAlbum && (
+          <EditAlbumModal
             open={openEditModal}
             onClose={() => setOpenEditModal(false)}
-            onSubmitUser={(data, user) => {
-              setSubmittedData({ ...user, ...data });
+            onSubmit={(data, album) => {
+              setSubmittedData({ ...album, ...data });
               setOpenPreviewModal(true);
             }}
-            onSubmitProfile={(data, profile) => {
-              setSubmittedData({ ...profile, ...data });
-              setOpenPreviewModal(true);
-            }}
-            user={editingUser}
-            profile={editingProfile || null}
+            album={editingAlbum}
           />
         )}
       </Stack>
       {openAddModal && (
-        <AddUserModal
+        <AddAlbumModal
           open={openAddModal}
           onClose={() => setOpenAddModal(false)}
           onSubmit={(data) => {
@@ -293,4 +321,4 @@ const ManageUsers = () => {
   );
 };
 
-export default ManageUsers;
+export default ManageAlbums;
