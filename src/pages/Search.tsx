@@ -5,6 +5,8 @@ import { mockArtists, mockTracks, mockAlbums } from '../mock/data';
 import { usePlayerStore } from '../store/playerStore';
 import { addFavoriteTrack, removeFavoriteTrack, getUserPlaylists, addTrackToPlaylist, getFavoriteTracks } from '../api/user';
 import { Track } from '../types';
+import { musicApi } from '../api/musicApi';
+import { getProfileByAccountID } from '../api/profileApi';
 
 const tabs = [
   { key: 'all', label: 'Tất cả' },
@@ -41,6 +43,13 @@ export default function Search() {
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
 
+  // State cho search API
+  const [searchResult, setSearchResult] = useState<any>(null);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  const [artistNames, setArtistNames] = useState<Record<string, string>>({});
+
   // Load liked tracks
   useEffect(() => {
     const loadLikedTracks = async () => {
@@ -50,19 +59,44 @@ export default function Search() {
     loadLikedTracks();
   }, []);
 
-  // Lấy query từ URL hoặc mặc định là 'MCK'
-  const query = keyword ? decodeURIComponent(keyword) : 'MCK';
+  // Lấy query từ URL hoặc mặc định là ''
+  const query = keyword ? decodeURIComponent(keyword) : '';
 
-  // Tìm artist phù hợp (không phân biệt hoa thường, bỏ dấu)
-  const artist = mockArtists.find(a => {
-    const name = removeVietnameseTones((a.name || '').toLowerCase());
-    const q = removeVietnameseTones(query.toLowerCase());
-    return name === q;
-  });
+  // Gọi API search khi query thay đổi
+  useEffect(() => {
+    if (!query) {
+      setSearchResult(null);
+      return;
+    }
+    setSearchLoading(true);
+    setSearchError(null);
+    musicApi.searchSongsByTitle(query, 1, 10)
+      .then(res => {
+        setSearchResult(res.data || res); // tuỳ API trả về
+      })
+      .catch(err => {
+        setSearchError('Có lỗi xảy ra khi tìm kiếm');
+        setSearchResult(null);
+      })
+      .finally(() => setSearchLoading(false));
+  }, [query]);
 
-  // Lấy bài hát và album liên quan nếu có nghệ sĩ
-  const tracks = artist ? mockTracks.filter(t => t.artistId === artist.id) : [];
-  const albums = artist ? mockAlbums.filter(a => a.artistId === artist.id) : [];
+  useEffect(() => {
+    if (!searchResult || !searchResult.result) return;
+    const artistIds = Array.from(new Set(searchResult.result.map((song: any) => String(song.artistId)).filter(Boolean))) as string[];
+    const missingIds: string[] = artistIds.filter((id: string) => !artistNames[id]);
+    if (missingIds.length === 0) return;
+
+    missingIds.forEach(async (id: string) => {
+      try {
+        const profile = await getProfileByAccountID(id);
+        setArtistNames(prev => ({ ...prev, [id]: profile.fullName }));
+      } catch {
+        setArtistNames(prev => ({ ...prev, [id]: "Unknown Artist" }));
+      }
+    });
+    // eslint-disable-next-line
+  }, [searchResult]);
 
   const handlePlayTrack = (track: any) => {
     if (currentTrack?.id === track.id) {
@@ -74,8 +108,8 @@ export default function Search() {
   };
 
   const handlePlayAll = () => {
-    if (tracks.length > 0) {
-      setCurrentTrack(tracks[0]);
+    if (searchResult && searchResult.result && searchResult.result.length > 0) {
+      setCurrentTrack(searchResult.result[0]);
       playTrack();
     }
   };
@@ -121,45 +155,29 @@ export default function Search() {
         ))}
       </div>
 
-      {/* Nếu không tìm thấy nghệ sĩ */}
-      {!artist && (
-        <div className="text-center text-2xl text-gray-400 mt-20">Không tìm thấy kết quả cho "{query}"</div>
+      {/* Loading */}
+      {searchLoading && <div className="text-center text-2xl text-gray-400 mt-20">Đang tìm kiếm...</div>}
+      {/* Lỗi */}
+      {searchError && <div className="text-center text-2xl text-red-400 mt-20">{searchError}</div>}
+      {/* Không có kết quả */}
+      {!searchLoading && !searchError && searchResult && (!searchResult.result || searchResult.result.length === 0) && (
+        <div className="text-center text-2xl text-gray-400 mt-20">Không tìm thấy kết quả</div>
       )}
 
-      {/* Top result, Songs, Albums */}
-      {artist && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-            {/* Top result */}
-            <div className="md:col-span-1">
-              <h2 className="text-2xl font-bold mb-4">Kết quả hàng đầu</h2>
-              <div 
-                className="bg-gray-800 rounded-lg flex items-center gap-6 p-6 cursor-pointer hover:bg-gray-700 transition-colors"
-                onClick={() => navigate(`/artist/${artist.id}`)}
-              >
-                <img src={artist.avatarUrl} alt={artist.name} className="w-24 h-24 rounded-full object-cover" />
-                <div>
-                  <div className="text-2xl font-bold">{artist.name}</div>
-                  <div className="text-gray-400 mt-1">Nghệ sĩ</div>
-                </div>
-              </div>
-            </div>
-            {/* Songs */}
-            <div className="md:col-span-2">
+      {/* Kết quả bài hát */}
+      {!searchLoading && !searchError && searchResult && searchResult.result && searchResult.result.length > 0 && (
+        <div className="mb-12">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-2xl font-bold">Bài hát</h2>
-                {tracks.length > 0 && (
                   <button
                     onClick={handlePlayAll}
                     className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-full transition-colors"
                   >
                     Phát tất cả
                   </button>
-                )}
               </div>
               <div className="flex flex-col gap-2">
-                {tracks.length === 0 && <div className="text-gray-400">(Chưa có dữ liệu bài hát cho nghệ sĩ này)</div>}
-                {tracks.map(song => (
+            {searchResult.result.map((song: any) => (
                   <div 
                     key={song.id} 
                     className="group flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3 hover:bg-gray-700 transition-colors"
@@ -173,12 +191,14 @@ export default function Search() {
                     </button>
 
                     {/* Ảnh bài hát */}
+                {song.coverUrl && (
                     <img 
                       src={song.coverUrl} 
                       alt={song.title} 
                       className="w-12 h-12 rounded mr-4 cursor-pointer"
                       onClick={() => navigate(`/track/${song.id}`)}
                     />
+                )}
 
                     {/* Thông tin bài hát */}
                     <div className="flex-1">
@@ -190,16 +210,16 @@ export default function Search() {
                       </div>
                       <div 
                         className="text-gray-400 text-sm cursor-pointer hover:underline"
-                        onClick={() => navigate(`/artist/${song.artistId}`)}
+                    onClick={() => song.artistId && navigate(`/artist/${song.artistId}`)}
                       >
-                        {song.artistName}
+                    {song.artistName || artistNames[String(song.artistId)] || song.artistId}
                       </div>
                     </div>
 
                     {/* Actions */}
                     <div className="flex items-center gap-4">
                       {/* Thời lượng */}
-                      <div className="text-gray-400 text-sm">{formatDuration(song.durationMs)}</div>
+                  <div className="text-gray-400 text-sm">{song.durationMs ? formatDuration(song.durationMs) : song.duration ? formatDuration(song.duration * 1000) : ''}</div>
 
                       {/* Favorite Button */}
                       <button
@@ -223,27 +243,6 @@ export default function Search() {
                 ))}
               </div>
             </div>
-          </div>
-
-          {/* Albums section */}
-          <div>
-            <h2 className="text-2xl font-bold mb-4">Album</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {albums.length === 0 && <div className="text-gray-400">(Chưa có album nào)</div>}
-              {albums.map(album => (
-                <div 
-                  key={album.id} 
-                  className="bg-gray-800 rounded-lg p-4 flex flex-col items-center hover:bg-gray-700 transition-colors cursor-pointer"
-                  onClick={() => navigate(`/album/${album.id}`)}
-                >
-                  <img src={album.coverUrl} alt={album.title} className="w-32 h-32 rounded-lg object-cover mb-3" />
-                  <div className="font-semibold text-center mb-1">{album.title}</div>
-                  <div className="text-gray-400 text-sm text-center">{album.releaseDate}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </>
       )}
 
       {/* Playlist Popup */}

@@ -1,7 +1,6 @@
 import axios from "axios";
 
-// Tạo instance axios
-const api = axios.create({
+const axiosClient = axios.create({
   baseURL: "http://localhost:8080",
   headers: {
     "Content-Type": "application/json",
@@ -9,10 +8,9 @@ const api = axios.create({
   withCredentials: true,
 });
 
-// Interceptor để tự động gắn token vào request nếu có
-api.interceptors.request.use(
+axiosClient.interceptors.request.use(
   (config) => {
-    const token = sessionStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -21,10 +19,72 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
+let isRefreshing = false;
+let failedQueue: any[] = [];
+
+const processQueue = (error: any, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve(token);
+    }
+  });
+  failedQueue = [];
+};
+
+axiosClient.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise(function(resolve, reject) {
+          failedQueue.push({ resolve, reject });
+        })
+        .then((token) => {
+          originalRequest.headers['Authorization'] = 'Bearer ' + token;
+          return axiosClient(originalRequest);
+        })
+        .catch((err) => {
+          return Promise.reject(err);
+        });
+      }
+      originalRequest._retry = true;
+      isRefreshing = true;
+      const refreshToken = localStorage.getItem('refresh_token');
+      try {
+        const res = await axios.post('http://localhost:8080/auth/refresh-token', {
+          refreshToken: refreshToken
+        });
+        const { access_token, refresh_token } = res.data.data;
+        localStorage.setItem('access_token', access_token);
+        if (refresh_token) {
+          localStorage.setItem('refresh_token', refresh_token);
+        }
+        axiosClient.defaults.headers.common['Authorization'] = 'Bearer ' + access_token;
+        processQueue(null, access_token);
+        isRefreshing = false;
+        originalRequest.headers['Authorization'] = 'Bearer ' + access_token;
+        return axiosClient(originalRequest);
+      } catch (err) {
+        processQueue(err, null);
+        isRefreshing = false;
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
+        localStorage.removeItem('account_id');
+        window.location.href = '/login';
+        return Promise.reject(err);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
+
 // Lấy CSRF token
 const getCsrfToken = async (): Promise<string> => {
   try {
-    const { data } = await api.get("/auth/csrf");
+    const { data } = await axiosClient.get("/auth/csrf");
     const csrfToken = data?.data?.token;
     if (!csrfToken) throw new Error("Không có token trong phản hồi");
     return csrfToken;
@@ -47,7 +107,7 @@ export const login = async (
 
     const csrfToken = await getCsrfToken();
 
-    const response = await api.post(
+    const response = await axiosClient.post(
       "/auth/login",
       payload,
       {
@@ -98,7 +158,7 @@ export const register = async (registerData: {
           ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8WOsLxlKgTXh7gry1qONjjpnozv1IwdHf165tgttVd5FiaWx4G8yOo4LCWt9uPt6y0EWxE89oyHdEPbgre41s8Q"
           : registerData.avatarUrl,
     };
-    const response = await api.post("/auth/register", dataToSend, {
+    const response = await axiosClient.post("/auth/register", dataToSend, {
       headers: {
         "X-CSRFToken": csrfToken,
       },
@@ -114,7 +174,7 @@ export const register = async (registerData: {
 export const getAccountById = async (accountId: string) => {
   try {
     const csrfToken = await getCsrfToken();
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/account/find',
       { id: accountId },
       {
@@ -134,7 +194,7 @@ export const getAccountById = async (accountId: string) => {
 export const verifyCurrentPassword = async (email: string, currentPassword: string) => {
   try {
     const csrfToken = await getCsrfToken();
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/auth/login',
       { email, password: currentPassword },
       {
@@ -170,7 +230,7 @@ export const updatePassword = async (newPassword: string) => {
   try {
     const csrftoken = getCookie('csrftoken');
     const accessToken = localStorage.getItem('access_token');
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/account/update',
       { password: newPassword },
       {
@@ -192,7 +252,7 @@ export const updatePassword = async (newPassword: string) => {
 export const checkEmailExists = async (email: string) => {
   try {
     const csrfToken = await getCsrfToken();
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/account/find',
       { email },
       {
@@ -212,7 +272,7 @@ export const checkEmailExists = async (email: string) => {
 export const requestPasswordReset = async (email: string) => {
   try {
     const csrfToken = await getCsrfToken();
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/password-reset/request',
       { email },
       {
@@ -236,7 +296,7 @@ export const verifyAndResetPassword = async (
 ) => {
   try {
     const csrfToken = await getCsrfToken();
-    const response = await api.post(
+    const response = await axiosClient.post(
       '/password-reset/verify',
       {
         token,
@@ -256,4 +316,4 @@ export const verifyAndResetPassword = async (
   }
 };
 
-export default api;
+export default axiosClient;

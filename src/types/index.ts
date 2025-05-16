@@ -74,6 +74,8 @@ export interface Track {
   trackNumber: number;
   isPlayable: boolean;
   videoUrl: string | null;
+  storageId?: string;
+  storageImageId?: string;
 }
 
 export interface Genre {

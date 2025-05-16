@@ -16,6 +16,7 @@ import {
 import { usePlayerStore } from '../../store/playerStore';
 import { Link } from 'react-router-dom';
 import { addFavoriteTrack, getFavoriteTracks, removeFavoriteTrack, getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
+import { getStorageById, getImageUrl } from '../../api/storageApi';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -51,6 +52,8 @@ const Player: React.FC = () => {
   const [showPlaylistPopup, setShowPlaylistPopup] = useState(false);
   const [playlists, setPlaylists] = useState<any[]>([]);
   const [liked, setLiked] = useState(false);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   // Handle play/pause - removed currentTrack from dependencies
   useEffect(() => {
@@ -66,9 +69,118 @@ const Player: React.FC = () => {
     }
   }, [isPlaying]); // currentTrack is implicitly covered by the src change
 
+  // Lấy file URL từ storageId khi track thay đổi
+  useEffect(() => {
+    if (!currentTrack) return;
+    
+    console.log('========== TRACK INFO DEBUG ==========');
+    console.log('Current track full data:', JSON.stringify(currentTrack, null, 2));
+    console.log('Track ID:', currentTrack.id);
+    console.log('storageId:', currentTrack.storageId);
+    console.log('storageImageId:', currentTrack.storageImageId);
+    console.log('coverUrl:', currentTrack.coverUrl);
+    console.log('======================================');
+    
+    const fetchAudioUrl = async () => {
+      try {
+        console.log('Current track:', currentTrack);
+        
+        // Nếu đã có sẵn URL thì dùng luôn
+        if (currentTrack.previewUrl) {
+          console.log('Sử dụng previewUrl:', currentTrack.previewUrl);
+          setAudioUrl(currentTrack.previewUrl);
+          return;
+        }
+        
+        // Nếu có storageId thì lấy file từ storage service
+        if (currentTrack.storageId) {
+          console.log('Lấy audio từ storageId:', currentTrack.storageId);
+          const storageData = await getStorageById(currentTrack.storageId);
+          console.log('Dữ liệu storage nhận được:', storageData);
+          
+          if (storageData.success && storageData.data) {
+            // Cập nhật URL
+            if (storageData.data.fileUrl) {
+              console.log('Đã lấy được fileUrl:', storageData.data.fileUrl);
+              setAudioUrl(storageData.data.fileUrl);
+            }
+            
+            // Cập nhật duration từ API nếu có
+            if (storageData.data.duration) {
+              console.log('Duration từ API:', storageData.data.duration);
+              // Giả sử API trả về duration tính bằng giây
+              usePlayerStore.getState().setDuration(Number(storageData.data.duration));
+            }
+          } else {
+            console.error('Không lấy được URL audio từ storage:', storageData);
+            setAudioUrl(null);
+          }
+        } else {
+          console.warn('Track không có storageId hoặc previewUrl');
+          setAudioUrl(null);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy URL audio:', error);
+        setAudioUrl(null);
+      }
+    };
+    
+    // Hàm lấy URL ảnh từ storageImageId
+    const fetchCoverImage = async () => {
+      try {
+        // Nếu có sẵn coverUrl thì dùng luôn
+        if (currentTrack.coverUrl) {
+          console.log('Sử dụng coverUrl có sẵn:', currentTrack.coverUrl);
+          setCoverUrl(currentTrack.coverUrl);
+          return;
+        }
+        
+        // Fix: Kiểm tra cả hai cách truy cập storageImageId
+        // Một số trường hợp có thể dữ liệu gốc không được map đúng vào interface Track
+        const imageId = currentTrack.storageImageId || 
+                       (currentTrack as any).storageImageId ||
+                       (currentTrack as any).storageImageID;
+        
+        console.log('Kiểm tra lại imageId:', imageId);
+        
+        if (imageId) {
+          console.log('Lấy ảnh từ storageImageId đã sửa:', imageId);
+          const imageUrl = await getImageUrl(imageId);
+          if (imageUrl) {
+            console.log('Đã lấy được URL ảnh thành công:', imageUrl);
+            setCoverUrl(imageUrl);
+          } else {
+            console.log('Không lấy được URL ảnh từ storageImageId');
+            setCoverUrl(null);
+          }
+        } else {
+          // Nếu thật sự không có storageImageId, thử dùng storageId
+          if (currentTrack.storageId) {
+            console.log('Thử dùng storageId để lấy ảnh:', currentTrack.storageId);
+            const imageUrl = await getImageUrl(currentTrack.storageId);
+            if (imageUrl) {
+              console.log('Đã lấy được URL ảnh từ storageId:', imageUrl);
+              setCoverUrl(imageUrl);
+              return;
+            }
+          }
+          
+          console.log('Không có storageImageId trong track');
+          setCoverUrl(null);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy ảnh:', error);
+        setCoverUrl(null);
+      }
+    };
+    
+    fetchAudioUrl();
+    fetchCoverImage();
+  }, [currentTrack]);
+
   // Update audio src when currentTrack changes
   useEffect(() => {
-    if (audioRef.current && currentTrack) {
+    if (audioRef.current && currentTrack && audioUrl) {
       audioRef.current.load();
       if (isPlaying) {
         audioRef.current.play().catch(() => {
@@ -76,7 +188,7 @@ const Player: React.FC = () => {
         });
       }
     }
-  }, [currentTrack, isPlaying]);
+  }, [currentTrack, isPlaying, audioUrl]);
 
   // Update progress
   useEffect(() => {
@@ -227,6 +339,30 @@ const Player: React.FC = () => {
   const volumePercent = volume * 100;
   const volumeBg = `linear-gradient(90deg, #1db954 ${volumePercent}%, #fff 0)`;
 
+  // Handler khi audio load xong để lấy duration chính xác
+  const handleLoadedMetadata = () => {
+    const media = getMediaRef();
+    if (media) {
+      // Cập nhật duration từ file audio thực tế
+      const realDuration = media.duration;
+      console.log('Duration từ file audio:', realDuration);
+      
+      // So sánh các duration khác nhau
+      const metadataMs = currentTrack?.durationMs || 0;
+      const metadataSec = metadataMs / 1000;
+      const apiDuration = duration;
+      
+      console.log('Duration comparison:');
+      console.log('- Từ metadata (ms):', metadataMs);
+      console.log('- Từ metadata (s):', metadataSec);
+      console.log('- Từ API:', apiDuration);
+      console.log('- Từ file thực tế:', realDuration);
+      
+      // Luôn ưu tiên duration từ file audio thực tế
+      usePlayerStore.getState().setDuration(realDuration);
+    }
+  };
+
   // Helper để lấy ref video nếu đang showVideo
   const getMediaRef = () => {
     if (showVideo && typeof window !== 'undefined' && (window as any).__globalVideoRef) {
@@ -243,9 +379,17 @@ const Player: React.FC = () => {
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/4">
           <img
-            src={currentTrack.coverUrl}
+            src={coverUrl || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
             alt={currentTrack.title}
             className="w-14 h-14 rounded"
+            onError={(e) => {
+              // Tránh vòng lặp vô hạn khi ảnh fallback cũng lỗi
+              // Chỉ thay đổi src nếu src hiện tại không phải ảnh base64
+              const currentSrc = e.currentTarget.src;
+              if (!currentSrc.startsWith('data:image/')) {
+                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=';
+              }
+            }}
           />
           <div>
             <p className="text-white font-medium">{currentTrack.title}</p>
@@ -323,7 +467,7 @@ const Player: React.FC = () => {
             <input
               type="range"
               min="0"
-              max={duration}
+              max={isNaN(duration) ? 0 : duration}
               value={progress}
               onChange={(e) => {
                 const newTime = Number(e.target.value);
@@ -337,7 +481,7 @@ const Player: React.FC = () => {
               style={{ background: progressBg }}
             />
             <span className="text-gray-400 text-sm">
-              {formatDuration(currentTrack.durationMs)}
+              {formatDuration(duration * 1000)}
             </span>
           </div>
         </div>
@@ -377,8 +521,9 @@ const Player: React.FC = () => {
       {!showVideo && (
         <audio
           ref={audioRef}
-          src={currentTrack?.previewUrl}
+          src={audioUrl || ''}
           onEnded={handleTrackEnd}
+          onLoadedMetadata={handleLoadedMetadata}
           loop={repeat === 'track'}
         >
           {/* Added caption track to satisfy the linter */}

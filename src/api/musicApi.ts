@@ -3,11 +3,12 @@ import { MockApi } from '../lib/mocks/playerApi';
 import { PlayerState } from '../types/index';
 import { Track, ApiResponse } from '../types';
 import { mockData } from '../mock/data';
+import axios from "axios";
 
 let audio: HTMLAudioElement | null = null;
 
 // Constants
-const USE_MOCK_DATA = true; // Toggle this to switch between real API and mock data
+const USE_MOCK_DATA = false; // Toggle this to switch between real API and mock data
 
 // Helper to format response
 const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse<T> => {
@@ -198,6 +199,59 @@ export const musicApi = {
   resetPlayback: async (): Promise<ApiResponse<PlaybackState>> => {
     playbackState = { ...initialPlaybackState };
     return createResponse(playbackState);
+  },
+
+  searchSongsByTitle: async (title: string, page: number = 1, pageSize: number = 10) => {
+    try {
+      console.log(`Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`);
+      
+      if (USE_MOCK_DATA) {
+        const filtered = mockData.tracks.filter(t => t.title.toLowerCase().includes(title.toLowerCase()));
+        return createResponse({
+          result: filtered.slice((page-1)*pageSize, page*pageSize),
+          currentPage: page,
+          total: filtered.length,
+          totalPages: Math.ceil(filtered.length / pageSize)
+        });
+      }
+
+      // Lấy CSRF token từ cookie
+      const getCsrfToken = () => {
+        return document.cookie
+          .split('; ')
+          .find(row => row.startsWith('csrftoken='))
+          ?.split('=')[1] || '';
+      };
+      const csrfToken = getCsrfToken();
+
+      // Gọi API bằng axios
+      const res = await axios.post(
+        'http://localhost:8082/songs',
+        { title, page, pageSize },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
+            'X-CSRFToken': csrfToken,
+          },
+          withCredentials: true,
+        }
+      );
+      
+      console.log('Response từ API tìm kiếm:', JSON.stringify(res.data, null, 2));
+      
+      // Log thông tin về storageImageId
+      if (res.data && res.data.result && res.data.result.length > 0) {
+        res.data.result.forEach((song: any, index: number) => {
+          console.log(`Song ${index+1} - storageId: ${song.storageId}, storageImageId: ${song.storageImageId}`);
+        });
+      }
+      
+      return res.data;
+    } catch (error) {
+      console.error('Lỗi tìm kiếm bài hát:', error);
+      throw error;
+    }
   }
 };
 

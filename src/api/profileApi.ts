@@ -50,4 +50,19 @@ export const updateProfile = async (profileData: {
   return response.data.data;
 };
 
+export const getProfileByAccountID = async (accountID: string) => {
+  const csrfToken = getCsrfToken();
+  const response = await profileApi.post(
+    '/profiles',
+    { accountID },
+    {
+      headers: {
+        'X-CSRFToken': csrfToken,
+      },
+    }
+  );
+  if (!response.data.success) throw new Error(response.data.message);
+  return response.data.data;
+};
+
 export default profileApi; 
