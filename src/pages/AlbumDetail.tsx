@@ -13,6 +13,34 @@ const formatDuration = (ms: number) => {
   return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 };
 
+// Hàm định dạng ngày phát hành đẹp hơn
+const formatReleaseDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    // Nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return dateString;
+    
+    // Format: DD tháng MM, YYYY
+    return `${date.getDate()} tháng ${date.getMonth() + 1}, ${date.getFullYear()}`;
+  } catch (e) {
+    return dateString;
+  }
+};
+
+// Hàm định dạng ngày thêm ngắn gọn
+const formatAddedDate = (dateString: string) => {
+  try {
+    const date = new Date(dateString);
+    // Nếu ngày không hợp lệ
+    if (isNaN(date.getTime())) return '';
+    
+    // Format: DD/MM/YYYY
+    return `${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+  } catch (e) {
+    return '';
+  }
+};
+
 const AlbumDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [album, setAlbum] = useState<Album | null>(null);
@@ -78,7 +106,7 @@ const AlbumDetail = () => {
   const totalDuration = formatDuration(totalDurationMs);
 
   return (
-    <div className="bg-gradient-to-b from-green-400/80 to-[#181818] min-h-screen">
+    <div className="bg-gradient-to-b from-green-400/80 to-[#181818] min-h-screen pb-32">
       {/* Header album */}
       <div className="flex items-end gap-8 px-8 pt-8 pb-6">
         <img
@@ -92,7 +120,7 @@ const AlbumDetail = () => {
           <div className="flex items-center gap-2 mt-2">
             <img src="https://i.scdn.co/image/ab6775700000ee8518fe447fac315f236ce0bb52" alt="artist" className="w-7 h-7 rounded-full border border-white/30" />
             <span className="font-semibold text-white text-base mr-2">{album.artistName}</span>
-            <span className="text-white/70 text-sm">• {album.releaseDate} • {album.totalTracks} bài hát, khoảng {totalDuration}</span>
+            <span className="text-white/70 text-sm">• {formatReleaseDate(album.releaseDate)} • {album.totalTracks} bài hát, khoảng {totalDuration}</span>
           </div>
         </div>
       </div>
@@ -136,7 +164,7 @@ const AlbumDetail = () => {
                   </div>
                 </td>
                 <td className="py-2 px-2 text-white/60">{album.title}</td>
-                <td className="py-2 px-2 text-white/60">9 thg 2, 2025</td>
+                <td className="py-2 px-2 text-white/60">{formatAddedDate(album.releaseDate)}</td>
                 <td className="py-2 px-2 text-white/60 text-right">{formatDuration(track.durationMs || 0)}</td>
               </tr>
             ))}

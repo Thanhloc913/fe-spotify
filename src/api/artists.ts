@@ -111,6 +111,10 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
     if (profileResponse.data.success) {
       const profileData = profileResponse.data.data;
       
+      // Lấy profileId từ response
+      const profileId = profileData.id;
+      console.log('Profile ID:', profileId);
+      
       // Tạo đối tượng artist từ dữ liệu profile API
       const artist: Artist = {
         id: profileData.id,
@@ -215,10 +219,86 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
         console.error('Error fetching artist tracks:', error);
       }
       
-      // Giả lập albums và singles (có thể thay bằng API call thực tế sau)
+      // Lấy albums của nghệ sĩ
+      let albums: Album[] = [];
+      try {
+        console.log(`Gọi API lấy albums cho nghệ sĩ với profileId: ${profileId}`);
+        const albumsResponse = await axios.post(
+          'http://localhost:8082/albums',
+          { 
+            artistId: profileId, // Sử dụng profileId thay vì account_id
+            page: 1,
+            pageSize: 10
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getToken()}`,
+              'X-CSRFToken': csrfToken,
+            },
+            withCredentials: true,
+          }
+        );
+        
+        console.log('Albums API response:', albumsResponse.data);
+        
+        // Xác định cấu trúc chính xác của response dựa vào console.log
+        const albumsData = albumsResponse.data.data && albumsResponse.data.data.result 
+          ? albumsResponse.data.data.result 
+          : albumsResponse.data.result || [];
+          
+        console.log('Albums extracted data:', albumsData);
+        
+        if (albumsData && albumsData.length > 0) {
+          // Chuyển đổi dữ liệu album từ API sang định dạng Album
+          albums = albumsData.map((album: any) => ({
+            id: album.id,
+            title: album.name || album.title || '',
+            artistId: profileId,
+            artistName: profileData.fullName,
+            releaseDate: album.createdAt || new Date().toISOString(),
+            totalTracks: 0, 
+            type: 'album',
+            coverUrl: album.coverUrl || '',
+            // Lưu storageImageId vào biến tạm thời
+            ...(album.storageImageId ? { _storageImageId: album.storageImageId } : {})
+          }));
+          
+          console.log('Converted albums:', albums);
+          
+          // Lấy ảnh cho các album nếu có storageImageId
+          const albumsPromises = albums.map(async (album: any) => {
+            if (album._storageImageId) {
+              try {
+                console.log(`Đang lấy ảnh cho album "${album.title}" từ storageImageId: ${album._storageImageId}`);
+                const imageUrl = await getImageUrl(album._storageImageId);
+                
+                if (imageUrl) {
+                  console.log(`Đã lấy được URL ảnh cho album "${album.title}": ${imageUrl}`);
+                  const updatedAlbum = { ...album, coverUrl: imageUrl };
+                  delete updatedAlbum._storageImageId; // Xóa biến tạm
+                  return updatedAlbum;
+                }
+              } catch (error) {
+                console.error(`Lỗi khi lấy ảnh cho album "${album.title}":`, error);
+              }
+            }
+            const cleanAlbum = { ...album };
+            delete cleanAlbum._storageImageId; // Xóa biến tạm
+            return cleanAlbum;
+          });
+          
+          // Đợi tất cả các promise hoàn thành
+          albums = await Promise.all(albumsPromises);
+        }
+      } catch (error) {
+        console.error('Error fetching artist albums:', error);
+      }
+      
+      // Giả lập singles (có thể thay bằng API call thực tế sau)
       return createResponse({
         artist,
-        albums: [],
+        albums,
         singles: [],
         topTracks,
         relatedArtists: []
