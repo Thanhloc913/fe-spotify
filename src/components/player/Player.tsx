@@ -79,13 +79,21 @@ const Player: React.FC = () => {
     console.log('storageId:', currentTrack.storageId);
     console.log('storageImageId:', currentTrack.storageImageId);
     console.log('coverUrl:', currentTrack.coverUrl);
+    console.log('songUrl:', currentTrack.songUrl);
     console.log('======================================');
     
     const fetchAudioUrl = async () => {
       try {
         console.log('Current track:', currentTrack);
         
-        // Nếu đã có sẵn URL thì dùng luôn
+        // Kiểm tra có songUrl không (từ API mới)
+        if (currentTrack.songUrl) {
+          console.log('Sử dụng songUrl từ API:', currentTrack.songUrl);
+          setAudioUrl(currentTrack.songUrl);
+          return;
+        }
+        
+        // Nếu đã có sẵn previewUrl thì dùng luôn
         if (currentTrack.previewUrl) {
           console.log('Sử dụng previewUrl:', currentTrack.previewUrl);
           setAudioUrl(currentTrack.previewUrl);
@@ -379,7 +387,7 @@ const Player: React.FC = () => {
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/4">
           <img
-            src={coverUrl || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
+            src={coverUrl || (currentTrack as any).backgroundUrl || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
             alt={currentTrack.title}
             className="w-14 h-14 rounded"
             onError={(e) => {

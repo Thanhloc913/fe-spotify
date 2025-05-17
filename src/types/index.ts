@@ -66,16 +66,18 @@ export interface Track {
   artistName: string;
   albumId: string;
   albumName: string;
-  coverUrl: string;
-  previewUrl: string;
+  coverUrl?: string;
+  previewUrl?: string;
   durationMs: number;
   explicit: boolean;
   popularity: number;
-  trackNumber: number;
-  isPlayable: boolean;
-  videoUrl: string | null;
+  trackNumber?: number;
+  isPlayable?: boolean;
+  videoUrl?: string | null;
   storageId?: string;
   storageImageId?: string;
+  backgroundUrl?: string;
+  songUrl?: string;
 }
 
 export interface Genre {
