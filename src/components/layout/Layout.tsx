@@ -5,10 +5,11 @@ import { Outlet, useNavigate } from 'react-router-dom';
 import Navbar from './Navbar';
 import { usePlayerStore } from '../../store/playerStore';
 import VideoPlayer from '../player/VideoPlayer';
+import VideoModal from '../player/VideoModal';
 import axios from 'axios';
 
 const Layout: React.FC = () => {
-  const { showVideo, currentTrack, isPlaying, progress, volume, setShowVideo, repeat } = usePlayerStore();
+  const { showVideo, isVideoModalOpen, currentTrack, isPlaying, progress, volume, setShowVideo, repeat } = usePlayerStore();
   const videoElementRef = useRef<HTMLVideoElement | null>(null);
   const navigate = useNavigate();
 
@@ -50,6 +51,11 @@ const Layout: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Video Modal */}
+      {isVideoModalOpen && currentTrack && currentTrack.songUrl && (
+        <VideoModal videoUrl={currentTrack.songUrl} />
+      )}
 
       {/* Player - Fixed at bottom */}
       <Player />

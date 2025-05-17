@@ -4,6 +4,7 @@ import { Track } from '../types';
 import { getTrackById } from '../api/tracks';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
+import { MdOndemandVideo } from 'react-icons/md';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -16,7 +17,7 @@ const TrackDetail = () => {
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { playTrack, currentTrack, setCurrentTrack } = usePlayerStore();
+  const { playTrack, currentTrack, setCurrentTrack, openMusicVideo } = usePlayerStore();
 
   useEffect(() => {
     const fetchTrackData = async () => {
@@ -24,8 +25,21 @@ const TrackDetail = () => {
         if (!id) return;
 
         const response = await getTrackById(id);
-        setTrack(response.data);
+        const trackData = response.data;
+        
+        // Check and set songType if not present
+        if (!trackData.songType) {
+          if (trackData.songUrl && trackData.songUrl.includes('/videos/')) {
+            trackData.songType = 'MUSIC_VIDEO';
+          } else {
+            trackData.songType = 'SONG';
+          }
+        }
+        
+        console.log('Loaded track with data:', trackData);
+        console.log('Song type:', trackData.songType);
 
+        setTrack(trackData);
       } catch (err) {
         setError('Failed to fetch track data');
         console.error(err);
@@ -39,8 +53,22 @@ const TrackDetail = () => {
 
   const handlePlayTrack = () => {
     if (track) {
+      console.log('Playing track from TrackDetail:', track);
+      console.log('Track song type:', track.songType);
       setCurrentTrack(track);
       playTrack();
+    }
+  };
+
+  const handleWatchVideo = () => {
+    if (track) {
+      console.log('Opening music video for:', track);
+      
+      // Ensure the track is set as current
+      setCurrentTrack(track);
+      
+      // Then open the video
+      openMusicVideo();
     }
   };
 
@@ -96,13 +124,26 @@ const TrackDetail = () => {
           </div>
           <p className="text-gray-500 mt-2">
             {formatDuration(track.durationMs)} • {track.explicit ? 'Explicit' : 'Clean'}
+            {track.songType && <span> • {track.songType}</span>}
           </p>
-          <button
-            onClick={handlePlayTrack}
-            className="mt-4 bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
-          >
-            {currentTrack?.id === track.id ? 'Playing' : 'Play'}
-          </button>
+          <div className="flex gap-3 mt-4">
+            <button
+              onClick={handlePlayTrack}
+              className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
+            >
+              {currentTrack?.id === track.id ? 'Playing' : 'Play'}
+            </button>
+            
+            {track.songType === 'MUSIC_VIDEO' && (
+              <button 
+                onClick={handleWatchVideo}
+                className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2"
+              >
+                <MdOndemandVideo size={20} />
+                <span>Xem video</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -118,6 +159,12 @@ const TrackDetail = () => {
             <h3 className="text-gray-400 mb-2">Track Number</h3>
             <p className="text-white">{track.trackNumber}</p>
           </div>
+          {track.songType && (
+            <div>
+              <h3 className="text-gray-400 mb-2">Type</h3>
+              <p className="text-white">{track.songType}</p>
+            </div>
+          )}
         </div>
       </div>
     </div>
