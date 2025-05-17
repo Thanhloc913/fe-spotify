@@ -1,5 +1,6 @@
 import { usePlayerStore } from '../store/playerStore';
 import { FaPlay, FaPause, FaStepBackward, FaStepForward, FaVolumeUp, FaRandom, FaRedoAlt } from 'react-icons/fa';
+import { MdOndemandVideo } from 'react-icons/md';
 
 const Player = () => {
   const {
@@ -16,7 +17,8 @@ const Player = () => {
     setRepeat,
     toggleShuffle,
     skipToNext,
-    skipToPrevious
+    skipToPrevious,
+    openMusicVideo
   } = usePlayerStore();
 
   if (!currentTrack) {
@@ -43,9 +45,20 @@ const Player = () => {
           alt={currentTrack.title}
           className="w-14 h-14 object-cover"
         />
-        <div>
+        <div className="flex flex-col">
           <h4 className="text-white font-medium">{currentTrack.title}</h4>
           <p className="text-spotify-text-secondary text-sm">{currentTrack.artistName}</p>
+          
+          {/* Hiển thị trong phần thông tin bài hát */}
+          {currentTrack.songType === 'MUSIC_VIDEO' && (
+            <button 
+              onClick={openMusicVideo}
+              className="flex items-center gap-1 text-spotify-green hover:text-white text-sm mt-1"
+            >
+              <MdOndemandVideo size={16} />
+              <span>Xem video</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -82,6 +95,17 @@ const Player = () => {
           >
             <FaRedoAlt />
           </button>
+          
+          {/* Hiển thị thêm nút xem video nổi bật hơn khi là MUSIC_VIDEO */}
+          {currentTrack.songType === 'MUSIC_VIDEO' && (
+            <button 
+              onClick={openMusicVideo}
+              className="flex items-center gap-1 bg-spotify-green text-white rounded-full px-3 py-1 text-sm ml-4 hover:bg-spotify-green-hover transition-colors"
+            >
+              <MdOndemandVideo size={16} />
+              <span>Xem MV</span>
+            </button>
+          )}
         </div>
         <div className="flex items-center gap-2 w-full">
           <span className="text-spotify-text-secondary text-xs">

@@ -20,5 +20,6 @@ export const removeToken = () => {
   localStorage.removeItem('access_token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('account_id');
+  localStorage.removeItem('profile_id');
 };
   

@@ -1,4 +1,3 @@
-// User type definition
 export interface User {
   id: string;
   name: string;
@@ -78,6 +77,7 @@ export interface Track {
   storageImageId?: string;
   backgroundUrl?: string;
   songUrl?: string;
+  songType?: 'SONG' | 'MUSIC_VIDEO';
 }
 
 export interface Genre {
@@ -140,4 +140,89 @@ export interface ApiResponse<T> {
   data: T;
   status: number;
   message?: string;
+}
+
+// Authentication types
+export interface LoginRequest {
+  email?: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  data: {
+    access_token: string;
+    refresh_token: string;
+    account: {
+      id: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+      isActive: boolean;
+      roleId: string;
+      username: string;
+      email: string;
+    };
+  };
+  message: string;
+  success: boolean;
+}
+
+export interface RegisterRequest {
+  username: string;
+  email: string;
+  password: string;
+  fullName: string;
+  avatarUrl?: string;
+  bio?: string;
+  dateOfBirth?: string;
+  phoneNumber?: string;
+}
+
+export interface RegisterResponse {
+  data: {
+    account: {
+      id: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+      isActive: boolean;
+      roleId: string;
+      username: string;
+      email: string;
+    };
+    profile: {
+      id: string;
+      accountID: string;
+      fullName: string;
+      avatarUrl: string;
+      bio: string;
+      dateOfBirth: string;
+      phoneNumber: string;
+      createdAt: string;
+      updatedAt: string;
+      deletedAt: string | null;
+      isActive: boolean;
+    };
+  };
+  message: string;
+  success: boolean;
+}
+
+export interface FindAccountByEmailRequest {
+  email: string;
+}
+
+export interface FindAccountByEmailResponse {
+  success: boolean;
+  message: string;
+  data: {
+    id: string;
+    createdAt: string;
+    updatedAt: string;
+    deletedAt: string | null;
+    isActive: boolean;
+    roleId: string;
+    email: string;
+    username: string;
+  };
 }

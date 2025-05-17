@@ -24,6 +24,7 @@ interface PlayerState {
   skipToNext: () => void;
   skipToPrevious: () => void;
   setShowVideo: (show: boolean) => void;
+  openMusicVideo: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -40,7 +41,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ 
       currentTrack: track, 
       duration: track.durationMs / 1000,
-      progress: 0
+      progress: 0,
+      // Reset showVideo when changing tracks
+      showVideo: false
     });
     
     // Call the API to set the current track
@@ -98,16 +101,28 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
   },
   skipToPrevious: () => {
-    const { progress, playTrack } = get();
+    const { progress, setProgress, playTrack } = get();
+    // If progress is more than 3 seconds, restart the track
     if (progress > 3) {
-      // If more than 3 seconds into the song, restart it
-      set({ progress: 0 });
+      setProgress(0);
       playTrack();
     } else {
       // Otherwise go to previous track (not implemented yet)
-      set({ progress: 0 });
-      playTrack();
+      setProgress(0);
     }
   },
-  setShowVideo: (show) => set({ showVideo: show })
+  setShowVideo: (show) => set({ showVideo: show }),
+  openMusicVideo: () => {
+    const { currentTrack } = get();
+    if (currentTrack?.songType === 'MUSIC_VIDEO') {
+      // Ưu tiên sử dụng videoUrl nếu có, nếu không thì dùng songUrl
+      const videoSource = currentTrack?.videoUrl || currentTrack?.songUrl;
+      if (videoSource) {
+        // Mở video URL trong tab mới
+        window.open(videoSource, '_blank');
+      } else {
+        console.error('Không tìm thấy URL video cho bài hát này');
+      }
+    }
+  },
 }));
