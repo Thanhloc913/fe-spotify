@@ -30,12 +30,6 @@ const getCsrfToken = () => {
 
 export const getProfile = async () => {
   const response = await profileApi.get('/profile');
-  
-  // Lưu profile ID vào localStorage
-  if (response.data?.data?.id) {
-    localStorage.setItem('profile_id', response.data.data.id);
-  }
-  
   return response.data;
 };
 

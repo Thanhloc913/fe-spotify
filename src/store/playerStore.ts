@@ -12,6 +12,7 @@ interface PlayerState {
   repeat: 'off' | 'track' | 'context';
   shuffle: boolean;
   showVideo: boolean;
+  isVideoModalOpen: boolean;
   setCurrentTrack: (track: Track) => void;
   playTrack: () => void;
   pauseTrack: () => void;
@@ -25,6 +26,7 @@ interface PlayerState {
   skipToPrevious: () => void;
   setShowVideo: (show: boolean) => void;
   openMusicVideo: () => void;
+  toggleVideoModal: () => void;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -37,13 +39,15 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   repeat: 'off',
   shuffle: false,
   showVideo: false,
+  isVideoModalOpen: false,
   setCurrentTrack: (track) => {
     set({ 
       currentTrack: track, 
       duration: track.durationMs / 1000,
       progress: 0,
       // Reset showVideo when changing tracks
-      showVideo: false
+      showVideo: false,
+      isVideoModalOpen: false
     });
     
     // Call the API to set the current track
@@ -114,15 +118,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setShowVideo: (show) => set({ showVideo: show }),
   openMusicVideo: () => {
     const { currentTrack } = get();
-    if (currentTrack?.songType === 'MUSIC_VIDEO') {
-      // Ưu tiên sử dụng videoUrl nếu có, nếu không thì dùng songUrl
-      const videoSource = currentTrack?.videoUrl || currentTrack?.songUrl;
-      if (videoSource) {
-        // Mở video URL trong tab mới
-        window.open(videoSource, '_blank');
-      } else {
-        console.error('Không tìm thấy URL video cho bài hát này');
-      }
+    if (currentTrack?.songUrl) {
+      console.log('Opening music video URL:', currentTrack.songUrl);
+      
+      // Mở modal video thay vì set showVideo
+      set({ isVideoModalOpen: true });
     }
   },
+  toggleVideoModal: () => set((state) => ({ isVideoModalOpen: !state.isVideoModalOpen })),
 }));

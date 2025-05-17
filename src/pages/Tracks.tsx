@@ -33,6 +33,20 @@ const Tracks = () => {
   }, []);
 
   const handlePlayTrack = (track: Track) => {
+    console.log('Playing track in Tracks.tsx:', track);
+    console.log('Track song type:', track.songType);
+    
+    // Ensure songType is set before passing to player
+    if (!track.songType) {
+      if (track.songUrl && track.songUrl.includes('videos')) {
+        track.songType = 'MUSIC_VIDEO';
+        console.log('Set track type to MUSIC_VIDEO based on URL');
+      } else {
+        track.songType = 'SONG';
+        console.log('Set default track type to SONG');
+      }
+    }
+    
     setCurrentTrack(track);
     playTrack();
   };

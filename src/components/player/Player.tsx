@@ -42,7 +42,8 @@ const Player: React.FC = () => {
     skipToPrevious,
     setCurrentTrack,
     setShowVideo,
-    showVideo
+    showVideo,
+    toggleVideoModal
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
@@ -414,10 +415,10 @@ const Player: React.FC = () => {
           <button onClick={openPlaylistPopup} className="ml-2 text-gray-400 hover:text-green-400">
             <FaList className="w-5 h-5" />
           </button>
-          {currentTrack.videoUrl && (
+          {currentTrack.songType === 'MUSIC_VIDEO' && (
             <button
-              onClick={() => setShowVideo(!showVideo)}
-              className={`ml-2 ${showVideo ? 'text-spotify-green' : 'text-gray-400'} hover:text-spotify-green`}
+              onClick={toggleVideoModal}
+              className={`ml-2 text-gray-400 hover:text-spotify-green`}
             >
               <FaVideo className="w-5 h-5" />
             </button>

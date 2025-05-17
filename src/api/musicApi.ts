@@ -209,6 +209,21 @@ export const musicApi = {
           return createResponse(playbackState, 404, "Track not found");
         }
 
+        console.log("Setting track:", track);
+        console.log("Track type:", track.songType); 
+
+        // Ensure the track has the songType property
+        if (!track.songType) {
+          // Default to SONG if not specified
+          track.songType = "SONG";
+          
+          // If it has a songUrl that includes /videos/, it's likely a music video
+          if (track.songUrl && track.songUrl.includes('/videos/')) {
+            track.songType = "MUSIC_VIDEO";
+          }
+        }
+
+        console.log("Updated track type:", track.songType);
         playbackState.currentTrack = track;
         playbackState.progress = 0;
         return createResponse(playbackState);
