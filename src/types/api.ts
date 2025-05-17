@@ -1,19 +1,21 @@
 // {
-//     "id": "5f31ccc2-8839-444d-8021-a1c5b7f1b334",
-//     "createdAt": "2025-05-17T07:34:05.139537Z",
-//     "updatedAt": "2025-05-17T07:34:05.152928Z",
+//     "id": "9d8c3af2-f9c3-4fde-a6e5-b5098f28223c",
+//     "songUrl": "https://clontify-storage.s3.amazonaws.com/audios/358236eb-92f1-43e8-8f86-f787f0fea3a4.mp3?response-content-disposition=inline&response-content-type=audio%2Fmpeg&AWSAccessKeyId=AKIA4Y5DFSU7Y2AKHSWS&Signature=fOIi7BFfdsqc9cpbmI%2Be7PsL1Mo%3D&Expires=1747588387",
+//     "backgroundUrl": "https://clontify-storage.s3.amazonaws.com/images/55a12c88-7a34-4002-af53-696d95e7cdf0.jpg?response-content-disposition=inline&response-content-type=image%2Fjpeg&AWSAccessKeyId=AKIA4Y5DFSU7Y2AKHSWS&Signature=N5QJHVUQOeyqaqJibo4iiaEtBNE%3D&Expires=1747588388",
+//     "createdAt": "2025-05-17T07:46:09.551779Z",
+//     "updatedAt": "2025-05-17T07:46:09.562471Z",
 //     "deletedAt": null,
 //     "isActive": true,
-//     "title": "Cứu lấy con vịt 188k",
+//     "title": "cứu lấy âm nhạc",
 //     "description": "Con vịt làm nhạc đầu tay",
-//     "artistId": "2f13a966-2624-406a-9e7e-1dcbe1359ded",
-//     "storageId": "2bf58607-ec90-42b6-b237-e12889be84d3",
-//     "storageImageId": "fa5241cd-1fc2-414c-8ee8-885b0fafe80f",
+//     "artistId": "9d8c3af2-f9c3-4fde-a6e5-b5098f28222b",
 //     "duration": 25,
 //     "songType": "SONG"
 // }
 export type ApiSongType = {
   id: string;
+  songUrl: string;
+  backgroundUrl: string;
   createdAt: string;
   updatedAt: string;
   deletedAt: string | null;
@@ -21,20 +23,18 @@ export type ApiSongType = {
   title: string;
   description: string;
   artistId: string;
-  storageId: string;
-  storageImageId: string;
   duration: number;
   songType: string;
 };
 
 // {
-//     "id": 6,
-//     "createdAt": "2025-05-17T12:34:42.049787Z",
-//     "updatedAt": "2025-05-17T12:34:42.049787Z",
+//     "id": 1,
+//     "createdAt": "2025-05-17T17:21:42.788083Z",
+//     "updatedAt": "2025-05-17T17:21:42.788083Z",
 //     "deletedAt": null,
 //     "isActive": true,
-//     "profileID": "efd7d6cf-85a8-4e46-aacd-22608f941752",
-//     "songID": "5f31ccc2-8839-444d-8021-a1c5b7f1b334"
+//     "profileID": "d801ba03-323b-438c-8887-47bf33c8cc07",
+//     "songID": "9d8c3af2-f9c3-4fde-a6e5-b5098f28223c"
 // }
 export type ApiFavoriteSongType = {
   id: number;

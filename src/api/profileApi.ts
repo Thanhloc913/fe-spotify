@@ -1,4 +1,5 @@
 import axios from "axios";
+import { ApiProfileType } from "../types/api";
 
 const profileApi = axios.create({
   baseURL: "http://localhost:8081",
@@ -22,20 +23,22 @@ profileApi.interceptors.request.use(
 
 // Lấy CSRF token từ cookie
 const getCsrfToken = () => {
-  return document.cookie
-    .split('; ')
-    .find(row => row.startsWith('csrftoken='))
-    ?.split('=')[1] || '';
+  return (
+    document.cookie
+      .split("; ")
+      .find((row) => row.startsWith("csrftoken="))
+      ?.split("=")[1] || ""
+  );
 };
 
 export const getProfile = async () => {
-  const response = await profileApi.get('/profile');
-  
+  const response = await profileApi.get("/profile");
+
   // Lưu profile ID vào localStorage
   if (response.data?.data?.id) {
-    localStorage.setItem('profile_id', response.data.data.id);
+    localStorage.setItem("profile_id", response.data.data.id);
   }
-  
+
   return response.data;
 };
 
@@ -47,22 +50,37 @@ export const updateProfile = async (profileData: {
   avatarUrl: string;
 }) => {
   const csrfToken = getCsrfToken();
-  const response = await profileApi.post('/profile/update', profileData, {
+  const response = await profileApi.post("/profile/update", profileData, {
     headers: {
-      'X-CSRFToken': csrfToken,
+      "X-CSRFToken": csrfToken,
     },
   });
   if (!response.data.success) throw new Error(response.data.message);
   return response.data.data;
 };
 
+// export const getProfileByAccountID = async (accountID: string) => {
+//   const csrfToken = getCsrfToken();
+//   const response = await profileApi.get(
+//     `/artist/${accountID}`,
+//     {
+//       headers: {
+//         'X-CSRFToken': csrfToken,
+//       },
+//     }
+//   );
+//   if (!response.data.success) throw new Error(response.data.message);
+//   return response.data.data;
+// };
+
 export const getProfileByAccountID = async (accountID: string) => {
   const csrfToken = getCsrfToken();
-  const response = await profileApi.get(
-    `/artist/${accountID}`,
+  const response = await profileApi.post(
+    `/profiles`,
+    { accountID },
     {
       headers: {
-        'X-CSRFToken': csrfToken,
+        "X-CSRFToken": csrfToken,
       },
     }
   );
@@ -70,4 +88,18 @@ export const getProfileByAccountID = async (accountID: string) => {
   return response.data.data;
 };
 
-export default profileApi; 
+export const getProfilesByIds = async (
+  ids: string[]
+): Promise<ApiProfileType[]> => {
+  const response = await profileApi.get("/profiles", {
+    params: {
+      ids: ids,
+    },
+    paramsSerializer: {
+      indexes: false,
+    },
+  });
+  return response.data.data;
+};
+
+export default profileApi;

@@ -4,8 +4,7 @@ import { PlayerState } from "../types/index";
 import { Track, ApiResponse } from "../types";
 import { mockData } from "../mock/data";
 import axios from "axios";
-import { ApiSongType } from "../types/api";
-import { getProfileByAccountID } from "./profileApi";
+import { ApiFavoriteSongType, ApiSongType } from "../types/api";
 import { getCsrfToken } from "./storageApi";
 import { getToken } from "../utils/auth";
 
@@ -319,26 +318,38 @@ export const musicApi = {
 
   getLikedSongs: async (): Promise<ApiSongType[]> => {
     const favRes = await usersApi.post("/favorites", {
-      profileId: (
-        await getProfileByAccountID(localStorage.getItem("account_id") ?? "")
-      )?.id,
+      profileId: localStorage.getItem("profile_id"),
     });
-    const favList: { profileID: string; songID: string }[] =
-      favRes.data.data.result;
+    const favList: ApiFavoriteSongType[] = favRes.data.data.result;
     console.log("favorite list", favList);
 
-    const songRes = await songsApi.get("/songs", {
+    const songList = await getSongsByIds(favList.map((fav) => fav.songID));
+    console.log("favorite song list", songList);
+    return songList;
+  },
+
+  createFavorite: async (profileId: string, songId: string) => {
+    const res = await usersApi.post("/favorite/create", { profileId, songId });
+    return res.data;
+  },
+
+  deleteFavorite: async (profileId: string, songId: string) => {
+    const res = await usersApi.post("/favorite/delete", { profileId, songId });
+    return res.data;
+  },
+};
+
+async function getSongsByIds(ids: string[]): Promise<ApiSongType[]> {
+  return (
+    await songsApi.get("/songs", {
       params: {
-        id: favList.map((fav) => fav.songID),
+        ids: ids,
       },
       paramsSerializer: {
         indexes: false, // This will serialize arrays as repeated query params: ?id[]=1&id[]=2
       },
-    });
-    const songList = songRes.data.data.result;
-    console.log("favorite song list", songList);
-    return songList;
-  },
-};
+    })
+  ).data.data;
+}
 
 export default musicApi;
