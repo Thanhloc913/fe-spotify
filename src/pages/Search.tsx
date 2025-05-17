@@ -62,10 +62,8 @@ export default function Search() {
     loadLikedTracks();
   }, []);
 
-  // Lấy query từ URL hoặc mặc định là ''
   const query = keyword ? decodeURIComponent(keyword) : '';
 
-  // Gọi API search khi query thay đổi
   useEffect(() => {
     if (!query) {
       setSearchResult(null);
@@ -84,7 +82,6 @@ export default function Search() {
       .finally(() => setSearchLoading(false));
   }, [query]);
 
-  // Lấy thông tin nghệ sĩ khi có kết quả tìm kiếm
   useEffect(() => {
     if (!searchResult || !searchResult.result) return;
     const artistIds = Array.from(new Set(searchResult.result.map((song: any) => String(song.artistId)).filter(Boolean))) as string[];
@@ -138,7 +135,7 @@ export default function Search() {
         // Nếu không có storageImageId hoặc không lấy được, thử dùng storageId
         if (!imageUrl && song.storageId) {
           console.log(`Đang lấy ảnh cho bài hát "${song.title}" từ storageId: ${song.storageId}`);
-          imageUrl = await getImageUrl(song.storageId);
+          imageUrl =  getImageUrl(song.storageId);
         }
         
         if (imageUrl) {
@@ -158,14 +155,38 @@ export default function Search() {
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {
-      setCurrentTrack(track);
+      // Kiểm tra và đảm bảo rằng track có tất cả thông tin cần thiết
+      const enhancedTrack = {
+        ...track,
+        // Đảm bảo các trường cần thiết đều được đưa vào
+        songUrl: track.songUrl || undefined,
+        previewUrl: track.previewUrl || track.songUrl || undefined,
+        coverUrl: track.backgroundUrl || songImages[track.id] || track.coverUrl || undefined,
+        artistName: track.artistName || artistNames[String(track.artistId)] || "Nghệ sĩ không xác định",
+        durationMs: track.durationMs || (track.duration ? track.duration * 1000 : 0)
+      };
+      
+      console.log('Đang phát bài hát với thông tin:', JSON.stringify(enhancedTrack, null, 2));
+      setCurrentTrack(enhancedTrack);
       playTrack();
     }
   };
 
   const handlePlayAll = () => {
     if (searchResult && searchResult.result && searchResult.result.length > 0) {
-      setCurrentTrack(searchResult.result[0]);
+      const firstTrack = searchResult.result[0];
+      // Tương tự như handlePlayTrack, đảm bảo track có tất cả thông tin cần thiết
+      const enhancedTrack = {
+        ...firstTrack,
+        songUrl: firstTrack.songUrl || undefined,
+        previewUrl: firstTrack.previewUrl || firstTrack.songUrl || undefined,
+        coverUrl: firstTrack.backgroundUrl || songImages[firstTrack.id] || firstTrack.coverUrl || undefined,
+        artistName: firstTrack.artistName || artistNames[String(firstTrack.artistId)] || "Nghệ sĩ không xác định",
+        durationMs: firstTrack.durationMs || (firstTrack.duration ? firstTrack.duration * 1000 : 0)
+      };
+      
+      console.log('Đang phát bài hát đầu tiên với thông tin:', JSON.stringify(enhancedTrack, null, 2));
+      setCurrentTrack(enhancedTrack);
       playTrack();
     }
   };
@@ -256,7 +277,7 @@ export default function Search() {
 
                     {/* Ảnh bài hát */}
                     <img 
-                      src={song.coverUrl || songImages[song.id] || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='} 
+                      src={song.backgroundUrl || songImages[song.id] || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='} 
                       alt={song.title} 
                       className="w-12 h-12 rounded mr-4 cursor-pointer"
                       onClick={() => navigate(`/track/${song.id}`)}

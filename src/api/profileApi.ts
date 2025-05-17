@@ -52,9 +52,8 @@ export const updateProfile = async (profileData: {
 
 export const getProfileByAccountID = async (accountID: string) => {
   const csrfToken = getCsrfToken();
-  const response = await profileApi.post(
-    '/profiles',
-    { accountID },
+  const response = await profileApi.get(
+    `/artist/${accountID}`,
     {
       headers: {
         'X-CSRFToken': csrfToken,

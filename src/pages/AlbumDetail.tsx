@@ -74,9 +74,28 @@ const AlbumDetail = () => {
 
   const handlePlayAlbum = () => {
     if (tracks.length > 0) {
-      setCurrentTrack(tracks[0]);
+      const firstTrack = {
+        ...tracks[0],
+        // Đảm bảo player có đủ thông tin cần thiết
+        backgroundUrl: tracks[0].backgroundUrl || tracks[0].coverUrl || album?.coverUrl,
+        coverUrl: tracks[0].backgroundUrl || tracks[0].coverUrl || album?.coverUrl
+      };
+      setCurrentTrack(firstTrack);
       playTrack();
     }
+  };
+
+  const handlePlayTrack = (track: Track) => {
+    const enhancedTrack = {
+      ...track,
+      // Thêm thông tin để player có thể hiển thị đúng
+      backgroundUrl: track.backgroundUrl || track.coverUrl || album?.coverUrl,
+      coverUrl: track.backgroundUrl || track.coverUrl || album?.coverUrl
+    };
+    
+    console.log('Đang phát bài hát với thông tin:', JSON.stringify(enhancedTrack, null, 2));
+    setCurrentTrack(enhancedTrack);
+    playTrack();
   };
 
   if (loading) {
@@ -118,9 +137,7 @@ const AlbumDetail = () => {
           <span className="uppercase text-xs font-bold text-white/80">Album</span>
           <h1 className="text-6xl font-extrabold text-white leading-tight drop-shadow-lg">{album.title}</h1>
           <div className="flex items-center gap-2 mt-2">
-            <img src="https://i.scdn.co/image/ab6775700000ee8518fe447fac315f236ce0bb52" alt="artist" className="w-7 h-7 rounded-full border border-white/30" />
-            <span className="font-semibold text-white text-base mr-2">{album.artistName}</span>
-            <span className="text-white/70 text-sm">• {formatReleaseDate(album.releaseDate)} • {album.totalTracks} bài hát, khoảng {totalDuration}</span>
+<span className="text-white/70 text-sm">• {formatReleaseDate(album.releaseDate)} • {album.totalTracks} bài hát, khoảng {totalDuration}</span>
           </div>
         </div>
       </div>
@@ -150,10 +167,14 @@ const AlbumDetail = () => {
           </thead>
           <tbody>
             {tracks.map((track, idx) => (
-              <tr key={track.id} className="hover:bg-white/5 group transition cursor-pointer" onClick={() => { setCurrentTrack(track); playTrack(); }}>
+              <tr key={track.id} className="hover:bg-white/5 group transition cursor-pointer" onClick={() => { handlePlayTrack(track); }}>
                 <td className="py-2 px-2 text-white/70 w-8">{idx + 1}</td>
                 <td className="py-2 px-2 flex items-center gap-3">
-                  <img src={album.coverUrl} alt={track.title} className="w-10 h-10 rounded shadow" />
+                  <img 
+                    src={track.backgroundUrl || track.coverUrl || album.coverUrl} 
+                    alt={track.title} 
+                    className="w-10 h-10 rounded shadow" 
+                  />
                   <div>
                     <div className="text-white font-medium cursor-default">{track.title}</div>
                     <div className="text-white/60 text-xs">

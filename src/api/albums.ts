@@ -153,6 +153,8 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
           previewUrl: '',
           popularity: 100,
           coverUrl: track.coverUrl || album.coverUrl || '',
+          backgroundUrl: track.backgroundUrl || '',
+          songUrl: track.songUrl || '',
           storageId: track.storageId || '',
           storageImageId: track.storageImageId || '',
           trackNumber: track.trackNumber || 1,
@@ -169,6 +171,19 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
             }
           } catch (error) {
             console.error(`Error fetching track cover for ${track.title}:`, error);
+          }
+        }
+        
+        // Lấy URL file nhạc từ storageId nếu không có sẵn songUrl
+        if (!trackObj.songUrl && track.storageId) {
+          try {
+            const songUrl = await getImageUrl(track.storageId);
+            if (songUrl) {
+              trackObj.songUrl = songUrl;
+              console.log(`Đã lấy được URL file nhạc cho "${track.title}": ${songUrl}`);
+            }
+          } catch (error) {
+            console.error(`Error fetching song URL for ${track.title}:`, error);
           }
         }
         
