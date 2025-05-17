@@ -62,8 +62,18 @@ const ArtistDetail = () => {
   };
 
   if (loading) return <div>Loading...</div>;
-  if (error) return <div>Error: {error}</div>;
-  if (!artist) return <div>Artist not found</div>;
+  if (error || !artist) return (
+    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
+      <h1 className="text-3xl font-bold mb-4">Error: Artist not found</h1>
+      <p className="text-gray-400 mb-6">Không tìm thấy nghệ sĩ với ID: {id}</p>
+      <Link 
+        to="/search"
+        className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full transition-colors"
+      >
+        Quay lại tìm kiếm
+      </Link>
+    </div>
+  );
 
   return (
     <div className="p-12">

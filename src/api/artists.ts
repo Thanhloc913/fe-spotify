@@ -2,10 +2,11 @@ import axios from 'axios';
 import { type Artist, type Album, type Track, type ApiResponse } from '../types';
 import { mockData } from '../mock/data';
 import { getToken } from '../utils/auth';
+import { getImageUrl } from './storageApi';
 
 // Constants
-const API_BASE_URL = 'https://api.spotify.com/v1';
-const USE_MOCK_DATA = true; // Toggle this to switch between real API and mock data
+const API_BASE_URL = 'http://localhost:8081'; // URL đến backend API thực tế
+const USE_MOCK_DATA = false; // Toggle this to switch between real API and mock data
 
 // Helper to format response
 const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse<T> => {
@@ -37,9 +38,16 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
   if (!getToken()) throw new Error('No token');
   try {
     if (USE_MOCK_DATA) {
-      const artist = mockData.artists.find(a => a.id === id);
+      // Kiểm tra xem id có phải là accountID không
+      let artist = mockData.artists.find(a => a.id === id);
+      
+      // Nếu không tìm thấy theo id, thử tìm theo accountID
+      if (!artist) {
+        artist = mockData.artists.find(a => a.accountID === id);
+      }
       
       if (!artist) {
+        console.log(`Không tìm thấy nghệ sĩ với ID: ${id}`);
         return createResponse(null as any, 404, 'Artist not found');
       }
 
@@ -72,22 +80,153 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
       });
     }
 
-    // Real API implementation
-    const [artistRes, albumsRes, singlesRes, topTracksRes, relatedRes] = await Promise.all([
-      axios.get(`${API_BASE_URL}/artists/${id}`),
-      axios.get(`${API_BASE_URL}/artists/${id}/albums?include_groups=album`),
-      axios.get(`${API_BASE_URL}/artists/${id}/albums?include_groups=single`),
-      axios.get(`${API_BASE_URL}/artists/${id}/top-tracks?market=US`),
-      axios.get(`${API_BASE_URL}/artists/${id}/related-artists`)
-    ]);
+    // Gọi API thực tế - POST đến /profile với accountID
+    console.log(`Gọi API thực với ID: ${id}`);
+    
+    // Lấy CSRF token từ cookie
+    const getCsrfToken = () => {
+      return document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='))
+        ?.split('=')[1] || '';
+    };
+    const csrfToken = getCsrfToken();
 
-    return createResponse({
-      ...artistRes.data,
-      albums: albumsRes.data.items,
-      singles: singlesRes.data.items,
-      topTracks: topTracksRes.data.tracks,
-      relatedArtists: relatedRes.data.artists
-    });
+    // Gọi API profile để lấy thông tin nghệ sĩ
+    const profileResponse = await axios.post(
+      `${API_BASE_URL}/profiles`,
+      { accountID: id },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${getToken()}`,
+          'X-CSRFToken': csrfToken,
+        },
+        withCredentials: true,
+      }
+    );
+    
+    console.log('Profile API response:', profileResponse.data);
+    
+    if (profileResponse.data.success) {
+      const profileData = profileResponse.data.data;
+      
+      // Tạo đối tượng artist từ dữ liệu profile API
+      const artist: Artist = {
+        id: profileData.id,
+        name: profileData.fullName,
+        avatarUrl: profileData.avatarUrl,
+        bio: profileData.bio || '',
+        genres: ['V-Pop'], // Có thể điều chỉnh hoặc lấy từ API nếu có
+        monthlyListeners: 0, // Có thể điều chỉnh hoặc lấy từ API nếu có
+        albums: [],
+        singles: [],
+        topTracks: [],
+        related: [],
+        accountID: profileData.accountID,
+        fullName: profileData.fullName,
+        dateOfBirth: profileData.dateOfBirth,
+        phoneNumber: profileData.phoneNumber,
+        createdAt: profileData.createdAt,
+        updatedAt: profileData.updatedAt,
+        deletedAt: profileData.deletedAt,
+        isActive: profileData.isActive
+      };
+      
+      // Gọi API để lấy bài hát phổ biến của nghệ sĩ
+      let topTracks: Track[] = [];
+      try {
+        const songsResponse = await axios.post(
+          'http://localhost:8082/songs',
+          { 
+            artistId: id,
+            page: 1,
+            pageSize: 10
+          },
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${getToken()}`,
+              'X-CSRFToken': csrfToken,
+            },
+            withCredentials: true,
+          }
+        );
+        
+        console.log('Songs API response:', songsResponse.data);
+        
+        if (songsResponse.data.success && songsResponse.data.data && songsResponse.data.data.result) {
+          // Chuyển đổi dữ liệu bài hát từ API sang định dạng Track
+          topTracks = songsResponse.data.data.result.map((song: any) => ({
+            id: song.id,
+            title: song.title || '',
+            artistId: song.artistId || id,
+            artistName: profileData.fullName,
+            albumId: song.albumId || '',
+            albumName: song.albumName || '',
+            durationMs: song.duration ? song.duration * 1000 : 0,
+            explicit: false,
+            previewUrl: '',
+            popularity: 100,
+            coverUrl: song.coverUrl || '',
+            storageId: song.storageId || '',
+            storageImageId: song.storageImageId || '',
+          }));
+          
+          console.log('Converted tracks:', topTracks);
+          
+          // Lấy ảnh cho các bài hát nếu không có coverUrl
+          const tracksPromises = topTracks.map(async (track) => {
+            if (!track.coverUrl && (track.storageImageId || track.storageId)) {
+              try {
+                // Ưu tiên lấy từ storageImageId trước
+                const imageId = track.storageImageId || 
+                               (track as any).storageImageId ||
+                               (track as any).storageImageID;
+                
+                let imageUrl = null;
+                
+                if (imageId) {
+                  console.log(`Đang lấy ảnh cho bài hát "${track.title}" từ storageImageId: ${imageId}`);
+                  imageUrl = await getImageUrl(imageId);
+                }
+                
+                // Nếu không có storageImageId hoặc không lấy được, thử dùng storageId
+                if (!imageUrl && track.storageId) {
+                  console.log(`Đang lấy ảnh cho bài hát "${track.title}" từ storageId: ${track.storageId}`);
+                  imageUrl = await getImageUrl(track.storageId);
+                }
+                
+                if (imageUrl) {
+                  console.log(`Đã lấy được URL ảnh cho bài hát "${track.title}": ${imageUrl}`);
+                  return { ...track, coverUrl: imageUrl };
+                }
+              } catch (error) {
+                console.error(`Lỗi khi lấy ảnh cho bài hát "${track.title}":`, error);
+              }
+            }
+            return track;
+          });
+          
+          // Đợi tất cả các promise hoàn thành
+          topTracks = await Promise.all(tracksPromises);
+        }
+      } catch (error) {
+        console.error('Error fetching artist tracks:', error);
+      }
+      
+      // Giả lập albums và singles (có thể thay bằng API call thực tế sau)
+      return createResponse({
+        artist,
+        albums: [],
+        singles: [],
+        topTracks,
+        relatedArtists: []
+      });
+    } else {
+      console.error('Profile API không trả về dữ liệu thành công:', profileResponse.data);
+      return createResponse(null as any, 404, 'Artist not found');
+    }
   } catch (error) {
     console.error('Error fetching artist details:', error);
     return createResponse(null as any, 500, 'Failed to fetch artist details');

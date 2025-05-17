@@ -7,6 +7,7 @@ import { addFavoriteTrack, removeFavoriteTrack, getUserPlaylists, addTrackToPlay
 import { Track } from '../types';
 import { musicApi } from '../api/musicApi';
 import { getProfileByAccountID } from '../api/profileApi';
+import { getImageUrl } from '../api/storageApi';
 
 const tabs = [
   { key: 'all', label: 'Tất cả' },
@@ -49,6 +50,8 @@ export default function Search() {
   const [searchError, setSearchError] = useState<string | null>(null);
 
   const [artistNames, setArtistNames] = useState<Record<string, string>>({});
+  // Thêm state để lưu URL ảnh
+  const [songImages, setSongImages] = useState<Record<string, string>>({});
 
   // Load liked tracks
   useEffect(() => {
@@ -81,21 +84,74 @@ export default function Search() {
       .finally(() => setSearchLoading(false));
   }, [query]);
 
+  // Lấy thông tin nghệ sĩ khi có kết quả tìm kiếm
   useEffect(() => {
     if (!searchResult || !searchResult.result) return;
     const artistIds = Array.from(new Set(searchResult.result.map((song: any) => String(song.artistId)).filter(Boolean))) as string[];
-    const missingIds: string[] = artistIds.filter((id: string) => !artistNames[id]);
-    if (missingIds.length === 0) return;
-
-    missingIds.forEach(async (id: string) => {
+    
+    // Lấy tất cả ID nghệ sĩ cần tìm
+    artistIds.forEach(async (id: string) => {
       try {
+        console.log(`Đang lấy thông tin nghệ sĩ ID: ${id}`);
         const profile = await getProfileByAccountID(id);
-        setArtistNames(prev => ({ ...prev, [id]: profile.fullName }));
-      } catch {
-        setArtistNames(prev => ({ ...prev, [id]: "Unknown Artist" }));
+        if (profile && profile.fullName) {
+          console.log(`Tìm thấy nghệ sĩ: ${profile.fullName}`);
+          setArtistNames(prev => ({ ...prev, [id]: profile.fullName }));
+        } else {
+          console.log(`Không tìm thấy thông tin nghệ sĩ ID: ${id}`);
+          setArtistNames(prev => ({ ...prev, [id]: "Nghệ sĩ không xác định" }));
+        }
+      } catch (error) {
+        console.error(`Lỗi khi lấy thông tin nghệ sĩ ID ${id}:`, error);
+        setArtistNames(prev => ({ ...prev, [id]: "Nghệ sĩ không xác định" }));
       }
     });
-    // eslint-disable-next-line
+  }, [searchResult]);
+
+  // Thêm useEffect để lấy ảnh từ storageImageId
+  useEffect(() => {
+    if (!searchResult || !searchResult.result) return;
+    
+    // Lấy danh sách các bài hát cần lấy ảnh (song không có coverUrl và có storageImageId)
+    const songsNeedImage = searchResult.result.filter(
+      (song: any) => !song.coverUrl && (song.storageImageId || song.storageId)
+    );
+    
+    // Nếu không có bài hát nào cần lấy ảnh, dừng
+    if (songsNeedImage.length === 0) return;
+    
+    // Lấy ảnh cho từng bài hát
+    songsNeedImage.forEach(async (song: any) => {
+      try {
+        // Ưu tiên lấy từ storageImageId trước
+        const imageId = song.storageImageId || 
+                      (song as any).storageImageId ||
+                      (song as any).storageImageID;
+                      
+        let imageUrl = null;
+        
+        if (imageId) {
+          console.log(`Đang lấy ảnh cho bài hát "${song.title}" từ storageImageId: ${imageId}`);
+          imageUrl = await getImageUrl(imageId);
+        }
+        
+        // Nếu không có storageImageId hoặc không lấy được, thử dùng storageId
+        if (!imageUrl && song.storageId) {
+          console.log(`Đang lấy ảnh cho bài hát "${song.title}" từ storageId: ${song.storageId}`);
+          imageUrl = await getImageUrl(song.storageId);
+        }
+        
+        if (imageUrl) {
+          console.log(`Đã lấy được URL ảnh cho bài hát "${song.title}": ${imageUrl}`);
+          setSongImages(prev => ({
+            ...prev,
+            [song.id]: imageUrl
+          }));
+        }
+      } catch (error) {
+        console.error(`Lỗi khi lấy ảnh cho bài hát "${song.title}":`, error);
+      }
+    });
   }, [searchResult]);
 
   const handlePlayTrack = (track: any) => {
@@ -138,6 +194,14 @@ export default function Search() {
     const pls = await getUserPlaylists();
     setPlaylists(pls);
     setShowPlaylistPopup(true);
+  };
+
+  // Hàm xử lý khi click vào tên nghệ sĩ
+  const handleArtistClick = (artistId: string) => {
+    if (!artistId) return;
+    
+    console.log(`Đang chuyển đến trang nghệ sĩ ID: ${artistId}`);
+    navigate(`/artist/${artistId}`);
   };
 
   return (
@@ -191,14 +255,18 @@ export default function Search() {
                     </button>
 
                     {/* Ảnh bài hát */}
-                {song.coverUrl && (
                     <img 
-                      src={song.coverUrl} 
+                      src={song.coverUrl || songImages[song.id] || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='} 
                       alt={song.title} 
                       className="w-12 h-12 rounded mr-4 cursor-pointer"
                       onClick={() => navigate(`/track/${song.id}`)}
+                      onError={(e) => {
+                        const currentSrc = e.currentTarget.src;
+                        if (!currentSrc.startsWith('data:image/')) {
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=';
+                        }
+                      }}
                     />
-                )}
 
                     {/* Thông tin bài hát */}
                     <div className="flex-1">
@@ -210,9 +278,9 @@ export default function Search() {
                       </div>
                       <div 
                         className="text-gray-400 text-sm cursor-pointer hover:underline"
-                    onClick={() => song.artistId && navigate(`/artist/${song.artistId}`)}
+                        onClick={() => handleArtistClick(song.artistId)}
                       >
-                    {song.artistName || artistNames[String(song.artistId)] || song.artistId}
+                        {song.artistName || artistNames[String(song.artistId)] || "Đang tải..."}
                       </div>
                     </div>
 
