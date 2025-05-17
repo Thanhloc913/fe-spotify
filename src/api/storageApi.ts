@@ -23,7 +23,7 @@ storageApi.interceptors.request.use(
 );
 
 // Lấy CSRF token từ cookie
-const getCsrfToken = () => {
+export const getCsrfToken = () => {
   return document.cookie
     .split('; ')
     .find(row => row.startsWith('csrftoken='))

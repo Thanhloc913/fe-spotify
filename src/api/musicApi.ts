@@ -1,9 +1,13 @@
 // musicService.ts
-import { MockApi } from '../lib/mocks/playerApi';
-import { PlayerState } from '../types/index';
-import { Track, ApiResponse } from '../types';
-import { mockData } from '../mock/data';
+import { MockApi } from "../lib/mocks/playerApi";
+import { PlayerState } from "../types/index";
+import { Track, ApiResponse } from "../types";
+import { mockData } from "../mock/data";
 import axios from "axios";
+import { ApiSongType } from "../types/api";
+import { getProfileByAccountID } from "./profileApi";
+import { getCsrfToken } from "./storageApi";
+import { getToken } from "../utils/auth";
 
 let audio: HTMLAudioElement | null = null;
 
@@ -11,7 +15,11 @@ let audio: HTMLAudioElement | null = null;
 const USE_MOCK_DATA = false; // Toggle this to switch between real API and mock data
 
 // Helper to format response
-const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse<T> => {
+const createResponse = <T>(
+  data: T,
+  status = 200,
+  message?: string
+): ApiResponse<T> => {
   return {
     data,
     status,
@@ -19,13 +27,47 @@ const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse
   };
 };
 
+const SONGS_API_URL = "http://localhost:8082";
+
+const songsApi = axios.create({
+  baseURL: SONGS_API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
+});
+
+const USERS_API_URL = "http://localhost:8081";
+
+const usersApi = axios.create({
+  baseURL: USERS_API_URL,
+  headers: {
+    "X-CSRFToken": getCsrfToken(),
+    Authorization: `Bearer ${getToken()}`,
+    "Content-Type": "application/json",
+  },
+  withCredentials: true,
+});
+
+// Interceptor để tự động gắn token vào request
+songsApi.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem("access_token");
+    if (token && config.headers) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 export interface PlaybackState {
   isPlaying: boolean;
   currentTrack: Track | null;
   progress: number;
   volume: number;
   shuffle: boolean;
-  repeat: 'off' | 'track' | 'context';
+  repeat: "off" | "track" | "context";
 }
 
 // Initial playback state
@@ -35,7 +77,7 @@ const initialPlaybackState: PlaybackState = {
   progress: 0,
   volume: 0.5,
   shuffle: false,
-  repeat: 'off'
+  repeat: "off",
 };
 
 // Mock playback state for client-side usage
@@ -119,16 +161,20 @@ export const musicApi = {
       if (USE_MOCK_DATA) {
         // If trackId is provided, update current track
         if (trackId) {
-          const track = mockData.tracks.find(t => t.id === trackId);
+          const track = mockData.tracks.find((t) => t.id === trackId);
           if (!track) {
-            return createResponse(playbackState, 404, 'Track not found');
+            return createResponse(playbackState, 404, "Track not found");
           }
           playbackState.currentTrack = track;
         }
 
         // If no track is set yet, return error
         if (!playbackState.currentTrack) {
-          return createResponse(playbackState, 400, 'No track is currently set');
+          return createResponse(
+            playbackState,
+            400,
+            "No track is currently set"
+          );
         }
 
         playbackState.isPlaying = true;
@@ -138,8 +184,8 @@ export const musicApi = {
       // Real API implementation would go here
       return createResponse(playbackState);
     } catch (error) {
-      console.error('Error playing track:', error);
-      return createResponse(playbackState, 500, 'Failed to play track');
+      console.error("Error playing track:", error);
+      return createResponse(playbackState, 500, "Failed to play track");
     }
   },
 
@@ -158,9 +204,9 @@ export const musicApi = {
   setTrack: async (trackId: string): Promise<ApiResponse<PlaybackState>> => {
     try {
       if (USE_MOCK_DATA) {
-        const track = mockData.tracks.find(t => t.id === trackId);
+        const track = mockData.tracks.find((t) => t.id === trackId);
         if (!track) {
-          return createResponse(playbackState, 404, 'Track not found');
+          return createResponse(playbackState, 404, "Track not found");
         }
 
         playbackState.currentTrack = track;
@@ -171,8 +217,8 @@ export const musicApi = {
       // Real API implementation would go here
       return createResponse(playbackState);
     } catch (error) {
-      console.error('Error setting track:', error);
-      return createResponse(playbackState, 500, 'Failed to set track');
+      console.error("Error setting track:", error);
+      return createResponse(playbackState, 500, "Failed to set track");
     }
   },
 
@@ -180,18 +226,18 @@ export const musicApi = {
   getTrack: async (trackId: string): Promise<ApiResponse<Track>> => {
     try {
       if (USE_MOCK_DATA) {
-        const track = mockData.tracks.find(t => t.id === trackId);
+        const track = mockData.tracks.find((t) => t.id === trackId);
         if (!track) {
-          return createResponse(null as any, 404, 'Track not found');
+          return createResponse(null as any, 404, "Track not found");
         }
         return createResponse(track);
       }
 
       // Real API implementation would go here
-      return createResponse(null as any, 500, 'Not implemented');
+      return createResponse(null as any, 500, "Not implemented");
     } catch (error) {
-      console.error('Error getting track:', error);
-      return createResponse(null as any, 500, 'Failed to get track');
+      console.error("Error getting track:", error);
+      return createResponse(null as any, 500, "Failed to get track");
     }
   },
 
@@ -201,58 +247,98 @@ export const musicApi = {
     return createResponse(playbackState);
   },
 
-  searchSongsByTitle: async (title: string, page: number = 1, pageSize: number = 10) => {
+  searchSongsByTitle: async (
+    title: string,
+    page: number = 1,
+    pageSize: number = 10
+  ) => {
     try {
-      console.log(`Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`);
-      
+      console.log(
+        `Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`
+      );
+
       if (USE_MOCK_DATA) {
-        const filtered = mockData.tracks.filter(t => t.title.toLowerCase().includes(title.toLowerCase()));
+        const filtered = mockData.tracks.filter((t) =>
+          t.title.toLowerCase().includes(title.toLowerCase())
+        );
         return createResponse({
-          result: filtered.slice((page-1)*pageSize, page*pageSize),
+          result: filtered.slice((page - 1) * pageSize, page * pageSize),
           currentPage: page,
           total: filtered.length,
-          totalPages: Math.ceil(filtered.length / pageSize)
+          totalPages: Math.ceil(filtered.length / pageSize),
         });
       }
 
       // Lấy CSRF token từ cookie
       const getCsrfToken = () => {
-        return document.cookie
-          .split('; ')
-          .find(row => row.startsWith('csrftoken='))
-          ?.split('=')[1] || '';
+        return (
+          document.cookie
+            .split("; ")
+            .find((row) => row.startsWith("csrftoken="))
+            ?.split("=")[1] || ""
+        );
       };
       const csrfToken = getCsrfToken();
 
       // Gọi API bằng axios
       const res = await axios.post(
-        'http://localhost:8082/songs',
+        "http://localhost:8082/songs",
         { title, page, pageSize },
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-            'X-CSRFToken': csrfToken,
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+            "X-CSRFToken": csrfToken,
           },
           withCredentials: true,
         }
       );
-      
-      console.log('Response từ API tìm kiếm:', JSON.stringify(res.data, null, 2));
-      
+
+      console.log(
+        "Response từ API tìm kiếm:",
+        JSON.stringify(res.data, null, 2)
+      );
+
       // Log thông tin về storageImageId
       if (res.data && res.data.result && res.data.result.length > 0) {
         res.data.result.forEach((song: any, index: number) => {
-          console.log(`Song ${index+1} - storageId: ${song.storageId}, storageImageId: ${song.storageImageId}`);
+          console.log(
+            `Song ${index + 1} - storageId: ${
+              song.storageId
+            }, storageImageId: ${song.storageImageId}`
+          );
         });
       }
-      
+
       return res.data;
     } catch (error) {
-      console.error('Lỗi tìm kiếm bài hát:', error);
+      console.error("Lỗi tìm kiếm bài hát:", error);
       throw error;
     }
-  }
+  },
+
+  getLikedSongs: async (): Promise<ApiSongType[]> => {
+    const favRes = await usersApi.post("/favorites", {
+      profileId: (
+        await getProfileByAccountID(localStorage.getItem("account_id") ?? "")
+      )?.id,
+    });
+    const favList: { profileID: string; songID: string }[] =
+      favRes.data.data.result;
+    console.log("favorite list", favList);
+
+    const songRes = await songsApi.get("/songs", {
+      params: {
+        id: favList.map((fav) => fav.songID),
+      },
+      paramsSerializer: {
+        indexes: false, // This will serialize arrays as repeated query params: ?id[]=1&id[]=2
+      },
+    });
+    const songList = songRes.data.data.result;
+    console.log("favorite song list", songList);
+    return songList;
+  },
 };
 
 export default musicApi;
