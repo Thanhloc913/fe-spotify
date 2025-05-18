@@ -21,6 +21,7 @@ const links = [
   { path: "genres", label: "Genres", icon: <MdMusicNote /> },
   { path: "categories", label: "Categories", icon: <MdCategory /> },
   { path: "roles", label: "Roles", icon: <MdSecurity /> },
+  { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
   // ...Array.from({ length: 20 }, (_, index) => ({
   //   path: `playlists`,
   //   label: `Test Overflow ${index + 1}`,

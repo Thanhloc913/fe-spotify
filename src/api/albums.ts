@@ -18,7 +18,7 @@ const createResponse = <T>(data: T, status = 200, message?: string): ApiResponse
 };
 
 // Helper to get CSRF token
-const getCsrfToken = () => {
+export const getCsrfToken = () => {
   return document.cookie
     .split('; ')
     .find(row => row.startsWith('csrftoken='))

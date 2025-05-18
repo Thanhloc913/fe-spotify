@@ -4,7 +4,11 @@ import { PlayerState } from "../types/index";
 import { Track, ApiResponse } from "../types";
 import { mockData } from "../mock/data";
 import axios from "axios";
-import { ApiFavoriteSongType, ApiSongType } from "../types/api";
+import {
+  ApiFavoriteSongType,
+  ApiPaginatedResult,
+  ApiSongType,
+} from "../types/api";
 import { getCsrfToken } from "./storageApi";
 import { getToken } from "../utils/auth";
 
@@ -209,15 +213,15 @@ export const musicApi = {
         }
 
         console.log("Setting track:", track);
-        console.log("Track type:", track.songType); 
+        console.log("Track type:", track.songType);
 
         // Ensure the track has the songType property
         if (!track.songType) {
           // Default to SONG if not specified
           track.songType = "SONG";
-          
+
           // If it has a songUrl that includes /videos/, it's likely a music video
-          if (track.songUrl && track.songUrl.includes('/videos/')) {
+          if (track.songUrl && track.songUrl.includes("/videos/")) {
             track.songType = "MUSIC_VIDEO";
           }
         }
@@ -265,7 +269,7 @@ export const musicApi = {
     title: string,
     page: number = 1,
     pageSize: number = 10
-  ) => {
+  ): Promise<ApiPaginatedResult<ApiSongType>> => {
     try {
       console.log(
         `Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`
@@ -275,6 +279,7 @@ export const musicApi = {
         const filtered = mockData.tracks.filter((t) =>
           t.title.toLowerCase().includes(title.toLowerCase())
         );
+        // @ts-ignore
         return createResponse({
           result: filtered.slice((page - 1) * pageSize, page * pageSize),
           currentPage: page,

@@ -72,3 +72,42 @@ export type ApiProfileType = {
   dateOfBirth: string;
   phoneNumber: string;
 };
+
+export type ApiPaginatedResult<T> = {
+  result: T[];
+  currentPage: number;
+  total: number;
+  totalPages: number;
+};
+
+export type ApiRoleType = {
+  id: string; // UUID
+  name: string;
+  description: string;
+};
+
+export type ApiPagedRequest = {
+  page: number;
+  pageSize: number;
+};
+
+export type ApiGetRoleRequest = ApiPagedRequest & {
+  name?: string;
+};
+
+export type ApiResponse<T> = {
+  data: T;
+  message: string;
+  success: boolean;
+};
+
+export type ApiCreateRoleRequest = {
+  name: string;
+  description: string;
+};
+
+export type ApiEditRoleRequest = {
+  id: string;
+  name: string;
+  description: string;
+};

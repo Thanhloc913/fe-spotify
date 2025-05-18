@@ -1,4 +1,12 @@
 import axios from "axios";
+import {
+  ApiCreateRoleRequest,
+  ApiEditRoleRequest,
+  ApiGetRoleRequest,
+  ApiPaginatedResult,
+  ApiResponse,
+  ApiRoleType,
+} from "../types/api";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:8080",
@@ -23,7 +31,7 @@ let isRefreshing = false;
 let failedQueue: any[] = [];
 
 const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach(prom => {
+  failedQueue.forEach((prom) => {
     if (error) {
       prom.reject(error);
     } else {
@@ -37,43 +45,51 @@ axiosClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    if (error.response && error.response.status === 401 && !originalRequest._retry) {
+    if (
+      error.response &&
+      error.response.status === 401 &&
+      !originalRequest._retry
+    ) {
       if (isRefreshing) {
-        return new Promise(function(resolve, reject) {
+        return new Promise(function (resolve, reject) {
           failedQueue.push({ resolve, reject });
         })
-        .then((token) => {
-          originalRequest.headers['Authorization'] = 'Bearer ' + token;
-          return axiosClient(originalRequest);
-        })
-        .catch((err) => {
-          return Promise.reject(err);
-        });
+          .then((token) => {
+            originalRequest.headers["Authorization"] = "Bearer " + token;
+            return axiosClient(originalRequest);
+          })
+          .catch((err) => {
+            return Promise.reject(err);
+          });
       }
       originalRequest._retry = true;
       isRefreshing = true;
-      const refreshToken = localStorage.getItem('refresh_token');
+      const refreshToken = localStorage.getItem("refresh_token");
       try {
-        const res = await axios.post('http://localhost:8080/auth/refresh-token', {
-          refreshToken: refreshToken
-        });
+        const res = await axios.post(
+          "http://localhost:8080/auth/refresh-token",
+          {
+            refreshToken: refreshToken,
+          }
+        );
         const { access_token, refresh_token } = res.data.data;
-        localStorage.setItem('access_token', access_token);
+        localStorage.setItem("access_token", access_token);
         if (refresh_token) {
-          localStorage.setItem('refresh_token', refresh_token);
+          localStorage.setItem("refresh_token", refresh_token);
         }
-        axiosClient.defaults.headers.common['Authorization'] = 'Bearer ' + access_token;
+        axiosClient.defaults.headers.common["Authorization"] =
+          "Bearer " + access_token;
         processQueue(null, access_token);
         isRefreshing = false;
-        originalRequest.headers['Authorization'] = 'Bearer ' + access_token;
+        originalRequest.headers["Authorization"] = "Bearer " + access_token;
         return axiosClient(originalRequest);
       } catch (err) {
         processQueue(err, null);
         isRefreshing = false;
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        localStorage.removeItem('account_id');
-        window.location.href = '/login';
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("account_id");
+        window.location.href = "/login";
         return Promise.reject(err);
       }
     }
@@ -107,15 +123,11 @@ export const login = async (
 
     const csrfToken = await getCsrfToken();
 
-    const response = await axiosClient.post(
-      "/auth/login",
-      payload,
-      {
-        headers: {
-          "X-CSRFToken": csrfToken,
-        },
-      }
-    );
+    const response = await axiosClient.post("/auth/login", payload, {
+      headers: {
+        "X-CSRFToken": csrfToken,
+      },
+    });
 
     const { access_token, refresh_token, account } = response.data.data;
     const csrfTokenFromResponse = response.data.data.token;
@@ -133,7 +145,9 @@ export const login = async (
     }
   } catch (error: any) {
     console.error("Lỗi login:", error);
-    throw new Error(error.response?.data?.message || "Sai tài khoản hoặc mật khẩu!");
+    throw new Error(
+      error.response?.data?.message || "Sai tài khoản hoặc mật khẩu!"
+    );
   }
 };
 
@@ -154,7 +168,9 @@ export const register = async (registerData: {
       ...registerData,
       avatarUrl:
         !registerData.avatarUrl ||
-        ["no", "null", "undefined"].includes((registerData.avatarUrl || "").trim().toLowerCase())
+        ["no", "null", "undefined"].includes(
+          (registerData.avatarUrl || "").trim().toLowerCase()
+        )
           ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcS8WOsLxlKgTXh7gry1qONjjpnozv1IwdHf165tgttVd5FiaWx4G8yOo4LCWt9uPt6y0EWxE89oyHdEPbgre41s8Q"
           : registerData.avatarUrl,
     };
@@ -175,48 +191,55 @@ export const getAccountById = async (accountId: string) => {
   try {
     const csrfToken = await getCsrfToken();
     const response = await axiosClient.post(
-      '/account/find',
+      "/account/find",
       { id: accountId },
       {
         headers: {
-          'X-CSRFToken': csrfToken,
+          "X-CSRFToken": csrfToken,
         },
       }
     );
     return response.data;
   } catch (error: any) {
-    console.error('Lỗi lấy thông tin tài khoản:', error);
-    throw new Error(error.response?.data?.message || 'Không thể lấy thông tin tài khoản');
+    console.error("Lỗi lấy thông tin tài khoản:", error);
+    throw new Error(
+      error.response?.data?.message || "Không thể lấy thông tin tài khoản"
+    );
   }
 };
 
 // Hàm kiểm tra mật khẩu hiện tại
-export const verifyCurrentPassword = async (email: string, currentPassword: string) => {
+export const verifyCurrentPassword = async (
+  email: string,
+  currentPassword: string
+) => {
   try {
     const csrfToken = await getCsrfToken();
     const response = await axiosClient.post(
-      '/auth/login',
+      "/auth/login",
       { email, password: currentPassword },
       {
         headers: {
-          'X-CSRFToken': csrfToken,
+          "X-CSRFToken": csrfToken,
         },
       }
     );
     return response.data;
   } catch (error: any) {
-    console.error('Lỗi kiểm tra mật khẩu:', error);
-    throw new Error(error.response?.data?.message || 'Mật khẩu không chính xác');
+    console.error("Lỗi kiểm tra mật khẩu:", error);
+    throw new Error(
+      error.response?.data?.message || "Mật khẩu không chính xác"
+    );
   }
 };
 
 const getCookie = (name: string): string | null => {
   let cookieValue = null;
-  if (document.cookie && document.cookie !== '') {
-    const cookies = document.cookie.split(';');
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
     for (let i = 0; i < cookies.length; i++) {
       const cookie = cookies[i].trim();
-      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+      if (cookie.substring(0, name.length + 1) === name + "=") {
         cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
         break;
       }
@@ -228,23 +251,25 @@ const getCookie = (name: string): string | null => {
 // Hàm cập nhật mật khẩu
 export const updatePassword = async (newPassword: string) => {
   try {
-    const csrftoken = getCookie('csrftoken');
-    const accessToken = localStorage.getItem('access_token');
+    const csrftoken = getCookie("csrftoken");
+    const accessToken = localStorage.getItem("access_token");
     const response = await axiosClient.post(
-      '/account/update',
+      "/account/update",
       { password: newPassword },
       {
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRFToken': csrftoken,
-          'Authorization': `Bearer ${accessToken}`
-      },
+          "Content-Type": "application/json",
+          "X-CSRFToken": csrftoken,
+          Authorization: `Bearer ${accessToken}`,
+        },
       }
     );
     return response.data;
   } catch (error: any) {
-    console.error('Lỗi cập nhật mật khẩu:', error);
-    throw new Error(error.response?.data?.message || 'Cập nhật mật khẩu thất bại');
+    console.error("Lỗi cập nhật mật khẩu:", error);
+    throw new Error(
+      error.response?.data?.message || "Cập nhật mật khẩu thất bại"
+    );
   }
 };
 
@@ -253,18 +278,20 @@ export const checkEmailExists = async (email: string) => {
   try {
     const csrfToken = await getCsrfToken();
     const response = await axiosClient.post(
-      '/account/find',
+      "/account/find",
       { email },
       {
         headers: {
-          'X-CSRFToken': csrfToken,
+          "X-CSRFToken": csrfToken,
         },
       }
     );
     return response.data.success;
   } catch (error: any) {
-    console.error('Lỗi kiểm tra email:', error);
-    throw new Error(error.response?.data?.message || 'Không thể kiểm tra email');
+    console.error("Lỗi kiểm tra email:", error);
+    throw new Error(
+      error.response?.data?.message || "Không thể kiểm tra email"
+    );
   }
 };
 
@@ -273,18 +300,20 @@ export const requestPasswordReset = async (email: string) => {
   try {
     const csrfToken = await getCsrfToken();
     const response = await axiosClient.post(
-      '/password-reset/request',
+      "/password-reset/request",
       { email },
       {
         headers: {
-          'X-CSRFToken': csrfToken,
+          "X-CSRFToken": csrfToken,
         },
       }
     );
     return response.data;
   } catch (error: any) {
-    console.error('Lỗi yêu cầu đặt lại mật khẩu:', error);
-    throw new Error(error.response?.data?.message || 'Không thể gửi yêu cầu đặt lại mật khẩu');
+    console.error("Lỗi yêu cầu đặt lại mật khẩu:", error);
+    throw new Error(
+      error.response?.data?.message || "Không thể gửi yêu cầu đặt lại mật khẩu"
+    );
   }
 };
 
@@ -297,7 +326,7 @@ export const verifyAndResetPassword = async (
   try {
     const csrfToken = await getCsrfToken();
     const response = await axiosClient.post(
-      '/password-reset/verify',
+      "/password-reset/verify",
       {
         token,
         verification_code: verificationCode,
@@ -305,15 +334,102 @@ export const verifyAndResetPassword = async (
       },
       {
         headers: {
-          'X-CSRFToken': csrfToken,
+          "X-CSRFToken": csrfToken,
         },
       }
     );
     return response.data;
   } catch (error: any) {
-    console.error('Lỗi xác thực và đặt lại mật khẩu:', error);
-    throw new Error(error.response?.data?.message || 'Không thể đặt lại mật khẩu');
+    console.error("Lỗi xác thực và đặt lại mật khẩu:", error);
+    throw new Error(
+      error.response?.data?.message || "Không thể đặt lại mật khẩu"
+    );
   }
 };
+
+export async function getRoles(
+  body: ApiGetRoleRequest = { page: 1, pageSize: 100 }
+): Promise<ApiPaginatedResult<ApiRoleType>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-CSRFToken": (await getCsrfToken()) || "",
+    Authorization: `Bearer ${getAuthToken() || ""}`,
+  };
+
+  try {
+    const response = await fetch("http://localhost:8080/roles", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    if (response.status === 404) {
+      return {
+        result: [],
+        currentPage: 1,
+        total: 0,
+        totalPages: 0,
+      };
+    }
+    const result: ApiResponse<ApiPaginatedResult<ApiRoleType>> =
+      await response.json();
+    console.log("Response:", result);
+    return result.data;
+  } catch (error) {
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
+}
+
+export async function createRole(body: ApiCreateRoleRequest): Promise<ApiRoleType> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-CSRFToken": (await getCsrfToken()) || "",
+    Authorization: `Bearer ${getAuthToken() || ""}`,
+  };
+
+  try {
+    const response = await fetch("http://localhost:8080/role/create", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    const result: ApiResponse<ApiRoleType> = await response.json();
+    console.log("Response:", result);
+    return result.data;
+  } catch (error) {
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
+}
+
+export async function editRole(body: ApiEditRoleRequest): Promise<ApiRoleType> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-CSRFToken": (await getCsrfToken()) || "",
+    Authorization: `Bearer ${getAuthToken() || ""}`,
+  };
+
+  try {
+    const response = await fetch("http://localhost:8080/role/update", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    const result: ApiResponse<ApiRoleType> = await response.json();
+    console.log("Response:", result);
+    return result.data;
+  } catch (error) {
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
+}
+
+// Helper function to get authorization token from localStorage
+export function getAuthToken() {
+  return localStorage.getItem("access_token");
+}
 
 export default axiosClient;

@@ -7,6 +7,7 @@ import ManageAlbums from "./ManageAlbums";
 import ManageTracks from "./ManageTracks";
 import ManagePlaylists from "./ManagePlaylists";
 import ManageCategories from "./ManageCategories";
+import ManageRoles2 from "./ManageRoles2";
 
 export const AdminRoutes = (
   <>
@@ -19,5 +20,6 @@ export const AdminRoutes = (
     <Route path="categories" element={<ManageCategories />} />
     <Route path="genres" element={<ManageGenres />} />
     <Route path="roles" element={<ManageRoles />} />
+    <Route path="roles2" element={<ManageRoles2 />} />
   </>
 );
