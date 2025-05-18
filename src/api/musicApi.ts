@@ -373,3 +373,34 @@ async function getSongsByIds(ids: string[]): Promise<ApiSongType[]> {
 }
 
 export default musicApi;
+
+// API function to create a new song
+export const createSong = async (songData: {
+  title: string;
+  description: string;
+  fileId: string; // ID của file nhạc đã upload thành công
+  imageId?: string; // ID của ảnh bìa (nếu có)
+  albumId?: string; // ID album (nếu có)
+  artistId: string;
+}) => {
+  console.log('Đang tạo bài hát mới...');
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken(),
+    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+  };
+
+  try {
+    const response = await fetch('http://localhost:8082/song/create', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(songData),
+      credentials: 'include'
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+  } catch (error: any) {
+    console.error('Lỗi khi tạo bài hát:', error);
+    return { status: 500, data: { error: error.message } };
+  }
+};

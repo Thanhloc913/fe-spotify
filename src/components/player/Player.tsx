@@ -101,90 +101,12 @@ const Player: React.FC = () => {
           return;
         }
         
-        // Nếu có storageId thì lấy file từ storage service
-        if (currentTrack.storageId) {
-          console.log('Lấy audio từ storageId:', currentTrack.storageId);
-          const storageData = await getStorageById(currentTrack.storageId);
-          console.log('Dữ liệu storage nhận được:', storageData);
-          
-          if (storageData.success && storageData.data) {
-            // Cập nhật URL
-            if (storageData.data.fileUrl) {
-              console.log('Đã lấy được fileUrl:', storageData.data.fileUrl);
-              setAudioUrl(storageData.data.fileUrl);
-            }
-            
-            // Cập nhật duration từ API nếu có
-            if (storageData.data.duration) {
-              console.log('Duration từ API:', storageData.data.duration);
-              // Giả sử API trả về duration tính bằng giây
-              usePlayerStore.getState().setDuration(Number(storageData.data.duration));
-            }
-          } else {
-            console.error('Không lấy được URL audio từ storage:', storageData);
-            setAudioUrl(null);
-          }
-        } else {
-          console.warn('Track không có storageId hoặc previewUrl');
-          setAudioUrl(null);
-        }
       } catch (error) {
         console.error('Lỗi khi lấy URL audio:', error);
         setAudioUrl(null);
       }
     };
     
-    // Hàm lấy URL ảnh từ storageImageId
-    const fetchCoverImage = async () => {
-      try {
-        // Nếu có sẵn coverUrl thì dùng luôn
-        if (currentTrack.coverUrl) {
-          console.log('Sử dụng coverUrl có sẵn:', currentTrack.coverUrl);
-          setCoverUrl(currentTrack.coverUrl);
-          return;
-        }
-        
-        // Fix: Kiểm tra cả hai cách truy cập storageImageId
-        // Một số trường hợp có thể dữ liệu gốc không được map đúng vào interface Track
-        const imageId = currentTrack.storageImageId || 
-                       (currentTrack as any).storageImageId ||
-                       (currentTrack as any).storageImageID;
-        
-        console.log('Kiểm tra lại imageId:', imageId);
-        
-        if (imageId) {
-          console.log('Lấy ảnh từ storageImageId đã sửa:', imageId);
-          const imageUrl = await getImageUrl(imageId);
-          if (imageUrl) {
-            console.log('Đã lấy được URL ảnh thành công:', imageUrl);
-            setCoverUrl(imageUrl);
-          } else {
-            console.log('Không lấy được URL ảnh từ storageImageId');
-            setCoverUrl(null);
-          }
-        } else {
-          // Nếu thật sự không có storageImageId, thử dùng storageId
-          if (currentTrack.storageId) {
-            console.log('Thử dùng storageId để lấy ảnh:', currentTrack.storageId);
-            const imageUrl = await getImageUrl(currentTrack.storageId);
-            if (imageUrl) {
-              console.log('Đã lấy được URL ảnh từ storageId:', imageUrl);
-              setCoverUrl(imageUrl);
-              return;
-            }
-          }
-          
-          console.log('Không có storageImageId trong track');
-          setCoverUrl(null);
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy ảnh:', error);
-        setCoverUrl(null);
-      }
-    };
-    
-    fetchAudioUrl();
-    fetchCoverImage();
   }, [currentTrack]);
 
   // Update audio src when currentTrack changes

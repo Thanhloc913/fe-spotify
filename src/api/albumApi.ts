@@ -17,6 +17,7 @@ export const generateAlbums = (artists: Artist[], count = 30): Album[] => {
       artistId: artist.id,
       artistName: artist.name,
       coverUrl: faker.image.urlLoremFlickr({ category: 'album', width: 300, height: 300 }),
+      backgroundUrl: faker.image.urlLoremFlickr({ category: 'album', width: 300, height: 300 }),
       releaseDate: faker.date.past({ years: 15 }).toISOString(),
       tracks: [],
       type: faker.helpers.arrayElement(['album', 'single', 'EP'] as const),
