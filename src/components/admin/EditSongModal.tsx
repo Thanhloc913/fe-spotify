@@ -21,7 +21,7 @@ import { MuiFileInput } from "mui-file-input";
 type Song = ApiSongType;
 
 // Form fields for editing a song
-export interface UpdateSongFormProps {
+export interface EditSongFormProps {
   title: string;
   background: File | null;
   duration: number;
@@ -30,7 +30,7 @@ export interface UpdateSongFormProps {
 interface EditSongModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (data: UpdateSongFormProps, song: Song) => void;
+  onSubmit: (data: EditSongFormProps, song: Song) => void;
   song: Song;
 }
 
@@ -41,7 +41,7 @@ export const EditSongModal: React.FC<EditSongModalProps> = ({
   song,
 }) => {
   const { register, handleSubmit, watch, setValue } =
-    useForm<UpdateSongFormProps>({
+    useForm<EditSongFormProps>({
       values: {
         title: song.title,
         duration: song.duration,

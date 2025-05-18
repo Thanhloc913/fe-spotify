@@ -78,7 +78,7 @@ export interface Track {
   storageImageId?: string;
   backgroundUrl?: string;
   songUrl?: string;
-  songType?: 'SONG' | 'MUSIC_VIDEO';
+  songType?: "SONG" | "MUSIC_VIDEO";
 }
 
 export interface Genre {

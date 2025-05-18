@@ -24,7 +24,7 @@ export type ApiSongType = {
   description: string;
   artistId: string;
   duration: number;
-  songType: string;
+  songType: "MUSIC_VIDEO" | "SONG";
 };
 
 // {
@@ -133,8 +133,6 @@ export type ApiStorageUploadResponse = {
   fileUrl: string;
 };
 
-export type ApiStorageUploadResult = ApiResponse<ApiStorageUploadResponse>;
-
 // storage create
 export type ApiStorageCreateRequest = {
   fileName: string;
@@ -145,7 +143,7 @@ export type ApiStorageCreateRequest = {
   description: string;
 };
 
-export type ApiStorageCreateResponseData = {
+export type ApiStorageCreateResponse = {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -159,8 +157,6 @@ export type ApiStorageCreateResponseData = {
   description: string;
 };
 
-export type ApiStorageCreateResult = ApiResponse<ApiStorageCreateResponseData>;
-
 // album create
 export type ApiAlbumCreateRequest = {
   name: string;
@@ -169,7 +165,7 @@ export type ApiAlbumCreateRequest = {
   artistId: string;
 };
 
-export type ApiAlbumCreateResponseData = {
+export type ApiAlbumType = {
   id: string;
   createdAt: string;
   updatedAt: string;
@@ -180,8 +176,6 @@ export type ApiAlbumCreateResponseData = {
   storageImageId: string;
   artistId: string;
 };
-
-export type ApiAlbumCreateResult = ApiResponse<ApiAlbumCreateResponseData>;
 
 // storage upload req
 // fetch("http://localhost:8083/storage/upload", {
@@ -314,6 +308,19 @@ export type ApiAlbumCreateResult = ApiResponse<ApiAlbumCreateResponseData>;
 //         "artistId": "d801ba03-323b-438c-8887-47bf33c8cc07"
 //     }
 // }
+
+// song create
+export type ApiSongCreateRequest = {
+  title: string;
+  artistId: string;
+  genreId: string[];
+  storageId: string;
+  storageImageId: string | null;
+  duration: number;
+  description: string;
+  albumId: string[];
+  songType: "MUSIC_VIDEO" | "SONG";
+};
 
 export type ApiSongUpdateRequest = {
   id: string; // UUID of the song to update

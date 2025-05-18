@@ -6,5 +6,5 @@ RUN corepack enable
 
 WORKDIR /react
 
-CMD yarn install && yarn cache clean && yarn dev
-# CMD yarn dev
+# CMD yarn install && yarn cache clean && yarn dev
+CMD yarn dev

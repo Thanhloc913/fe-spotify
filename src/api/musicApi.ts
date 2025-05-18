@@ -1,16 +1,16 @@
 // musicService.ts
-import { MockApi } from "../lib/mocks/playerApi";
-import { PlayerState } from "../types/index";
-import { Track, ApiResponse } from "../types";
-import { mockData } from "../mock/data";
 import axios from "axios";
+import { MockApi } from "../lib/mocks/playerApi";
+import { mockData } from "../mock/data";
+import { ApiResponse, Track } from "../types";
 import {
   ApiFavoriteSongType,
-  ApiPaginatedResult,
-  ApiSongType,
+  ApiPaginatedResult, ApiResponse as ApiResponseV2, ApiSongCreateRequest,
+  ApiSongType
 } from "../types/api";
-import { getCsrfToken } from "./storageApi";
+import { PlayerState } from "../types/index";
 import { getToken } from "../utils/auth";
+import { getCsrfToken } from "./storageApi";
 
 let audio: HTMLAudioElement | null = null;
 
@@ -383,24 +383,43 @@ export const createSong = async (songData: {
   albumId?: string; // ID album (nếu có)
   artistId: string;
 }) => {
-  console.log('Đang tạo bài hát mới...');
+  console.log("Đang tạo bài hát mới...");
   const headers = {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCsrfToken(),
-    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCsrfToken(),
+    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
   };
 
   try {
-    const response = await fetch('http://localhost:8082/song/create', {
-      method: 'POST',
+    const response = await fetch("http://localhost:8082/song/create", {
+      method: "POST",
       headers,
       body: JSON.stringify(songData),
-      credentials: 'include'
+      credentials: "include",
     });
     const data = await response.json();
     return { status: response.status, data };
   } catch (error: any) {
-    console.error('Lỗi khi tạo bài hát:', error);
+    console.error("Lỗi khi tạo bài hát:", error);
     return { status: 500, data: { error: error.message } };
   }
+};
+
+export const createSongV2 = async (
+  songData: ApiSongCreateRequest
+): Promise<ApiResponseV2<ApiSongType>> => {
+  const headers = {
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCsrfToken(),
+    Authorization: `Bearer ${localStorage.getItem("access_token")}`,
+  };
+
+  const response = await fetch("http://localhost:8082/song/create", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(songData),
+    credentials: "include",
+  });
+
+  return await response.json();
 };

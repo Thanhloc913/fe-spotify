@@ -142,8 +142,8 @@ const ManageRole2s = () => {
     total: 0,
     totalPages: 1,
   });
-
   const [refreshKey, setRefreshKey] = useState(0);
+
   useEffect(() => {
     const getRolesFromApi = async () => {
       const pagedResult = await getRoles({

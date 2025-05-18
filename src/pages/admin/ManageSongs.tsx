@@ -1,16 +1,34 @@
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import { Button, Stack, TextField } from "@mui/material";
+import {
+  Avatar,
+  Backdrop,
+  Button,
+  CircularProgress,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
-import { AddSongModal } from "../../components/admin/AddSongModal";
+import { musicApi } from "../../api";
+import { createSongV2 } from "../../api/musicApi";
+import { createStorageData, uploadFile } from "../../api/storageApi";
+import {
+  AddSongFormProps,
+  AddSongModal,
+} from "../../components/admin/AddSongModal";
 import { EditSongModal } from "../../components/admin/EditSongModal";
 import GenericTableActionEdit, {
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
-import { ApiPaginatedResult, ApiSongType } from "../../types/api";
-import { musicApi } from "../../api";
+import {
+  ApiPaginatedResult,
+  ApiResponse,
+  ApiSongCreateRequest,
+  ApiSongType,
+  ApiStorageUploadResponse,
+} from "../../types/api";
 
 type Song = ApiSongType;
 type Paginated<T> = ApiPaginatedResult<T>;
@@ -39,13 +57,14 @@ const songTableColumnDefinitions: SongTableColumnDefinition[] = [
     id: "backgroundUrl",
     label: "Background",
     sortable: false,
-    render: (song) => (
-      <img
-        src={song.backgroundUrl}
-        alt="background"
-        style={{ width: 50, height: 50, objectFit: "cover" }}
-      />
-    ),
+    render: (song) =>
+      song.backgroundUrl ? (
+        <Avatar
+          src={song.backgroundUrl}
+          variant="rounded"
+          sx={{ width: 50, height: 50 }}
+        />
+      ) : null,
   },
   { id: "title", label: "Title", sortable: true },
   { id: "description", label: "Description", sortable: false },
@@ -137,6 +156,7 @@ const ManageSongs = () => {
     total: 0,
     totalPages: 1,
   });
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const handleRequestSort = (property: keyof SongTableColumnNames) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
@@ -163,7 +183,14 @@ const ManageSongs = () => {
       console.log("paged result", pagedResult);
     };
     getSongsFromApi();
-  }, [search, page, rowsPerPage, columnSortOrder, columnSortOrderBy]);
+  }, [
+    search,
+    page,
+    rowsPerPage,
+    columnSortOrder,
+    columnSortOrderBy,
+    refreshKey,
+  ]);
 
   const handleSelectAllClick = async (isSelected: boolean) => {
     if (isSelected) {
@@ -210,6 +237,164 @@ const ManageSongs = () => {
     [editingSongId]
   );
 
+  const [isCreatingSong, setIsCreatingSong] = useState(false);
+  const handleCloseModal = (onClose: () => void) => {
+    if (!isCreatingSong) onClose();
+  };
+
+  const handleCreate = async (data: AddSongFormProps) => {
+    setIsCreatingSong(true);
+    let logs: Record<string, any> = {};
+    let finalCreateSongResult: ApiResponse<ApiSongType> | null = null;
+
+    try {
+      if (data.albumIds.length <= 0) {
+        throw new Error("Must have at least one album connected to a song");
+      }
+      const actorId = localStorage.getItem("profile_id");
+      if (!actorId) {
+        throw new Error("Artist or User ID not found!");
+      }
+      logs["actorId"] = actorId;
+
+      if (!data.song) {
+        throw new Error("Please select a song file!");
+      }
+
+      // 1. Upload the song file
+      const songUploadResult = await uploadFile(data.song);
+      logs["songUploadResult"] = {
+        success: songUploadResult.success,
+        message: songUploadResult.message,
+        error: songUploadResult.error,
+        status: songUploadResult.status,
+        fileName: songUploadResult.data?.fileName,
+      };
+
+      if (!songUploadResult.success || !songUploadResult.data) {
+        throw new Error(
+          songUploadResult?.message || "Failed to upload song file."
+        );
+      }
+      const songFileInfo = songUploadResult.data;
+
+      // 2. Create storage entry for the song
+      const songStorageResult = await createStorageData({
+        fileName: songFileInfo.fileName,
+        fileType: songFileInfo.fileType,
+        userId: actorId,
+        fileUrl: songFileInfo.fileUrl,
+        fileSize: songFileInfo.fileSize,
+        description: `File am nhac ${songFileInfo.fileName}`,
+      });
+      logs["songStorageResult"] = {
+        success: songStorageResult.success,
+        message: songStorageResult.message,
+        error: songStorageResult.error,
+        status: songStorageResult.status,
+        storageId: songStorageResult.data?.id,
+      };
+
+      if (!songStorageResult.success || !songStorageResult.data) {
+        throw new Error(
+          songStorageResult.error?.message ||
+            "Failed to create storage entry for the song."
+        );
+      }
+      const songStorageId = songStorageResult.data.id;
+      let storageImageId: string | null = null;
+      logs["songStorageId"] = songStorageId; // 3. Upload the background image (if provided)
+
+      if (data.background) {
+        const backgroundUploadResult: ApiResponse<ApiStorageUploadResponse> =
+          await uploadFile(data.background);
+        logs["backgroundUploadResult"] = backgroundUploadResult;
+
+        if (!backgroundUploadResult.success) {
+          throw new Error(
+            backgroundUploadResult?.message ||
+              "Failed to upload background image."
+          );
+        } else if (backgroundUploadResult.data) {
+          const backgroundImageInfo = backgroundUploadResult.data;
+          const backgroundStorageResult = await createStorageData({
+            fileName: backgroundImageInfo.fileName,
+            fileType: backgroundImageInfo.fileType,
+            userId: actorId,
+            fileUrl: backgroundImageInfo.fileUrl,
+            fileSize: backgroundImageInfo.fileSize,
+            description: `File hinh anh ${backgroundImageInfo.fileName} cho ${songFileInfo.fileName}`,
+          });
+          logs["backgroundStorageResult"] = backgroundStorageResult;
+
+          if (
+            !backgroundStorageResult.success ||
+            !backgroundStorageResult.data
+          ) {
+            throw new Error(
+              backgroundStorageResult.message ||
+                "Failed to create storage entry for the background image."
+            );
+          } else {
+            storageImageId = backgroundStorageResult.data.id;
+            logs["storageImageId"] = storageImageId;
+          }
+        }
+      } else {
+        logs["backgroundSkipped"] = "No background image provided.";
+      }
+
+      // 4. Determine song type
+      const songType: "SONG" | "MUSIC_VIDEO" = songFileInfo.fileType.includes(
+        "audio"
+      )
+        ? "SONG"
+        : "MUSIC_VIDEO";
+      logs["songType"] = songType;
+
+      // 5. Create the song
+      const createSongRequest: ApiSongCreateRequest = {
+        title: data.title,
+        artistId: actorId,
+        genreId: data.albumIds, // Assuming albumIds is used for genreId for now, adjust as needed
+        storageId: songStorageId,
+        storageImageId: storageImageId,
+        duration: data.duration,
+        description: data.description,
+        albumId: data.albumIds,
+        songType,
+      };
+      logs["createSongRequest"] = createSongRequest;
+
+      finalCreateSongResult = await createSongV2(createSongRequest);
+      logs["createSongResult"] = finalCreateSongResult;
+
+      if (!finalCreateSongResult.success) {
+        throw new Error(
+          finalCreateSongResult?.message ||
+            `Failed to create song: ${finalCreateSongResult.message}`
+        );
+      }
+      setSubmittedData({ songData: finalCreateSongResult.data, logs });
+      setOpenPreviewModal(true);
+      setOpenAddModal(false);
+      setRefreshKey((k) => k + 1);
+    } catch (error: any) {
+      console.error("Error creating song:", error);
+      setSubmittedData({ error: error.message, logs });
+      setOpenPreviewModal(true);
+    } finally {
+      setIsCreatingSong(false);
+    }
+  };
+
+  // const handleEdit = async (data: EditSongFormProps, entity: Song) => {
+  //   setSubmittedData(await editRole({ ...data, id: entity.id }));
+  //   setOpenEditModal(false);
+  //   setOpenPreviewModal(true);
+  //   setRefreshKey((k) => k + 1);
+  // };
+
   return (
     <>
       <Stack className="h-full">
@@ -249,7 +434,7 @@ const ManageSongs = () => {
         {editingSong && (
           <EditSongModal
             open={openEditModal}
-            onClose={() => setOpenEditModal(false)}
+            onClose={() => handleCloseModal(() => setOpenEditModal(false))}
             onSubmit={(data, song) => {
               setSubmittedData({ ...song, ...data });
               setOpenPreviewModal(true);
@@ -261,11 +446,8 @@ const ManageSongs = () => {
       {openAddModal && (
         <AddSongModal
           open={openAddModal}
-          onClose={() => setOpenAddModal(false)}
-          onSubmit={(data) => {
-            setSubmittedData(data);
-            setOpenPreviewModal(true);
-          }}
+          onClose={() => handleCloseModal(() => setOpenAddModal(false))}
+          onSubmit={handleCreate}
         />
       )}
       <PreviewModal
@@ -273,6 +455,12 @@ const ManageSongs = () => {
         onClose={() => setOpenPreviewModal(false)}
         data={submittedData}
       />
+      <Backdrop
+        sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
+        open={isCreatingSong}
+      >
+        <CircularProgress color="inherit" />
+      </Backdrop>
     </>
   );
 };
