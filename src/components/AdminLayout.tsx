@@ -1,16 +1,24 @@
-import { Outlet, Link } from "react-router-dom";
-import { Tabs, Tab, Box, Stack } from "@mui/material";
 import {
-  MdPerson,
-  MdLibraryMusic,
+  Backdrop,
+  Box,
+  CircularProgress,
+  Stack,
+  Tab,
+  Tabs,
+} from "@mui/material";
+import { useEffect, useState } from "react";
+import {
   MdAlbum,
-  MdQueueMusic,
-  MdPlaylistPlay,
   MdCategory,
+  MdLibraryMusic,
   MdMusicNote,
+  MdPerson,
+  MdPlaylistPlay,
+  MdQueueMusic,
   MdSecurity,
 } from "react-icons/md";
-import { useState } from "react";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { useAdminLoading } from "./AdminStates";
 
 const links = [
   { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
@@ -32,53 +40,80 @@ const links = [
 
 const AdminLayout = () => {
   const [selectedTab, setSelectedTab] = useState(0);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Determine the active tab index based on the current pathname
+    const activeIndex = links.findIndex(
+      (link) => link.path === location.pathname.split("/")[2]
+    );
+    setSelectedTab(activeIndex !== -1 ? activeIndex : 0);
+  }, [location]);
 
   const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
     setSelectedTab(newValue);
+    navigate(`/admin/${links[newValue].path}`);
   };
 
+  const { count } = useAdminLoading();
+  const isLoading = count > 0;
+
   return (
-    <Stack direction="row" className="w-full h-full">
-      <Box
-        sx={{
-          borderRight: 1,
-          borderColor: "divider",
-          // no grow no shrink
-          flex: "0 0 auto",
-          height: "100%",
-          // Enable vertical scrolling
-          overflowY: "auto",
-        }}
-      >
-        <Tabs
-          orientation="vertical"
-          value={selectedTab}
-          onChange={handleTabChange}
-          aria-label="Admin Navigation Tabs"
+    <>
+      <Stack direction="row" className="w-full h-full">
+        <Box
+          sx={{
+            borderRight: 1,
+            borderColor: "divider",
+            // no grow no shrink
+            flex: "0 0 auto",
+            height: "100%",
+            // Enable vertical scrolling
+            overflowY: "auto",
+          }}
         >
-          {links.map(({ path, label, icon }, index) => (
-            <Tab
-              key={index}
-              label={
-                <Stack direction={"row"} gap={1}>
-                  {icon}
-                  {label}
-                </Stack>
-              }
-              component={Link}
-              to={`/admin/${path}`}
-            />
-          ))}
-        </Tabs>
-      </Box>
-      {/* can grow and shrink */}
-      <div
-        style={{ padding: "20px", flex: "1 1" }}
-        className="h-full overflow-x-auto"
-      >
-        <Outlet />
-      </div>
-    </Stack>
+          <Tabs
+            orientation="vertical"
+            value={selectedTab}
+            onChange={handleTabChange}
+            aria-label="Admin Navigation Tabs"
+          >
+            {links.map(({ label, icon }, index) => (
+              <Tab key={index} label={label} icon={icon} iconPosition="start" />
+            ))}
+          </Tabs>
+        </Box>
+        {/* can grow and shrink */}
+        <div
+          style={{ padding: "20px", flex: "1 1" }}
+          className="h-full overflow-x-auto"
+        >
+          <Outlet />
+        </div>
+      </Stack>
+      {/** Show loading backdrop when count > 0 */}
+      {isLoading && (
+        <Backdrop
+          sx={{ zIndex: (theme) => theme.zIndex.modal + 1, color: "#fff" }}
+          open
+        >
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 2,
+            }}
+          >
+            <CircularProgress sx={{ height: "80%" }} />
+            <Box sx={{ mt: 2, fontWeight: "bold" }}>
+              {`${count} job${count > 1 ? "s" : ""} remaining...`}
+            </Box>
+          </Box>
+        </Backdrop>
+      )}
+    </>
   );
 };
 

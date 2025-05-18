@@ -3,7 +3,7 @@ import { Box, Dialog, DialogTitle } from "@mui/material";
 export const PreviewModal: React.FC<{
   open: boolean;
   onClose: () => void;
-  data: object | null;
+  data: unknown;
 }> = ({ open, onClose, data }) => {
   const isError = data instanceof Error;
 

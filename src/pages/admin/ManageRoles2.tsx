@@ -17,6 +17,7 @@ import GenericTableActionEdit, {
 import { PreviewModal } from "../../components/admin/PreviewModal";
 import { ApiPaginatedResult, ApiRoleType } from "../../types/api";
 import { createRole, deleteRoles, editRole, getRoles } from "../../api/authApi";
+import { useAdminLoading } from "../../components/AdminStates";
 
 type Role2 = ApiRoleType;
 type Paginated<T> = ApiPaginatedResult<T>;
@@ -133,7 +134,7 @@ const ManageRole2s = () => {
     useState<keyof Role2TableColumnNames>("updatedAt");
 
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
-  const [submittedData, setSubmittedData] = useState<object | null>(null);
+  const [submittedData, setSubmittedData] = useState<unknown>(null);
   const [openAddModal, setOpenAddModal] = useState(false);
 
   const [displayingResult, setDisplayingResult] = useState<Paginated<Role2>>({
@@ -218,10 +219,10 @@ const ManageRole2s = () => {
 
   const editingRole2 = useMemo(
     () => displayingResult.result.find((u) => u.id === editingRole2Id),
-    [editingRole2Id]
+    [displayingResult.result, editingRole2Id]
   );
 
-  const handleOpenPreview = (data: any) => {
+  const handleOpenPreview = (data: unknown) => {
     setSubmittedData(data);
     setOpenPreviewModal(true);
   };
@@ -239,25 +240,33 @@ const ManageRole2s = () => {
 
   const handleCreate = async (data: AddRole2FormProps) => {
     try {
+      loadingState.increment();
       const result = await createRole(data);
       handleOpenPreview(result);
       setRefreshKey((k) => k + 1);
       setOpenAddModal(false);
     } catch (error) {
       handleOpenPreview(error);
+    } finally {
+      loadingState.decrement();
     }
   };
 
   const handleEdit = async (data: EditRole2FormProps, entity: Role2) => {
     try {
+      loadingState.increment();
       const result = await editRole({ ...data, id: entity.id });
       handleOpenPreview(result);
       setRefreshKey((k) => k + 1);
       setOpenEditModal(false);
     } catch (error) {
       handleOpenPreview(error);
+    } finally {
+      loadingState.decrement();
     }
   };
+
+  const loadingState = useAdminLoading();
 
   return (
     <>

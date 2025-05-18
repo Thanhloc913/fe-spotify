@@ -6,7 +6,7 @@ import tseslint from "typescript-eslint";
 import pluginQuery from "@tanstack/eslint-plugin-query";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  { ignores: ["dist", "tailwind.config.js", "postcss.config.js"] },
   {
     extends: [
       js.configs.recommended,

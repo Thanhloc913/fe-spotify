@@ -1,13 +1,6 @@
 import AddIcon from "@mui/icons-material/Add";
 import SearchIcon from "@mui/icons-material/Search";
-import {
-  Avatar,
-  Backdrop,
-  Button,
-  CircularProgress,
-  Stack,
-  TextField,
-} from "@mui/material";
+import { Avatar, Button, Stack, TextField } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
 import { musicApi } from "../../api";
 import { createSongV2 } from "../../api/musicApi";
@@ -22,6 +15,7 @@ import GenericTableActionEdit, {
   SortOrder,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
+import { useAdminLoading } from "../../components/AdminStates";
 import {
   ApiPaginatedResult,
   ApiResponse,
@@ -234,17 +228,17 @@ const ManageSongs = () => {
 
   const editingSong = useMemo(
     () => displayingResult?.result?.find((u) => u.id === editingSongId),
-    [editingSongId]
+    [displayingResult?.result, editingSongId]
   );
 
-  const [isCreatingSong, setIsCreatingSong] = useState(false);
+  const loadingState = useAdminLoading();
   const handleCloseModal = (onClose: () => void) => {
-    if (!isCreatingSong) onClose();
+    if (loadingState.count === 0) onClose();
   };
 
   const handleCreate = async (data: AddSongFormProps) => {
-    setIsCreatingSong(true);
-    let logs: Record<string, any> = {};
+    loadingState.increment();
+    const logs: Record<string, unknown> = {};
     let finalCreateSongResult: ApiResponse<ApiSongType> | null = null;
 
     try {
@@ -379,12 +373,12 @@ const ManageSongs = () => {
       setOpenPreviewModal(true);
       setOpenAddModal(false);
       setRefreshKey((k) => k + 1);
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error creating song:", error);
-      setSubmittedData({ error: error.message, logs });
+      setSubmittedData({ error: (error as Error).message, logs });
       setOpenPreviewModal(true);
     } finally {
-      setIsCreatingSong(false);
+      loadingState.decrement();
     }
   };
 
@@ -455,12 +449,6 @@ const ManageSongs = () => {
         onClose={() => setOpenPreviewModal(false)}
         data={submittedData}
       />
-      <Backdrop
-        sx={{ zIndex: (theme) => theme.zIndex.modal + 1 }}
-        open={isCreatingSong}
-      >
-        <CircularProgress color="inherit" />
-      </Backdrop>
     </>
   );
 };
