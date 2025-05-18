@@ -61,21 +61,60 @@ export const getStorages = async (page = 1, pageSize = 10) => {
 
 // Upload file
 export const uploadFile = async (file: File) => {
-  const csrfToken = getCsrfToken();
+  console.log('Đang tải lên tệp...');
   const formData = new FormData();
   formData.append('file', file);
-  
-  const response = await fetch(`${BASE_URL}/storage/upload`, {
-    method: 'POST',
-    headers: {
-      'X-CSRFToken': csrfToken,
-      'Authorization': `Bearer ${localStorage.getItem('access_token')}`,
-    },
-    body: formData,
-    credentials: 'include',
-  });
-  
-  return await response.json();
+  const headers = {
+    'X-CSRFToken': getCsrfToken(),
+    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+  };
+
+  try {
+    const response = await fetch(`${BASE_URL}/storage/upload`, {
+      method: 'POST',
+      headers,
+      body: formData,
+      credentials: 'include'
+    });
+    const result = await response.json();
+    console.log('Upload Response:', result);
+    return result;
+  } catch (error) {
+    console.error('Upload Error:', error);
+    return null;
+  }
+};
+
+// Create storage data function
+export const createStorageData = async (data: {
+  fileName: string;
+  fileType: string;
+  userId: string | null;
+  fileUrl: string;
+  fileSize: number;
+  description: string;
+}) => {
+  console.log('Đang tạo dữ liệu lưu trữ...');
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken(),
+    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+  };
+
+  try {
+    const response = await fetch(`${BASE_URL}/storage/create`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(data),
+      credentials: 'include'
+    });
+    const result = await response.json();
+    console.log('Storage Response:', result);
+    return result;
+  } catch (error) {
+    console.error('Storage Error:', error);
+    return null;
+  }
 };
 
 // Lấy URL ảnh từ storageImageId (dùng lại endpoint giống storageId)
@@ -159,4 +198,33 @@ export const getImageUrl = async (storageImageId: string) => {
   }
 };
 
-export default storageApi; 
+export default storageApi;
+
+// Album creation function
+export const createAlbum = async (albumData: {
+  name: string;
+  description: string;
+  storageImageId: string;
+  artistId: string;
+}) => {
+  console.log('Đang tạo album...');
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken(),
+    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+  };
+
+  try {
+    const response = await fetch(`http://localhost:8082/album/create`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(albumData),
+      credentials: 'include'
+    });
+    const data = await response.json();
+    return { status: response.status, data };
+  } catch (error: any) {
+    console.error('Lỗi:', error);
+    return { status: 500, data: { error: error.message } };
+  }
+}; 

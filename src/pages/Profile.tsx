@@ -3,8 +3,10 @@ import { Artist } from '../types';
 import { updateProfile, getProfile } from '../api/profileApi';
 import { useUser } from '../contexts/UserContext';
 import { getAccountById, verifyCurrentPassword, updatePassword } from '../api/authApi';
+import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
+import { createSong } from '../api/musicApi';
 
-const formatDate = (dateStr: string | undefined) => {
+const formatDate = (dateStr: string | undefined | null) => {
   if (!dateStr) return 'N/A';
   const d = new Date(dateStr);
   return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth()+1).toString().padStart(2, '0')}/${d.getFullYear()}`;
@@ -36,6 +38,30 @@ const Profile = () => {
   const [passwordError, setPasswordError] = useState('');
   const [passwordSuccess, setPasswordSuccess] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+
+  // State for album creation
+  const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false);
+  const [showCreateMusicModal, setShowCreateMusicModal] = useState(false);
+  const [albumData, setAlbumData] = useState({
+    name: '',
+    description: '',
+    coverImage: undefined as File | undefined,
+  });
+  const [isCreatingAlbum, setIsCreatingAlbum] = useState(false);
+  const [albumCreationMessage, setAlbumCreationMessage] = useState('');
+  const [albumCreationError, setAlbumCreationError] = useState('');
+  const [isUploading, setIsUploading] = useState(false);
+
+  const [musicData, setMusicData] = useState({
+    title: '',
+    description: '',
+    file: undefined as File | undefined,
+    coverImage: undefined as File | undefined
+  });
+  const [isCreatingMusic, setIsCreatingMusic] = useState(false);
+  const [musicCreationError, setMusicCreationError] = useState('');
+  const [musicCreationMessage, setMusicCreationMessage] = useState('');
+  const [isMusicUploading, setIsMusicUploading] = useState(false);
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -71,7 +97,7 @@ const Profile = () => {
     try {
       const updated = await updateProfile(editData);
       setArtist(updated);
-      await fetchProfile(); // Cập nhật context để Navbar update avatar
+      await fetchProfile();
       setEditMode(false);
       setSuccessMsg('Cập nhật thành công!');
     } catch (err) {
@@ -128,6 +154,209 @@ const Profile = () => {
     }
   };
 
+  // Album creation function
+  const handleAlbumSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingAlbum(true);
+    setAlbumCreationMessage('');
+    setAlbumCreationError('');
+    setIsUploading(true);
+
+    try {
+      // Get the artist ID from localStorage
+      const userId = localStorage.getItem('profile_id');
+      const artistId = localStorage.getItem('profile_id');
+      if (!artistId) {
+        throw new Error('Không tìm thấy ID nghệ sĩ!');
+      }
+      
+      if (!albumData.coverImage) {
+        throw new Error('Vui lòng chọn ảnh bìa cho album!');
+      }
+
+      // 1. Upload the cover image
+      const uploadResult = await uploadFile(albumData.coverImage);
+      
+      if (uploadResult && uploadResult.success) {
+        // 2. Get the uploaded file information
+        const { fileName, fileType, fileUrl, fileSize } = uploadResult.data;
+        
+        // 3. Create storage data with the uploaded file info
+        const storageResult = await createStorageData({
+          fileName,
+          fileType,
+          userId,
+          fileUrl,
+          fileSize,
+          description: 'Album cover image'
+        });
+        
+        setIsUploading(false);
+        
+        if (storageResult && storageResult.success) {
+          // Get the storage ID from the storage result
+          const storageId = storageResult.data.id;
+          console.log('Storage ID for album:', storageId);
+          
+          // 4. Create the album with the storage image ID
+          const albumResult = await createAlbum({
+            name: albumData.name,
+            description: albumData.description,
+            storageImageId: storageId,
+            artistId
+          });
+
+          if (albumResult.status === 200 || albumResult.status === 201) {
+            setAlbumCreationMessage('Tạo album thành công!');
+            setAlbumData({
+              name: '',
+              description: '',
+              coverImage: undefined
+            });
+            // Close modal after a delay
+            setTimeout(() => {
+              setShowCreateAlbumModal(false);
+              setAlbumCreationMessage('');
+            }, 2000);
+          } else {
+            throw new Error(albumResult.data.error || 'Lỗi khi tạo album');
+          }
+        } else {
+          throw new Error('Lỗi khi tạo dữ liệu lưu trữ cho ảnh bìa');
+        }
+      } else {
+        throw new Error('Lỗi khi tải ảnh lên');
+      }
+    } catch (err) {
+      setAlbumCreationError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo album');
+    } finally {
+      setIsCreatingAlbum(false);
+      setIsUploading(false);
+    }
+  };
+
+  const handleAlbumChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    setAlbumData({ ...albumData, [e.target.name]: e.target.value });
+  };
+
+  const handleCoverImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAlbumData({ ...albumData, coverImage: e.target.files[0] });
+    }
+  };
+
+  // Hàm xử lý tạo bài hát mới
+  const handleMusicSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsCreatingMusic(true);
+    setMusicCreationMessage('');
+    setMusicCreationError('');
+    setIsMusicUploading(true);
+
+    try {
+      // Get profile ID from localStorage
+      const profileId = localStorage.getItem('profile_id');
+      
+      if (!profileId) {
+        throw new Error('Không tìm thấy ID nghệ sĩ!');
+      }
+      
+      if (!musicData.file) {
+        throw new Error('Vui lòng chọn file nhạc!');
+      }
+
+      // 1. Upload music file
+      const musicUploadResult = await uploadFile(musicData.file);
+      
+      if (!musicUploadResult || !musicUploadResult.success) {
+        throw new Error('Lỗi khi tải file nhạc lên');
+      }
+      
+      // 2. Get the uploaded music file information
+      const { fileName: musicFileName, fileType: musicFileType, fileUrl: musicFileUrl, fileSize: musicFileSize } = musicUploadResult.data;
+      
+      // 3. Create storage data for music file
+      const musicStorageResult = await createStorageData({
+        fileName: musicFileName,
+        fileType: musicFileType,
+        userId: profileId,
+        fileUrl: musicFileUrl,
+        fileSize: musicFileSize,
+        description: 'Music file'
+      });
+      
+      if (!musicStorageResult || !musicStorageResult.success) {
+        throw new Error('Lỗi khi tạo dữ liệu lưu trữ cho file nhạc');
+      }
+      
+      const musicStorageId = musicStorageResult.data.id;
+      
+      // 4. Upload cover image if provided
+      let imageStorageId = null;
+      
+      if (musicData.coverImage) {
+        const imageUploadResult = await uploadFile(musicData.coverImage);
+        
+        if (!imageUploadResult || !imageUploadResult.success) {
+          throw new Error('Lỗi khi tải ảnh bìa lên');
+        }
+        
+        // Get the uploaded image file information
+        const { fileName: imageFileName, fileType: imageFileType, fileUrl: imageFileUrl, fileSize: imageFileSize } = imageUploadResult.data;
+        
+        // Create storage data for image file
+        const imageStorageResult = await createStorageData({
+          fileName: imageFileName,
+          fileType: imageFileType,
+          userId: profileId,
+          fileUrl: imageFileUrl,
+          fileSize: imageFileSize,
+          description: 'Song cover image'
+        });
+        
+        if (!imageStorageResult || !imageStorageResult.success) {
+          throw new Error('Lỗi khi tạo dữ liệu lưu trữ cho ảnh bìa');
+        }
+        
+        imageStorageId = imageStorageResult.data.id;
+      }
+      
+      setIsMusicUploading(false);
+      
+      // 5. Create song with the storage IDs
+      const songResult = await createSong({
+        title: musicData.title,
+        description: musicData.description,
+        fileId: musicStorageId,
+        imageId: imageStorageId || undefined,
+        artistId: profileId
+      });
+      
+      if (songResult.status === 200 || songResult.status === 201) {
+        setMusicCreationMessage('Tạo bài hát thành công!');
+        setMusicData({
+          title: '',
+          description: '',
+          file: undefined,
+          coverImage: undefined
+        });
+        
+        // Close modal after a delay
+        setTimeout(() => {
+          setShowCreateMusicModal(false);
+          setMusicCreationMessage('');
+        }, 2000);
+      } else {
+        throw new Error(songResult.data.error || 'Lỗi khi tạo bài hát');
+      }
+    } catch (err) {
+      setMusicCreationError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài hát');
+    } finally {
+      setIsCreatingMusic(false);
+      setIsMusicUploading(false);
+    }
+  };
+
   if (loading) return <div className="flex justify-center items-center h-screen">Loading...</div>;
   if (error) return <div className="flex justify-center items-center h-screen text-red-500">{error}</div>;
   if (!artist) return <div className="flex justify-center items-center h-screen">Artist not found</div>;
@@ -137,16 +366,30 @@ const Profile = () => {
       {/* Profile Header */}
       <div className="flex items-end gap-6 mb-8">
         <img
-          src={artist.avatarUrl}
-          alt={artist.fullName}
+          src={artist.avatarUrl || ''}
+          alt={artist.fullName || 'Artist'}
           className="w-48 h-48 rounded-full object-cover"
         />
         <div>
-          <h1 className="text-5xl font-bold mb-4">{artist.fullName}</h1>
+          <h1 className="text-5xl font-bold mb-4">{artist.fullName || 'Unnamed Artist'}</h1>
           <p className="text-gray-400">{artist.bio || 'No bio available'}</p>
           <p className="text-gray-500 mt-2">
-            Member since {formatDate(artist?.createdAt)}
+            Member since {formatDate(artist?.createdAt || undefined)}
           </p>
+        </div>
+        <div className="ml-auto flex gap-2">
+          <button 
+            onClick={() => setShowCreateAlbumModal(true)} 
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full transition-colors"
+          >
+            Tạo Album
+          </button>
+          <button 
+            onClick={() => setShowCreateMusicModal(true)} 
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full transition-colors"
+          >
+            Tạo nhạc
+          </button>
         </div>
       </div>
 
@@ -292,7 +535,136 @@ const Profile = () => {
         </form>
       </div>
 
-      {/* TODO: Thêm form upload nhạc và tạo album mới ở đây */}
+      {/* Create Album Modal */}
+      {showCreateAlbumModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Tạo Album Mới</h3>
+            <form onSubmit={handleAlbumSubmit} className="space-y-4">
+              <div>
+                <label className="block text-gray-400 mb-1">Tên album</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={albumData.name}
+                  onChange={handleAlbumChange}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Mô tả</label>
+                <textarea
+                  name="description"
+                  value={albumData.description}
+                  onChange={handleAlbumChange}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Ảnh bìa</label>
+                <input
+                  type="file"
+                  name="coverImage"
+                  accept="image/png,image/jpeg"
+                  onChange={handleCoverImageChange}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                  required
+                />
+                {albumData.coverImage && (
+                  <p className="mt-1 text-sm text-gray-400">
+                    Đã chọn: {albumData.coverImage.name} ({Math.round(albumData.coverImage.size / 1024)} KB)
+                  </p>
+                )}
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  type="submit" 
+                  className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
+                  disabled={isCreatingAlbum}
+                >
+                  {isUploading ? 'Đang tải ảnh...' : isCreatingAlbum ? 'Đang tạo...' : 'Tạo Album'}
+                </button>
+                <button 
+                  type="button" 
+                  className="bg-gray-500 text-white px-6 py-2 rounded-full"
+                  onClick={() => setShowCreateAlbumModal(false)}
+                >
+                  Huỷ
+                </button>
+              </div>
+              {albumCreationError && <div className="text-red-400 mt-2">{albumCreationError}</div>}
+              {albumCreationMessage && <div className="text-green-400 mt-2">{albumCreationMessage}</div>}
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Create Music Modal */}
+      {showCreateMusicModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-xl font-bold mb-4">Tạo Bài Hát Mới</h3>
+            <form onSubmit={handleMusicSubmit} className="space-y-4">
+              <div>
+                <label className="block text-gray-400 mb-1">Tên bài hát</label>
+                <input
+                  type="text"
+                  value={musicData.title}
+                  onChange={(e) => setMusicData({...musicData, title: e.target.value})}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Mô tả</label>
+                <textarea
+                  value={musicData.description}
+                  onChange={(e) => setMusicData({...musicData, description: e.target.value})}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">File nhạc</label>
+                <input
+                  type="file"
+                  accept="audio/*"
+                  onChange={(e) => setMusicData({...musicData, file: e.target.files ? e.target.files[0] : undefined})}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-gray-400 mb-1">Ảnh bìa</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setMusicData({...musicData, coverImage: e.target.files ? e.target.files[0] : undefined})}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                />
+              </div>
+              <div className="flex gap-2">
+                <button 
+                  type="submit" 
+                  className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
+                  disabled={isCreatingMusic}
+                >
+                  {isMusicUploading ? 'Đang tải file...' : isCreatingMusic ? 'Đang tạo...' : 'Tạo bài hát'}
+                </button>
+                <button 
+                  type="button" 
+                  className="bg-gray-500 text-white px-6 py-2 rounded-full"
+                  onClick={() => setShowCreateMusicModal(false)}
+                >
+                  Huỷ
+                </button>
+              </div>
+              {musicCreationError && <div className="text-red-400 mt-2">{musicCreationError}</div>}
+              {musicCreationMessage && <div className="text-green-400 mt-2">{musicCreationMessage}</div>}
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

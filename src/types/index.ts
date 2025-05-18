@@ -50,6 +50,7 @@ export interface Album {
   artistId: string;
   artistName: string;
   coverUrl: string;
+  backgroundUrl: string;
   releaseDate: string;
   tracks: string[];
   type: "album" | "single" | "EP";

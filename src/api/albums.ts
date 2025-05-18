@@ -96,23 +96,11 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
       releaseDate: albumData.createdAt || new Date().toISOString(),
       totalTracks: 0, // Sẽ được cập nhật từ số lượng tracks
       type: 'album',
-      coverUrl: '',
+      coverUrl: albumData.backgroundUrl || '',
+      backgroundUrl: albumData.backgroundUrl || '',
       tracks: [], // Thêm thuộc tính bắt buộc
       durationMs: 0  // Thêm thuộc tính bắt buộc
     };
-    
-    // Lấy ảnh album nếu có storageImageId
-    if (albumData.storageImageId) {
-      try {
-        const imageUrl = await getImageUrl(albumData.storageImageId);
-        if (imageUrl) {
-          album.coverUrl = imageUrl;
-          console.log(`Album cover URL: ${imageUrl}`);
-        }
-      } catch (error) {
-        console.error('Error fetching album cover:', error);
-      }
-    }
     
     // Gọi API để lấy danh sách bài hát trong album
     const tracksResponse = await axios.post(`${API_BASE_URL}/songs`, {
@@ -139,9 +127,9 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
       // Cập nhật totalTracks
       album.totalTracks = tracksData.length;
       
-      // Chuyển đổi dữ liệu bài hát
-      tracks = await Promise.all(tracksData.map(async (track: any) => {
-        const trackObj: Track = {
+      // Chuyển đổi dữ liệu bài hát - sử dụng trực tiếp backgroundUrl và songUrl từ API
+      tracks = tracksData.map((track: any) => {
+        return {
           id: track.id,
           title: track.title || '',
           artistId: track.artistId || albumData.artistId,
@@ -152,7 +140,7 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
           explicit: false,
           previewUrl: '',
           popularity: 100,
-          coverUrl: track.coverUrl || album.coverUrl || '',
+          coverUrl: track.coverUrl || track.backgroundUrl || album.coverUrl || '',
           backgroundUrl: track.backgroundUrl || '',
           songUrl: track.songUrl || '',
           storageId: track.storageId || '',
@@ -161,34 +149,7 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
           isPlayable: true,
           videoUrl: null
         };
-        
-        // Lấy ảnh cho track nếu không có sẵn coverUrl
-        if (!trackObj.coverUrl && track.storageImageId) {
-          try {
-            const imageUrl = await getImageUrl(track.storageImageId);
-            if (imageUrl) {
-              trackObj.coverUrl = imageUrl;
-            }
-          } catch (error) {
-            console.error(`Error fetching track cover for ${track.title}:`, error);
-          }
-        }
-        
-        // Lấy URL file nhạc từ storageId nếu không có sẵn songUrl
-        if (!trackObj.songUrl && track.storageId) {
-          try {
-            const songUrl = await getImageUrl(track.storageId);
-            if (songUrl) {
-              trackObj.songUrl = songUrl;
-              console.log(`Đã lấy được URL file nhạc cho "${track.title}": ${songUrl}`);
-            }
-          } catch (error) {
-            console.error(`Error fetching song URL for ${track.title}:`, error);
-          }
-        }
-        
-        return trackObj;
-      }));
+      });
     }
     
     // Gọi API để lấy thông tin nghệ sĩ
@@ -248,13 +209,16 @@ export const getAlbumById = async (id: string): Promise<ApiResponse<{ album: Alb
       } catch (error) {
         console.error('Error fetching artist data:', error);
       }
+      
+      return createResponse({
+        album: { ...album, backgroundUrl: albumData.backgroundUrl || '' }, // Thêm backgroundUrl cho album
+        tracks,
+        artist: artist as Artist,
+      });
+    } else {
+      console.error('Profile API không trả về dữ liệu thành công:', albumResponse.data);
+      return createResponse(null as any, 404, 'Album not found');
     }
-    
-    return createResponse({
-      album,
-      tracks,
-      artist: artist as Artist,
-    });
   } catch (error) {
     console.error('Error fetching album details:', error);
     return createResponse(null as any, 500, 'Failed to fetch album details');
@@ -265,8 +229,7 @@ export const searchAlbums = async (query: string): Promise<ApiResponse<Album[]>>
   try {
     if (USE_MOCK_DATA) {
       const results = mockData.albums.filter(album => 
-        album.title.toLowerCase().includes(query.toLowerCase()) ||
-        album.artistName.toLowerCase().includes(query.toLowerCase())
+        album.title.toLowerCase().includes(query.toLowerCase())
       );
       return createResponse(results);
     }
@@ -282,12 +245,12 @@ export const searchAlbums = async (query: string): Promise<ApiResponse<Album[]>>
 export const getNewReleases = async (): Promise<ApiResponse<Album[]>> => {
   try {
     if (USE_MOCK_DATA) {
-      // Sort by release date to get newest albums
-      const newReleases = [...mockData.albums]
-        .sort((a, b) => new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime())
-        .slice(0, 10);
+      // Sort by release date, newest first
+      const sortedAlbums = [...mockData.albums].sort((a, b) => 
+        new Date(b.releaseDate).getTime() - new Date(a.releaseDate).getTime()
+      );
       
-      return createResponse(newReleases);
+      return createResponse(sortedAlbums.slice(0, 10));
     }
 
     const response = await axios.get(`${API_BASE_URL}/browse/new-releases`);

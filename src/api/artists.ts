@@ -234,7 +234,7 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
         const albumsResponse = await axios.post(
           'http://localhost:8082/albums',
           { 
-            artistId: profileId,
+            artistID: profileId,
             page: 1,
             pageSize: 10
           },
@@ -265,34 +265,18 @@ export const getArtistById = async (id: string): Promise<ApiResponse<{ artist: A
             releaseDate: album.createdAt || new Date().toISOString(),
             totalTracks: 0, 
             type: 'album',
-            coverUrl: album.coverUrl || '',
-            ...(album.storageImageId ? { _storageImageId: album.storageImageId } : {})
+            backgroundUrl: album.backgroundUrl || '',
           }));
           
-          console.log('Converted albums:', albums);
-          
-          const albumsPromises = albums.map(async (album: any) => {
-            if (album._storageImageId) {
-              try {
-                console.log(`Đang lấy ảnh cho album "${album.title}" từ storageImageId: ${album._storageImageId}`);
-                const imageUrl = await getImageUrl(album._storageImageId);
-                
-                if (imageUrl) {
-                  console.log(`Đã lấy được URL ảnh cho album "${album.title}": ${imageUrl}`);
-                  const updatedAlbum = { ...album, coverUrl: imageUrl };
-                  delete updatedAlbum._storageImageId;
-                  return updatedAlbum;
-                }
-              } catch (error) {
-                console.error(`Lỗi khi lấy ảnh cho album "${album.title}":`, error);
-              }
-            }
-            const cleanAlbum = { ...album };
-            delete cleanAlbum._storageImageId;
-            return cleanAlbum;
+          // Log thông tin về albums và backgroundUrl
+          console.log('Albums sau khi map:', albums);
+          albums.forEach((album, index) => {
+            console.log(`Album ${index} - ${album.title}:`);
+            console.log(`- id: ${album.id}`);
+            console.log(`- backgroundUrl: ${album.backgroundUrl}`);
+            console.log('- Đối tượng album đầy đủ:', album);
           });
           
-          albums = await Promise.all(albumsPromises);
         }
       } catch (error) {
         console.error('Error fetching artist albums:', error);
