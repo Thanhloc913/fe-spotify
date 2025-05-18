@@ -124,3 +124,202 @@ export type ApiEditRoleRequest = {
   name: string;
   description: string;
 };
+
+// storage upload
+export type ApiStorageUploadResponse = {
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+};
+
+export type ApiStorageUploadResult = ApiResponse<ApiStorageUploadResponse>;
+
+// storage create
+export type ApiStorageCreateRequest = {
+  fileName: string;
+  fileType: string;
+  userId: string;
+  fileUrl: string;
+  fileSize: number;
+  description: string;
+};
+
+export type ApiStorageCreateResponseData = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  isActive: boolean;
+  userId: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  fileUrl: string;
+  description: string;
+};
+
+export type ApiStorageCreateResult = ApiResponse<ApiStorageCreateResponseData>;
+
+// album create
+export type ApiAlbumCreateRequest = {
+  name: string;
+  description: string;
+  storageImageId: string;
+  artistId: string;
+};
+
+export type ApiAlbumCreateResponseData = {
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  isActive: boolean;
+  name: string;
+  description: string;
+  storageImageId: string;
+  artistId: string;
+};
+
+export type ApiAlbumCreateResult = ApiResponse<ApiAlbumCreateResponseData>;
+
+// storage upload req
+// fetch("http://localhost:8083/storage/upload", {
+//   "headers": {
+//     "accept": "*/*",
+//     "accept-language": "en-US,en;q=0.9",
+//     "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3NTQ2MzkxLCJpYXQiOjE3NDc1NDQ1OTEsImp0aSI6ImU2NWI3ZDdjZTEzZjQ2MTJiY2Y0ZDg3MzFjNTAxZmY2IiwidXNlcl9pZCI6IjAwYzBkNDlmLTI5ZDQtNGZhMy1iYzQxLWU1ODc5Yzk1NWJiNSJ9.nEqJVDiZWnGrakv5OAfkyl7ynysiUFQcatmjOAsvXYk",
+//     "content-type": "multipart/form-data; boundary=----WebKitFormBoundaryyQnDTMqP4CAmpkYW",
+//     "sec-ch-ua": "\"Chromium\";v=\"136\", \"Microsoft Edge\";v=\"136\", \"Not.A/Brand\";v=\"99\"",
+//     "sec-ch-ua-mobile": "?0",
+//     "sec-ch-ua-platform": "\"Windows\"",
+//     "sec-fetch-dest": "empty",
+//     "sec-fetch-mode": "cors",
+//     "sec-fetch-site": "same-site",
+//     "x-csrftoken": "8Ke4lNrL58mct1bRjrfmFoc3swyy1tmi"
+//   },
+//   "referrer": "http://localhost:5173/",
+//   "referrerPolicy": "strict-origin-when-cross-origin",
+//   "body": "------WebKitFormBoundaryyQnDTMqP4CAmpkYW\r\nContent-Disposition: form-data; name=\"file\"; filename=\"Disc 6 Matrix.png\"\r\nContent-Type: image/png\r\n\r\n\r\n------WebKitFormBoundaryyQnDTMqP4CAmpkYW--\r\n",
+//   "method": "POST",
+//   "mode": "cors",
+//   "credentials": "include"
+// });
+// (binary)
+
+// storage upload res
+// {
+//     "success": true,
+//     "message": "Upload thành công",
+//     "data": {
+//         "fileName": "images/81b34f8e-67b0-4dbd-83f3-59eeac85ef35.png",
+//         "fileType": "image",
+//         "fileSize": 459105,
+//         "fileUrl": "images/81b34f8e-67b0-4dbd-83f3-59eeac85ef35.png"
+//     }
+// }
+
+// storage create req
+// fetch("http://localhost:8083/storage/create", {
+//   "headers": {
+//     "accept": "*/*",
+//     "accept-language": "en-US,en;q=0.9",
+//     "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3NTQ2MzkxLCJpYXQiOjE3NDc1NDQ1OTEsImp0aSI6ImU2NWI3ZDdjZTEzZjQ2MTJiY2Y0ZDg3MzFjNTAxZmY2IiwidXNlcl9pZCI6IjAwYzBkNDlmLTI5ZDQtNGZhMy1iYzQxLWU1ODc5Yzk1NWJiNSJ9.nEqJVDiZWnGrakv5OAfkyl7ynysiUFQcatmjOAsvXYk",
+//     "content-type": "application/json",
+//     "sec-ch-ua": "\"Chromium\";v=\"136\", \"Microsoft Edge\";v=\"136\", \"Not.A/Brand\";v=\"99\"",
+//     "sec-ch-ua-mobile": "?0",
+//     "sec-ch-ua-platform": "\"Windows\"",
+//     "sec-fetch-dest": "empty",
+//     "sec-fetch-mode": "cors",
+//     "sec-fetch-site": "same-site",
+//     "x-csrftoken": "8Ke4lNrL58mct1bRjrfmFoc3swyy1tmi"
+//   },
+//   "referrer": "http://localhost:5173/",
+//   "referrerPolicy": "strict-origin-when-cross-origin",
+//   "body": "{\"fileName\":\"images/c8da1150-6767-4443-82ae-ab9506e22c91.png\",\"fileType\":\"image\",\"userId\":\"d801ba03-323b-438c-8887-47bf33c8cc07\",\"fileUrl\":\"images/c8da1150-6767-4443-82ae-ab9506e22c91.png\",\"fileSize\":449069,\"description\":\"Album cover image\"}",
+//   "method": "POST",
+//   "mode": "cors",
+//   "credentials": "include"
+// });
+// {
+//     "fileName": "images/c8da1150-6767-4443-82ae-ab9506e22c91.png",
+//     "fileType": "image",
+//     "userId": "d801ba03-323b-438c-8887-47bf33c8cc07",
+//     "fileUrl": "images/c8da1150-6767-4443-82ae-ab9506e22c91.png",
+//     "fileSize": 449069,
+//     "description": "Album cover image"
+// }
+
+// storage create res
+// {
+//     "success": true,
+//     "message": "Thành công",
+//     "data": {
+//         "id": "1e4a5aa2-60e0-4d9b-b7de-3b3934c81cb7",
+//         "createdAt": "2025-05-18T05:19:32.494506Z",
+//         "updatedAt": "2025-05-18T05:19:32.502991Z",
+//         "deletedAt": null,
+//         "isActive": true,
+//         "userId": "d801ba03-323b-438c-8887-47bf33c8cc07",
+//         "fileName": "images/c8da1150-6767-4443-82ae-ab9506e22c91.png",
+//         "fileType": "image",
+//         "fileSize": 449069,
+//         "fileUrl": "images/c8da1150-6767-4443-82ae-ab9506e22c91.png",
+//         "description": "Album cover image"
+//     }
+// }
+
+// album create req
+// fetch("http://localhost:8082/album/create", {
+//   "headers": {
+//     "accept": "*/*",
+//     "accept-language": "en-US,en;q=0.9",
+//     "authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzQ3NTQ2MzkxLCJpYXQiOjE3NDc1NDQ1OTEsImp0aSI6ImU2NWI3ZDdjZTEzZjQ2MTJiY2Y0ZDg3MzFjNTAxZmY2IiwidXNlcl9pZCI6IjAwYzBkNDlmLTI5ZDQtNGZhMy1iYzQxLWU1ODc5Yzk1NWJiNSJ9.nEqJVDiZWnGrakv5OAfkyl7ynysiUFQcatmjOAsvXYk",
+//     "content-type": "application/json",
+//     "sec-ch-ua": "\"Chromium\";v=\"136\", \"Microsoft Edge\";v=\"136\", \"Not.A/Brand\";v=\"99\"",
+//     "sec-ch-ua-mobile": "?0",
+//     "sec-ch-ua-platform": "\"Windows\"",
+//     "sec-fetch-dest": "empty",
+//     "sec-fetch-mode": "cors",
+//     "sec-fetch-site": "same-site",
+//     "x-csrftoken": "8Ke4lNrL58mct1bRjrfmFoc3swyy1tmi"
+//   },
+//   "referrer": "http://localhost:5173/",
+//   "referrerPolicy": "strict-origin-when-cross-origin",
+//   "body": "{\"name\":\"windows title bar\",\"description\":\"thiet ke giao dien\",\"storageImageId\":\"1e4a5aa2-60e0-4d9b-b7de-3b3934c81cb7\",\"artistId\":\"d801ba03-323b-438c-8887-47bf33c8cc07\"}",
+//   "method": "POST",
+//   "mode": "cors",
+//   "credentials": "include"
+// });
+// {
+//     "name": "windows title bar",
+//     "description": "thiet ke giao dien",
+//     "storageImageId": "1e4a5aa2-60e0-4d9b-b7de-3b3934c81cb7",
+//     "artistId": "d801ba03-323b-438c-8887-47bf33c8cc07"
+// }
+
+// album create response
+// {
+//     "success": true,
+//     "message": "Thành công",
+//     "data": {
+//         "id": "85c74eb3-f5b2-4364-a2e2-fa6b6c7acd6e",
+//         "createdAt": "2025-05-18T05:19:32.627906Z",
+//         "updatedAt": "2025-05-18T05:19:32.636810Z",
+//         "deletedAt": null,
+//         "isActive": true,
+//         "name": "windows title bar",
+//         "description": "thiet ke giao dien",
+//         "storageImageId": "1e4a5aa2-60e0-4d9b-b7de-3b3934c81cb7",
+//         "artistId": "d801ba03-323b-438c-8887-47bf33c8cc07"
+//     }
+// }
+
+export type ApiSongUpdateRequest = {
+  id: string; // UUID of the song to update
+  title: string;
+  storageImageId: string; // UUID of the associated image
+  duration: number; // Duration in seconds
+  description: string;
+  songType: "MUSIC_VIDEO" | "SONG"; // Extend as needed
+};

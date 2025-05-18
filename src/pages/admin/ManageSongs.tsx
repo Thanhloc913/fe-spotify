@@ -145,18 +145,31 @@ const ManageSongs = () => {
   };
 
   useEffect(() => {
-    const getSongsFromApi = async () =>
-      setDisplayingResult(
-        await musicApi.searchSongsByTitle(search, page, rowsPerPage)
-      );
+    const getSongsFromApi = async () => {
+      const pagedResult = (
+        await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
+      ).data;
+      // api chưa có sort nên sort tạm local
+      if (pagedResult.result && pagedResult.result.length > 0) {
+        pagedResult.result.sort((a, b) => {
+          const aValue = a[columnSortOrderBy];
+          const bValue = b[columnSortOrderBy];
+          if (aValue < bValue) return columnSortOrder === "asc" ? -1 : 1;
+          if (aValue > bValue) return columnSortOrder === "asc" ? 1 : -1;
+          return 0;
+        });
+      }
+      setDisplayingResult(pagedResult);
+      console.log("paged result", pagedResult);
+    };
     getSongsFromApi();
-  }, [search, page, rowsPerPage]);
+  }, [search, page, rowsPerPage, columnSortOrder, columnSortOrderBy]);
 
   const handleSelectAllClick = async (isSelected: boolean) => {
     if (isSelected) {
       const newSelecteds = (
-        await musicApi.searchSongsByTitle(search, page, rowsPerPage)
-      ).result.map((s) => s.id);
+        await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
+      ).data.result.map((s) => s.id);
       setSelectedItems(newSelecteds);
     } else {
       setSelectedItems([]);
@@ -193,8 +206,8 @@ const ManageSongs = () => {
   };
 
   const editingSong = useMemo(
-    () => displayingResult.result.find((u) => u.id === editingSongId),
-    [displayingResult]
+    () => displayingResult?.result?.find((u) => u.id === editingSongId),
+    [editingSongId]
   );
 
   return (

@@ -13,6 +13,8 @@ import {
 import { useState } from "react";
 
 const links = [
+  { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
+  { path: "songs2", label: "Songs2", icon: <MdSecurity /> },
   { path: "users", label: "Users", icon: <MdPerson /> },
   { path: "artists", label: "Artists", icon: <MdLibraryMusic /> },
   { path: "albums", label: "Albums", icon: <MdAlbum /> },
@@ -21,7 +23,6 @@ const links = [
   { path: "genres", label: "Genres", icon: <MdMusicNote /> },
   { path: "categories", label: "Categories", icon: <MdCategory /> },
   { path: "roles", label: "Roles", icon: <MdSecurity /> },
-  { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
   // ...Array.from({ length: 20 }, (_, index) => ({
   //   path: `playlists`,
   //   label: `Test Overflow ${index + 1}`,

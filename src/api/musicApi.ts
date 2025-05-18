@@ -269,7 +269,7 @@ export const musicApi = {
     title: string,
     page: number = 1,
     pageSize: number = 10
-  ): Promise<ApiPaginatedResult<ApiSongType>> => {
+  ): Promise<ApiResponse<ApiPaginatedResult<ApiSongType>>> => {
     try {
       console.log(
         `Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`

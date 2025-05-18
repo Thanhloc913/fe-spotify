@@ -22,6 +22,7 @@
     "dayjs": "^1.11.13",
     "lucide-react": "^0.510.0",
     "merge-sx": "^3.4.0",
+    "mui-file-input": "^7.0.0",
     "mui-tel-input": "^9.0.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
