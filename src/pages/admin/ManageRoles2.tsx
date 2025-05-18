@@ -21,7 +21,10 @@ import { createRole, editRole, getRoles } from "../../api/authApi";
 type Role2 = ApiRoleType;
 type Paginated<T> = ApiPaginatedResult<T>;
 
-type Role2TableColumnNames = Pick<Role2, "id" | "name" | "description">;
+type Role2TableColumnNames = Pick<
+  Role2,
+  "id" | "name" | "description" | "createdAt" | "updatedAt"
+>;
 
 type Role2TableColumnDefinition = {
   id: keyof Role2TableColumnNames;
@@ -35,6 +38,18 @@ const role2TableColumnDefinitions: Role2TableColumnDefinition[] = [
   { id: "id", label: "ID", sortable: true },
   { id: "name", label: "Name", sortable: true },
   { id: "description", label: "Description", sortable: false },
+  {
+    id: "createdAt",
+    label: "Created",
+    sortable: true,
+    render: (value: Role2) => new Date(value.createdAt).toLocaleString(),
+  },
+  {
+    id: "updatedAt",
+    label: "Updated",
+    sortable: true,
+    render: (value: Role2) => new Date(value.updatedAt).toLocaleString(),
+  },
 ] as const;
 
 interface Role2TableActionEditProps {
@@ -111,9 +126,11 @@ const ManageRole2s = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedItems, setSelectedItems] = useState<RowId[]>([]);
-  const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
+  const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">(
+    "desc"
+  );
   const [columnSortOrderBy, setColumnSortOrderBy] =
-    useState<keyof Role2TableColumnNames>("name");
+    useState<keyof Role2TableColumnNames>("updatedAt");
 
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
   const [submittedData, setSubmittedData] = useState<object | null>(null);
@@ -126,6 +143,7 @@ const ManageRole2s = () => {
     totalPages: 1,
   });
 
+  const [refreshKey, setRefreshKey] = useState(0);
   useEffect(() => {
     const getRolesFromApi = async () => {
       const pagedResult = await getRoles({
@@ -133,7 +151,7 @@ const ManageRole2s = () => {
         page: page + 1,
         pageSize: rowsPerPage,
       });
-      // api chua co sort nen sort tam local
+      // api chưa có sort nên sort tạm local
       if (pagedResult.result && pagedResult.result.length > 0) {
         pagedResult.result.sort((a, b) => {
           const aValue = a[columnSortOrderBy];
@@ -146,8 +164,16 @@ const ManageRole2s = () => {
       setDisplayingResult(pagedResult);
       console.log("paged result", pagedResult);
     };
+
     getRolesFromApi();
-  }, [search, page, rowsPerPage, columnSortOrder, columnSortOrderBy]);
+  }, [
+    search,
+    page,
+    rowsPerPage,
+    columnSortOrder,
+    columnSortOrderBy,
+    refreshKey,
+  ]);
 
   const handleRequestSort = (property: keyof Role2TableColumnNames) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
@@ -202,12 +228,16 @@ const ManageRole2s = () => {
 
   const handleCreate = async (data: AddRole2FormProps) => {
     setSubmittedData(await createRole(data));
+    setOpenAddModal(false);
     setOpenPreviewModal(true);
+    setRefreshKey((k) => k + 1);
   };
 
   const handleEdit = async (data: EditRole2FormProps, entity: Role2) => {
     setSubmittedData(await editRole({ ...data, id: entity.id }));
+    setOpenEditModal(false);
     setOpenPreviewModal(true);
+    setRefreshKey((k) => k + 1);
   };
 
   return (

@@ -80,8 +80,21 @@ export type ApiPaginatedResult<T> = {
   totalPages: number;
 };
 
+// {
+//   "id": "c83fd36f-c138-44b6-9233-5b9240443f63",
+//   "createdAt": "2025-05-16T03:11:32.699945Z",
+//   "updatedAt": "2025-05-18T04:20:41.747126Z",
+//   "deletedAt": null,
+//   "isActive": true,
+//   "name": "ARTIST",
+//   "description": "Artist role for music creators123"
+// }
 export type ApiRoleType = {
-  id: string; // UUID
+  id: string;
+  createdAt: string;
+  updatedAt: string;
+  deletedAt: string | null;
+  isActive: boolean;
   name: string;
   description: string;
 };
