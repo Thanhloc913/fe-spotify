@@ -16,7 +16,7 @@ import GenericTableActionEdit, {
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
 import { ApiPaginatedResult, ApiRoleType } from "../../types/api";
-import { createRole, editRole, getRoles } from "../../api/authApi";
+import { createRole, deleteRoles, editRole, getRoles } from "../../api/authApi";
 
 type Role2 = ApiRoleType;
 type Paginated<T> = ApiPaginatedResult<T>;
@@ -216,28 +216,47 @@ const ManageRole2s = () => {
     setOpenEditModal(true);
   };
 
-  const handleDeleteRole2s = (selectedIds: RowId[]) => {
-    console.log("Deleting role2s with IDs:", selectedIds);
-    setSelectedItems([]); // Clear selection after deletion for now
-  };
-
   const editingRole2 = useMemo(
     () => displayingResult.result.find((u) => u.id === editingRole2Id),
     [editingRole2Id]
   );
 
-  const handleCreate = async (data: AddRole2FormProps) => {
-    setSubmittedData(await createRole(data));
-    setOpenAddModal(false);
+  const handleOpenPreview = (data: any) => {
+    setSubmittedData(data);
     setOpenPreviewModal(true);
-    setRefreshKey((k) => k + 1);
+  };
+
+  const handleDeleteRole2s = async (selectedIds: RowId[]) => {
+    try {
+      const result = await deleteRoles(selectedIds as string[]);
+      handleOpenPreview(result);
+      setSelectedItems([]);
+      setRefreshKey((k) => k + 1);
+    } catch (error) {
+      handleOpenPreview(error);
+    }
+  };
+
+  const handleCreate = async (data: AddRole2FormProps) => {
+    try {
+      const result = await createRole(data);
+      handleOpenPreview(result);
+      setRefreshKey((k) => k + 1);
+      setOpenAddModal(false);
+    } catch (error) {
+      handleOpenPreview(error);
+    }
   };
 
   const handleEdit = async (data: EditRole2FormProps, entity: Role2) => {
-    setSubmittedData(await editRole({ ...data, id: entity.id }));
-    setOpenEditModal(false);
-    setOpenPreviewModal(true);
-    setRefreshKey((k) => k + 1);
+    try {
+      const result = await editRole({ ...data, id: entity.id });
+      handleOpenPreview(result);
+      setRefreshKey((k) => k + 1);
+      setOpenEditModal(false);
+    } catch (error) {
+      handleOpenPreview(error);
+    }
   };
 
   return (

@@ -125,6 +125,10 @@ export type ApiEditRoleRequest = {
   description: string;
 };
 
+export type ApiDeleteRolesRequest = {
+  ids: string[];
+};
+
 // storage upload
 export type ApiStorageUploadResponse = {
   fileName: string;

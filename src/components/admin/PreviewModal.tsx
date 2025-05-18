@@ -5,11 +5,21 @@ export const PreviewModal: React.FC<{
   onClose: () => void;
   data: object | null;
 }> = ({ open, onClose, data }) => {
+  const isError = data instanceof Error;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Form Submission Preview</DialogTitle>
       <Box p={2}>
-        <pre>{JSON.stringify(data, null, 2)}</pre> {/* Pretty-print JSON */}
+        {isError ? (
+          <pre>
+            {data.name}: {data.message}
+            {"\n"}
+            {data.stack}
+          </pre>
+        ) : (
+          <pre>{JSON.stringify(data, null, 2)}</pre>
+        )}
       </Box>
     </Dialog>
   );

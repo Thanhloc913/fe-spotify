@@ -194,9 +194,11 @@ const EnhancedTableToolbar: FC<EnhancedTableToolbarProps> = (props) => {
           </DialogContentText>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button onClick={handleDelete} autoFocus>
-            Uncheck all
+          <Button autoFocus onClick={() => setOpen(false)}>
+            Cancel
+          </Button>
+          <Button variant="outlined" color="error" onClick={handleDelete}>
+            Delete all
           </Button>
         </DialogActions>
       </Dialog>

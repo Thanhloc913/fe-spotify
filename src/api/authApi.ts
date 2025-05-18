@@ -1,6 +1,7 @@
 import axios from "axios";
 import {
   ApiCreateRoleRequest,
+  ApiDeleteRolesRequest,
   ApiEditRoleRequest,
   ApiGetRoleRequest,
   ApiPaginatedResult,
@@ -381,50 +382,70 @@ export async function getRoles(
   }
 }
 
-export async function createRole(body: ApiCreateRoleRequest): Promise<ApiRoleType> {
+async function apiRequest<T, U>(
+  url: string,
+  method: "GET" | "POST" | "PUT" | "DELETE",
+  body?: U
+): Promise<T> {
+  // ... (same apiRequest function as before)
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     "X-CSRFToken": (await getCsrfToken()) || "",
     Authorization: `Bearer ${getAuthToken() || ""}`,
   };
 
+  const config: RequestInit = {
+    method,
+    headers,
+    credentials: "include",
+  };
+
+  if (body) {
+    config.body = JSON.stringify(body);
+  }
+
   try {
-    const response = await fetch("http://localhost:8080/role/create", {
-      method: "POST",
-      headers,
-      credentials: "include",
-      body: JSON.stringify(body),
-    });
-    const result: ApiResponse<ApiRoleType> = await response.json();
-    console.log("Response:", result);
-    return result.data;
+    const response = await fetch(url, config);
+    const result: ApiResponse<T> = await response.json();
+    console.log(`Response (${method} ${url}):`, result);
+    if (result.success && result.data) {
+      return result.data;
+    } else {
+      return Promise.reject(
+        result.message || `Request failed with status ${response.status}`
+      );
+    }
   } catch (error) {
-    console.error("Error:", error);
+    console.error(`Error (${method} ${url}):`, error);
     return Promise.reject(error);
   }
 }
 
-export async function editRole(body: ApiEditRoleRequest): Promise<ApiRoleType> {
-  const headers: Record<string, string> = {
-    "Content-Type": "application/json",
-    "X-CSRFToken": (await getCsrfToken()) || "",
-    Authorization: `Bearer ${getAuthToken() || ""}`,
-  };
+export async function createRole(
+  body: ApiCreateRoleRequest
+): Promise<ApiRoleType> {
+  return apiRequest<ApiRoleType, ApiCreateRoleRequest>(
+    "http://localhost:8080/role/create",
+    "POST",
+    body
+  );
+}
 
-  try {
-    const response = await fetch("http://localhost:8080/role/update", {
-      method: "POST",
-      headers,
-      credentials: "include",
-      body: JSON.stringify(body),
-    });
-    const result: ApiResponse<ApiRoleType> = await response.json();
-    console.log("Response:", result);
-    return result.data;
-  } catch (error) {
-    console.error("Error:", error);
-    return Promise.reject(error);
-  }
+export async function editRole(body: ApiEditRoleRequest): Promise<ApiRoleType> {
+  return apiRequest<ApiRoleType, ApiEditRoleRequest>(
+    "http://localhost:8080/role/update",
+    "POST",
+    body
+  );
+}
+
+export async function deleteRoles(ids: string[]): Promise<ApiRoleType> {
+  const body: ApiDeleteRolesRequest = { ids };
+  return apiRequest<ApiRoleType, ApiDeleteRolesRequest>(
+    "http://localhost:8080/role/delete",
+    "POST",
+    body
+  );
 }
 
 // Helper function to get authorization token from localStorage
