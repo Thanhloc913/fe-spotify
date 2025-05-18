@@ -107,6 +107,9 @@ const Player: React.FC = () => {
       }
     };
     
+    // Call the fetchAudioUrl function to actually fetch and set the audio URL
+    fetchAudioUrl();
+    
   }, [currentTrack]);
 
   // Update audio src when currentTrack changes
