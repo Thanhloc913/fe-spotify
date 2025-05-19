@@ -17,7 +17,7 @@ import GenericTableActionEdit, {
 import { PreviewModal } from "../../components/admin/PreviewModal";
 import { ApiPaginatedResult, ApiRoleType } from "../../types/api";
 import { createRole, deleteRoles, editRole, getRoles } from "../../api/authApi";
-import { useAdminLoading } from "../../components/AdminStates";
+import { useAdminLoading } from "../../store/paginationStore";
 
 type Role2 = ApiRoleType;
 type Paginated<T> = ApiPaginatedResult<T>;
@@ -144,28 +144,30 @@ const ManageRole2s = () => {
     totalPages: 1,
   });
   const [refreshKey, setRefreshKey] = useState(0);
+  const loading = useAdminLoading();
 
   useEffect(() => {
     const getRolesFromApi = async () => {
-      const pagedResult = await getRoles({
-        name: search,
-        page: page + 1,
-        pageSize: rowsPerPage,
-      });
-      // api chưa có sort nên sort tạm local
-      if (pagedResult.result && pagedResult.result.length > 0) {
-        pagedResult.result.sort((a, b) => {
-          const aValue = a[columnSortOrderBy];
-          const bValue = b[columnSortOrderBy];
-          if (aValue < bValue) return columnSortOrder === "asc" ? -1 : 1;
-          if (aValue > bValue) return columnSortOrder === "asc" ? 1 : -1;
-          return 0;
+      await loading(async () => {
+        const pagedResult = await getRoles({
+          name: search,
+          page: page + 1,
+          pageSize: rowsPerPage,
         });
-      }
-      setDisplayingResult(pagedResult);
-      console.log("paged result", pagedResult);
+        // api chưa có sort nên sort tạm local
+        if (pagedResult.result && pagedResult.result.length > 0) {
+          pagedResult.result.sort((a, b) => {
+            const aValue = a[columnSortOrderBy];
+            const bValue = b[columnSortOrderBy];
+            if (aValue < bValue) return columnSortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return columnSortOrder === "asc" ? 1 : -1;
+            return 0;
+          });
+        }
+        setDisplayingResult(pagedResult);
+        console.log("paged result", pagedResult);
+      })();
     };
-
     getRolesFromApi();
   }, [
     search,
@@ -174,6 +176,7 @@ const ManageRole2s = () => {
     columnSortOrder,
     columnSortOrderBy,
     refreshKey,
+    loading,
   ]);
 
   const handleRequestSort = (property: keyof Role2TableColumnNames) => {
@@ -239,34 +242,30 @@ const ManageRole2s = () => {
   };
 
   const handleCreate = async (data: AddRole2FormProps) => {
-    try {
-      loadingState.increment();
-      const result = await createRole(data);
-      handleOpenPreview(result);
-      setRefreshKey((k) => k + 1);
-      setOpenAddModal(false);
-    } catch (error) {
-      handleOpenPreview(error);
-    } finally {
-      loadingState.decrement();
-    }
+    await loading(async () => {
+      try {
+        const result = await createRole(data);
+        handleOpenPreview(result);
+        setRefreshKey((k) => k + 1);
+        setOpenAddModal(false);
+      } catch (error) {
+        handleOpenPreview(error);
+      }
+    })();
   };
 
   const handleEdit = async (data: EditRole2FormProps, entity: Role2) => {
-    try {
-      loadingState.increment();
-      const result = await editRole({ ...data, id: entity.id });
-      handleOpenPreview(result);
-      setRefreshKey((k) => k + 1);
-      setOpenEditModal(false);
-    } catch (error) {
-      handleOpenPreview(error);
-    } finally {
-      loadingState.decrement();
-    }
+    await loading(async () => {
+      try {
+        const result = await editRole({ ...data, id: entity.id });
+        handleOpenPreview(result);
+        setRefreshKey((k) => k + 1);
+        setOpenEditModal(false);
+      } catch (error) {
+        handleOpenPreview(error);
+      }
+    })();
   };
-
-  const loadingState = useAdminLoading();
 
   return (
     <>

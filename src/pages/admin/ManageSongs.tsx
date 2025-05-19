@@ -15,7 +15,10 @@ import GenericTableActionEdit, {
   SortOrder,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
-import { useAdminLoading } from "../../components/AdminStates";
+import {
+  useAdminLoading,
+  useAdminLoadingState,
+} from "../../store/paginationStore";
 import {
   ApiPaginatedResult,
   ApiResponse,
@@ -151,6 +154,7 @@ const ManageSongs = () => {
     totalPages: 1,
   });
   const [refreshKey, setRefreshKey] = useState(0);
+  const loading = useAdminLoading();
 
   const handleRequestSort = (property: keyof SongTableColumnNames) => {
     const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
@@ -160,21 +164,23 @@ const ManageSongs = () => {
 
   useEffect(() => {
     const getSongsFromApi = async () => {
-      const pagedResult = (
-        await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
-      ).data;
-      // api chưa có sort nên sort tạm local
-      if (pagedResult.result && pagedResult.result.length > 0) {
-        pagedResult.result.sort((a, b) => {
-          const aValue = a[columnSortOrderBy];
-          const bValue = b[columnSortOrderBy];
-          if (aValue < bValue) return columnSortOrder === "asc" ? -1 : 1;
-          if (aValue > bValue) return columnSortOrder === "asc" ? 1 : -1;
-          return 0;
-        });
-      }
-      setDisplayingResult(pagedResult);
-      console.log("paged result", pagedResult);
+      await loading(async () => {
+        const pagedResult = (
+          await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
+        ).data;
+        // api chưa có sort nên sort tạm local
+        if (pagedResult.result && pagedResult.result.length > 0) {
+          pagedResult.result.sort((a, b) => {
+            const aValue = a[columnSortOrderBy];
+            const bValue = b[columnSortOrderBy];
+            if (aValue < bValue) return columnSortOrder === "asc" ? -1 : 1;
+            if (aValue > bValue) return columnSortOrder === "asc" ? 1 : -1;
+            return 0;
+          });
+        }
+        setDisplayingResult(pagedResult);
+        console.log("paged result", pagedResult);
+      })();
     };
     getSongsFromApi();
   }, [
@@ -184,12 +190,16 @@ const ManageSongs = () => {
     columnSortOrder,
     columnSortOrderBy,
     refreshKey,
+    loading,
   ]);
 
   const handleSelectAllClick = async (isSelected: boolean) => {
     if (isSelected) {
       const newSelecteds = (
-        await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
+        await loading(
+          async () =>
+            await musicApi.searchSongsByTitle(search, page + 1, rowsPerPage)
+        )()
       ).data.result.map((s) => s.id);
       setSelectedItems(newSelecteds);
     } else {
@@ -231,155 +241,153 @@ const ManageSongs = () => {
     [displayingResult?.result, editingSongId]
   );
 
-  const loadingState = useAdminLoading();
+  const loadingState = useAdminLoadingState();
   const handleCloseModal = (onClose: () => void) => {
     if (loadingState.count === 0) onClose();
   };
 
   const handleCreate = async (data: AddSongFormProps) => {
-    loadingState.increment();
-    const logs: Record<string, unknown> = {};
-    let finalCreateSongResult: ApiResponse<ApiSongType> | null = null;
-
-    try {
-      if (data.albumIds.length <= 0) {
-        throw new Error("Must have at least one album connected to a song");
-      }
-      const actorId = localStorage.getItem("profile_id");
-      if (!actorId) {
-        throw new Error("Artist or User ID not found!");
-      }
-      logs["actorId"] = actorId;
-
-      if (!data.song) {
-        throw new Error("Please select a song file!");
-      }
-
-      // 1. Upload the song file
-      const songUploadResult = await uploadFile(data.song);
-      logs["songUploadResult"] = {
-        success: songUploadResult.success,
-        message: songUploadResult.message,
-        error: songUploadResult.error,
-        status: songUploadResult.status,
-        fileName: songUploadResult.data?.fileName,
-      };
-
-      if (!songUploadResult.success || !songUploadResult.data) {
-        throw new Error(
-          songUploadResult?.message || "Failed to upload song file."
-        );
-      }
-      const songFileInfo = songUploadResult.data;
-
-      // 2. Create storage entry for the song
-      const songStorageResult = await createStorageData({
-        fileName: songFileInfo.fileName,
-        fileType: songFileInfo.fileType,
-        userId: actorId,
-        fileUrl: songFileInfo.fileUrl,
-        fileSize: songFileInfo.fileSize,
-        description: `File am nhac ${songFileInfo.fileName}`,
-      });
-      logs["songStorageResult"] = {
-        success: songStorageResult.success,
-        message: songStorageResult.message,
-        error: songStorageResult.error,
-        status: songStorageResult.status,
-        storageId: songStorageResult.data?.id,
-      };
-
-      if (!songStorageResult.success || !songStorageResult.data) {
-        throw new Error(
-          songStorageResult.error?.message ||
-            "Failed to create storage entry for the song."
-        );
-      }
-      const songStorageId = songStorageResult.data.id;
-      let storageImageId: string | null = null;
-      logs["songStorageId"] = songStorageId; // 3. Upload the background image (if provided)
-
-      if (data.background) {
-        const backgroundUploadResult: ApiResponse<ApiStorageUploadResponse> =
-          await uploadFile(data.background);
-        logs["backgroundUploadResult"] = backgroundUploadResult;
-
-        if (!backgroundUploadResult.success) {
-          throw new Error(
-            backgroundUploadResult?.message ||
-              "Failed to upload background image."
-          );
-        } else if (backgroundUploadResult.data) {
-          const backgroundImageInfo = backgroundUploadResult.data;
-          const backgroundStorageResult = await createStorageData({
-            fileName: backgroundImageInfo.fileName,
-            fileType: backgroundImageInfo.fileType,
-            userId: actorId,
-            fileUrl: backgroundImageInfo.fileUrl,
-            fileSize: backgroundImageInfo.fileSize,
-            description: `File hinh anh ${backgroundImageInfo.fileName} cho ${songFileInfo.fileName}`,
-          });
-          logs["backgroundStorageResult"] = backgroundStorageResult;
-
-          if (
-            !backgroundStorageResult.success ||
-            !backgroundStorageResult.data
-          ) {
-            throw new Error(
-              backgroundStorageResult.message ||
-                "Failed to create storage entry for the background image."
-            );
-          } else {
-            storageImageId = backgroundStorageResult.data.id;
-            logs["storageImageId"] = storageImageId;
-          }
+    await loading(async () => {
+      const logs: Record<string, unknown> = {};
+      let finalCreateSongResult: ApiResponse<ApiSongType> | null = null;
+      try {
+        if (data.albumIds.length <= 0) {
+          throw new Error("Must have at least one album connected to a song");
         }
-      } else {
-        logs["backgroundSkipped"] = "No background image provided.";
+        const actorId = localStorage.getItem("profile_id");
+        if (!actorId) {
+          throw new Error("Artist or User ID not found!");
+        }
+        logs["actorId"] = actorId;
+
+        if (!data.song) {
+          throw new Error("Please select a song file!");
+        }
+
+        // 1. Upload the song file
+        const songUploadResult = await uploadFile(data.song);
+        logs["songUploadResult"] = {
+          success: songUploadResult.success,
+          message: songUploadResult.message,
+          error: songUploadResult.error,
+          status: songUploadResult.status,
+          fileName: songUploadResult.data?.fileName,
+        };
+
+        if (!songUploadResult.success || !songUploadResult.data) {
+          throw new Error(
+            songUploadResult?.message || "Failed to upload song file."
+          );
+        }
+        const songFileInfo = songUploadResult.data;
+
+        // 2. Create storage entry for the song
+        const songStorageResult = await createStorageData({
+          fileName: songFileInfo.fileName,
+          fileType: songFileInfo.fileType,
+          userId: actorId,
+          fileUrl: songFileInfo.fileUrl,
+          fileSize: songFileInfo.fileSize,
+          description: `File am nhac ${songFileInfo.fileName}`,
+        });
+        logs["songStorageResult"] = {
+          success: songStorageResult.success,
+          message: songStorageResult.message,
+          error: songStorageResult.error,
+          status: songStorageResult.status,
+          storageId: songStorageResult.data?.id,
+        };
+
+        if (!songStorageResult.success || !songStorageResult.data) {
+          throw new Error(
+            songStorageResult.error?.message ||
+              "Failed to create storage entry for the song."
+          );
+        }
+        const songStorageId = songStorageResult.data.id;
+        let storageImageId: string | null = null;
+        logs["songStorageId"] = songStorageId; // 3. Upload the background image (if provided)
+
+        if (data.background) {
+          const backgroundUploadResult: ApiResponse<ApiStorageUploadResponse> =
+            await uploadFile(data.background);
+          logs["backgroundUploadResult"] = backgroundUploadResult;
+
+          if (!backgroundUploadResult.success) {
+            throw new Error(
+              backgroundUploadResult?.message ||
+                "Failed to upload background image."
+            );
+          } else if (backgroundUploadResult.data) {
+            const backgroundImageInfo = backgroundUploadResult.data;
+            const backgroundStorageResult = await createStorageData({
+              fileName: backgroundImageInfo.fileName,
+              fileType: backgroundImageInfo.fileType,
+              userId: actorId,
+              fileUrl: backgroundImageInfo.fileUrl,
+              fileSize: backgroundImageInfo.fileSize,
+              description: `File hinh anh ${backgroundImageInfo.fileName} cho ${songFileInfo.fileName}`,
+            });
+            logs["backgroundStorageResult"] = backgroundStorageResult;
+
+            if (
+              !backgroundStorageResult.success ||
+              !backgroundStorageResult.data
+            ) {
+              throw new Error(
+                backgroundStorageResult.message ||
+                  "Failed to create storage entry for the background image."
+              );
+            } else {
+              storageImageId = backgroundStorageResult.data.id;
+              logs["storageImageId"] = storageImageId;
+            }
+          }
+        } else {
+          logs["backgroundSkipped"] = "No background image provided.";
+        }
+
+        // 4. Determine song type
+        const songType: "SONG" | "MUSIC_VIDEO" = songFileInfo.fileType.includes(
+          "audio"
+        )
+          ? "SONG"
+          : "MUSIC_VIDEO";
+        logs["songType"] = songType;
+
+        // 5. Create the song
+        const createSongRequest: ApiSongCreateRequest = {
+          title: data.title,
+          artistId: actorId,
+          genreId: data.albumIds, // Assuming albumIds is used for genreId for now, adjust as needed
+          storageId: songStorageId,
+          storageImageId: storageImageId,
+          duration: data.duration,
+          description: data.description,
+          albumId: data.albumIds,
+          songType,
+        };
+        logs["createSongRequest"] = createSongRequest;
+
+        finalCreateSongResult = await createSongV2(createSongRequest);
+        logs["createSongResult"] = finalCreateSongResult;
+
+        if (!finalCreateSongResult.success) {
+          throw new Error(
+            finalCreateSongResult?.message ||
+              `Failed to create song: ${finalCreateSongResult.message}`
+          );
+        }
+        setSubmittedData({ songData: finalCreateSongResult.data, logs });
+        setOpenPreviewModal(true);
+        setOpenAddModal(false);
+        setRefreshKey((k) => k + 1);
+      } catch (error) {
+        console.error("Error creating song:", error);
+        setSubmittedData({ error: (error as Error).message, logs });
+        setOpenPreviewModal(true);
       }
-
-      // 4. Determine song type
-      const songType: "SONG" | "MUSIC_VIDEO" = songFileInfo.fileType.includes(
-        "audio"
-      )
-        ? "SONG"
-        : "MUSIC_VIDEO";
-      logs["songType"] = songType;
-
-      // 5. Create the song
-      const createSongRequest: ApiSongCreateRequest = {
-        title: data.title,
-        artistId: actorId,
-        genreId: data.albumIds, // Assuming albumIds is used for genreId for now, adjust as needed
-        storageId: songStorageId,
-        storageImageId: storageImageId,
-        duration: data.duration,
-        description: data.description,
-        albumId: data.albumIds,
-        songType,
-      };
-      logs["createSongRequest"] = createSongRequest;
-
-      finalCreateSongResult = await createSongV2(createSongRequest);
-      logs["createSongResult"] = finalCreateSongResult;
-
-      if (!finalCreateSongResult.success) {
-        throw new Error(
-          finalCreateSongResult?.message ||
-            `Failed to create song: ${finalCreateSongResult.message}`
-        );
-      }
-      setSubmittedData({ songData: finalCreateSongResult.data, logs });
-      setOpenPreviewModal(true);
-      setOpenAddModal(false);
-      setRefreshKey((k) => k + 1);
-    } catch (error) {
-      console.error("Error creating song:", error);
-      setSubmittedData({ error: (error as Error).message, logs });
-      setOpenPreviewModal(true);
-    } finally {
-      loadingState.decrement();
-    }
+    })();
   };
 
   // const handleEdit = async (data: EditSongFormProps, entity: Song) => {

@@ -18,7 +18,7 @@ import {
   MdSecurity,
 } from "react-icons/md";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { useAdminLoading } from "./AdminStates";
+import { useAdminLoadingState } from "../store/paginationStore";
 
 const links = [
   { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
@@ -56,7 +56,7 @@ const AdminLayout = () => {
     navigate(`/admin/${links[newValue].path}`);
   };
 
-  const { count } = useAdminLoading();
+  const { count } = useAdminLoadingState();
   const isLoading = count > 0;
 
   return (
