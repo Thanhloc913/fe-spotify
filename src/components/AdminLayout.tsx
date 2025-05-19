@@ -5,6 +5,7 @@ import {
   Stack,
   Tab,
   Tabs,
+  Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
 import {
@@ -103,13 +104,13 @@ const AdminLayout = () => {
               display: "flex",
               flexDirection: "column",
               alignItems: "center",
-              gap: 2,
+              gap: 6,
             }}
           >
-            <CircularProgress sx={{ height: "80%" }} />
-            <Box sx={{ mt: 2, fontWeight: "bold" }}>
-              {`${count} job${count > 1 ? "s" : ""} remaining...`}
-            </Box>
+            <CircularProgress size="10rem" sx={{ height: "80%" }} />
+            <Typography variant="h4">{`${count} job${
+              count > 1 ? "s" : ""
+            } remaining...`}</Typography>
           </Box>
         </Backdrop>
       )}

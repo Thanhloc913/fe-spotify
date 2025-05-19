@@ -3,13 +3,16 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Avatar, Button, Stack, TextField } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
 import { musicApi } from "../../api";
-import { createSongV2 } from "../../api/musicApi";
+import { createSongV2, updateSong } from "../../api/musicApi";
 import { createStorageData, uploadFile } from "../../api/storageApi";
 import {
   AddSongFormProps,
   AddSongModal,
 } from "../../components/admin/AddSongModal";
-import { EditSongModal } from "../../components/admin/EditSongModal";
+import {
+  EditSongFormProps,
+  EditSongModal,
+} from "../../components/admin/EditSongModal";
 import GenericTableActionEdit, {
   RowId,
   SortOrder,
@@ -24,6 +27,7 @@ import {
   ApiResponse,
   ApiSongCreateRequest,
   ApiSongType,
+  ApiSongUpdateRequest,
   ApiStorageUploadResponse,
 } from "../../types/api";
 
@@ -390,12 +394,83 @@ const ManageSongs = () => {
     })();
   };
 
-  // const handleEdit = async (data: EditSongFormProps, entity: Song) => {
-  //   setSubmittedData(await editRole({ ...data, id: entity.id }));
-  //   setOpenEditModal(false);
-  //   setOpenPreviewModal(true);
-  //   setRefreshKey((k) => k + 1);
-  // };
+  const handleEdit = async (data: EditSongFormProps, song: ApiSongType) => {
+    await loading(async () => {
+      const logs: Record<string, unknown> = {};
+      let finalUpdateData: ApiSongType | null = null;
+
+      try {
+        const actorId = localStorage.getItem("profile_id");
+        if (!actorId) {
+          throw new Error("Artist or User ID not found!");
+        }
+        logs["actorId"] = actorId;
+
+        // Prepare update payload
+        const updatePayload: ApiSongUpdateRequest = {
+          id: song.id, // Required - existing song ID
+          title: data.title || song.title,
+          duration: data.duration || song.duration,
+          storageImageId: null,
+          description: data.description || song.description,
+          songType: song.songType, // Keep original type unless you want to change it
+        };
+
+        // Handle background image update if provided
+        if (data.background) {
+          const uploadResult = await uploadFile(data.background);
+          logs["backgroundUpload"] = uploadResult;
+
+          if (!uploadResult.success || !uploadResult.data) {
+            throw new Error(uploadResult.message || "Background upload failed");
+          }
+
+          const storageResult = await createStorageData({
+            fileName: uploadResult.data.fileName,
+            fileType: uploadResult.data.fileType,
+            userId: actorId,
+            fileUrl: uploadResult.data.fileUrl,
+            fileSize: uploadResult.data.fileSize,
+            description: `Background image for ${data.title}`,
+          });
+
+          if (!storageResult.success || !storageResult.data) {
+            throw new Error("Failed to create storage entry for background");
+          }
+
+          updatePayload.storageImageId = storageResult.data.id;
+          logs["newBackgroundStorageId"] = updatePayload.storageImageId;
+        } else if (data.removeBackground) {
+          // Explicitly remove background image
+          updatePayload.storageImageId = "";
+          logs["backgroundRemoved"] = true;
+        }
+
+        // Execute the update
+        finalUpdateData = await updateSong(updatePayload);
+        logs["updateResult"] = finalUpdateData;
+
+        if (!finalUpdateData) {
+          throw new Error("Song update failed");
+        }
+
+        // Success handling
+        setSubmittedData({ songData: finalUpdateData, logs });
+        setOpenPreviewModal(true);
+        setOpenEditModal(false);
+        setRefreshKey((k) => k + 1);
+      } catch (error) {
+        console.error("Error updating song:", error);
+        setSubmittedData({
+          error: (error as Error).message,
+          logs,
+          originalSong: song,
+          attemptedChanges: data,
+        });
+        setOpenPreviewModal(true);
+      }
+    })();
+  };
 
   return (
     <>
@@ -437,10 +512,7 @@ const ManageSongs = () => {
           <EditSongModal
             open={openEditModal}
             onClose={() => handleCloseModal(() => setOpenEditModal(false))}
-            onSubmit={(data, song) => {
-              setSubmittedData({ ...song, ...data });
-              setOpenPreviewModal(true);
-            }}
+            onSubmit={handleEdit}
             song={editingSong}
           />
         )}

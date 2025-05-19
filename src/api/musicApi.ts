@@ -5,12 +5,16 @@ import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
 import {
   ApiFavoriteSongType,
-  ApiPaginatedResult, ApiResponse as ApiResponseV2, ApiSongCreateRequest,
-  ApiSongType
+  ApiPaginatedResult,
+  ApiResponse as ApiResponseV2,
+  ApiSongCreateRequest,
+  ApiSongType,
+  ApiSongUpdateRequest,
 } from "../types/api";
 import { PlayerState } from "../types/index";
 import { getToken } from "../utils/auth";
 import { getCsrfToken } from "./storageApi";
+import { apiRequest } from "./authApi";
 
 let audio: HTMLAudioElement | null = null;
 
@@ -423,3 +427,13 @@ export const createSongV2 = async (
 
   return await response.json();
 };
+
+export async function updateSong(
+  body: ApiSongUpdateRequest
+): Promise<ApiSongType> {
+  return apiRequest<ApiSongType, ApiSongUpdateRequest>(
+    "http://localhost:8082/song/update",
+    "POST",
+    body
+  );
+}

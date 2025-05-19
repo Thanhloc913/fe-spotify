@@ -382,7 +382,7 @@ export async function getRoles(
   }
 }
 
-async function apiRequest<T, U>(
+export async function apiRequest<T, U>(
   url: string,
   method: "GET" | "POST" | "PUT" | "DELETE",
   body?: U

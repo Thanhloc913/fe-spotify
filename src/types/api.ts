@@ -329,7 +329,7 @@ export type ApiSongCreateRequest = {
 export type ApiSongUpdateRequest = {
   id: string; // UUID of the song to update
   title: string;
-  storageImageId: string; // UUID of the associated image
+  storageImageId: string | null; // UUID of the associated image
   duration: number; // Duration in seconds
   description: string;
   songType: "MUSIC_VIDEO" | "SONG"; // Extend as needed

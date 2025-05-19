@@ -1,32 +1,40 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { MuiFileInput, MuiFileInputProps } from "mui-file-input";
-import React from "react";
-import { Control, Controller } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  FieldValues,
+  Path, // Import Path
+} from "react-hook-form";
 import ModalSection from "./ModalSection";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-type ControlledFileInputProps = MuiFileInputProps & {
-  name: string;
-  title: string;
-  accept: string;
-  control: Control<any>;
-};
 
-export const ControlledFileInput: React.FC<ControlledFileInputProps> = ({
+// Make the component generic
+type ControlledFileInputProps<TFieldValues extends FieldValues> =
+  MuiFileInputProps & {
+    name: Path<TFieldValues>; // <--- Change keyof TFieldValues to Path<TFieldValues>
+    title: string;
+    accept: string;
+    control: Control<TFieldValues>; // Control uses the generic type
+  };
+
+// Use the generic type in the component
+export const ControlledFileInput = <TFieldValues extends FieldValues>({
   name,
   title,
   accept,
   control,
   ...muiFileInputProps
-}) => {
+}: ControlledFileInputProps<TFieldValues>) => {
   return (
     <Controller
-      name={name}
+      name={name} // This will now correctly match the expected Path<TFieldValues>
       control={control}
       render={({ field: { onChange, value }, fieldState: { error } }) => (
         <ModalSection title={title}>
           <MuiFileInput
             {...muiFileInputProps}
-            value={value || null}
+            value={value}
             onChange={onChange}
             error={!!error}
             clearIconButtonProps={{
