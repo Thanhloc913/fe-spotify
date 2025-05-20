@@ -439,9 +439,9 @@ export async function editRole(body: ApiEditRoleRequest): Promise<ApiRoleType> {
   );
 }
 
-export async function deleteRoles(ids: string[]): Promise<ApiRoleType> {
+export async function deleteRoles(ids: string[]): Promise<unknown> {
   const body: ApiDeleteRolesRequest = { ids };
-  return apiRequest<ApiRoleType, ApiDeleteRolesRequest>(
+  return apiRequest<unknown, ApiDeleteRolesRequest>(
     "http://localhost:8080/role/delete",
     "POST",
     body

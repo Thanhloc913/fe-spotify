@@ -334,3 +334,7 @@ export type ApiSongUpdateRequest = {
   description: string;
   songType: "MUSIC_VIDEO" | "SONG"; // Extend as needed
 };
+
+export type ApiDeleteSongsRequest = {
+  ids: string[];
+};

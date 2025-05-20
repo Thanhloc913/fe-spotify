@@ -4,6 +4,7 @@ import { MockApi } from "../lib/mocks/playerApi";
 import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
 import {
+  ApiDeleteSongsRequest,
   ApiFavoriteSongType,
   ApiPaginatedResult,
   ApiResponse as ApiResponseV2,
@@ -435,5 +436,13 @@ export async function updateSong(
     "http://localhost:8082/song/update",
     "POST",
     body
+  );
+}
+
+export async function deleteSongs(ids: string[]): Promise<ApiSongType> {
+  return apiRequest<ApiSongType, ApiDeleteSongsRequest>(
+    "http://localhost:8082/song/delete",
+    "POST",
+    { ids }
   );
 }

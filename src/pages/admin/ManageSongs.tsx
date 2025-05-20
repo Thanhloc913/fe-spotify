@@ -3,7 +3,7 @@ import SearchIcon from "@mui/icons-material/Search";
 import { Avatar, Button, Stack, TextField } from "@mui/material";
 import { FC, useEffect, useMemo, useState } from "react";
 import { musicApi } from "../../api";
-import { createSongV2, updateSong } from "../../api/musicApi";
+import { createSongV2, updateSong, deleteSongs } from "../../api/musicApi";
 import { createStorageData, uploadFile } from "../../api/storageApi";
 import {
   AddSongFormProps,
@@ -148,7 +148,7 @@ const ManageSongs = () => {
     useState<keyof SongTableColumnNames>("id");
 
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
-  const [submittedData, setSubmittedData] = useState<object | null>(null);
+  const [submittedData, setSubmittedData] = useState<unknown>(null);
   const [openAddModal, setOpenAddModal] = useState(false);
 
   const [displayingResult, setDisplayingResult] = useState<Paginated<Song>>({
@@ -235,9 +235,20 @@ const ManageSongs = () => {
     setOpenEditModal(true);
   };
 
-  const handleDeleteSongs = (selectedIds: RowId[]) => {
-    console.log("Deleting songs with IDs:", selectedIds);
-    setSelectedItems([]); // Clear selection after deletion for now
+  const handleOpenPreview = (data: unknown) => {
+    setSubmittedData(data);
+    setOpenPreviewModal(true);
+  };
+
+  const handleDeleteSongs = async (selectedIds: RowId[]) => {
+    try {
+      const result = await deleteSongs(selectedIds as string[]);
+      handleOpenPreview(result);
+      setSelectedItems([]);
+      setRefreshKey((k) => k + 1);
+    } catch (error) {
+      handleOpenPreview(error);
+    }
   };
 
   const editingSong = useMemo(
