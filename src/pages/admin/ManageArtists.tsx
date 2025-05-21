@@ -4,7 +4,8 @@ import { Avatar, Button, Checkbox, Stack, TextField } from "@mui/material";
 import { FC, useMemo, useState } from "react";
 import { AddArtistModal } from "../../components/admin/AddArtistModal";
 import { EditArtistModal } from "../../components/admin/EditArtistModal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

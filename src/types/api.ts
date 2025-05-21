@@ -331,6 +331,10 @@ export type ApiDeleteAlbumsRequest = {
 //     }
 // }
 
+export type ApiGetSongsByAlbumIdRequest = ApiPagedRequest & {
+  albumId: string;
+};
+
 // song create
 export type ApiSongCreateRequest = {
   title: string;
@@ -385,4 +389,29 @@ export type ApiEditGenreRequest = {
 
 export type ApiDeleteGenresRequest = {
   ids: string[];
+};
+
+export type ApiAlbumSongType = {
+  albumID: string;
+  songID: string;
+};
+
+export type ApiCreateAlbumSongRequest = {
+  albumID: string;
+  songID: string;
+};
+
+export type ApiCreateAlbumSongsRequest = {
+  albumID: string;
+  songIDs: string[];
+};
+
+export type ApiDeleteAlbumSongRequest = {
+  albumID: string;
+  songID: string;
+};
+
+export type ApiDeleteAlbumSongsRequest = {
+  albumID: string;
+  songIDs: string[];
 };

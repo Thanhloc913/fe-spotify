@@ -13,7 +13,8 @@ import {
   EditSongFormProps,
   EditSongModal,
 } from "../../components/admin/EditSongModal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

@@ -464,4 +464,131 @@ export const GenericTableActionEdit = <
   );
 };
 
-export default GenericTableActionEdit;
+export interface GenericTableProps<
+  T extends Record<keyof T, unknown>,
+  K extends keyof T
+> {
+  label: string;
+  pluralEntityName: string;
+  rowsPerPageOptions?: number[];
+  data: T[];
+  columnDefinitions: TableColumnDefinitions<T>;
+  idKey: K;
+  selectedIds: RowId[];
+  onSelect: (id: RowId, isSelected: boolean) => void;
+  onSelectAll: (isSelected: boolean) => void;
+  rowActions: RowActions; // Changed from specific onEdit
+  onDelete: (selectedIds: RowId[]) => void;
+  onRequestSort: (column: keyof T, order: SortOrder) => void;
+  onRequestPageChange: (newPage: number) => void;
+  onRequestRowsPerPageChange: (rowsPerPage: number) => void;
+  order: SortOrder;
+  orderBy: keyof T;
+  page: number;
+  rowsPerPage: number;
+  totalCount: number;
+}
+
+export const GenericTable = <
+  T extends Record<keyof T, unknown>,
+  K extends keyof T
+>({
+  label,
+  pluralEntityName,
+  rowsPerPageOptions = [5, 10, 25],
+  data,
+  columnDefinitions,
+  idKey,
+  selectedIds,
+  onSelect,
+  onSelectAll,
+  rowActions, // Changed from specific onEdit
+  onDelete,
+  onRequestSort,
+  onRequestPageChange,
+  onRequestRowsPerPageChange,
+  order,
+  orderBy,
+  page,
+  rowsPerPage,
+  totalCount,
+}: GenericTableProps<T, K>) => {
+  return (
+    <Paper className="flex-auto overflow-x-auto">
+      <Stack className="h-full">
+        <EnhancedTableToolbar
+          className="flex-none"
+          label={label}
+          pluralEntityName={pluralEntityName}
+          numSelected={selectedIds.length}
+          onDelete={onDelete}
+          selectedIds={selectedIds}
+        />
+        <TableContainer className="flex-auto">
+          <Table stickyHeader>
+            <TableHead>
+              <TableRow>
+                <TableCell padding="checkbox">
+                  <Checkbox
+                    indeterminate={
+                      selectedIds.length > 0 && selectedIds.length < totalCount
+                    }
+                    checked={
+                      data.length > 0 && selectedIds.length >= totalCount
+                    }
+                    onChange={(e) => onSelectAll(e.target.checked)}
+                    slotProps={{
+                      input: { "aria-label": `select all ${label}` },
+                    }}
+                  />
+                </TableCell>
+                {columnDefinitions.map((column) => (
+                  <TableCell key={String(column.id)}>
+                    {column.sortable ? (
+                      <SortableTableHeaderLabel
+                        columnId={column.id}
+                        label={column.label}
+                        orderBy={orderBy}
+                        order={order}
+                        onRequestSort={onRequestSort}
+                      />
+                    ) : (
+                      column.label
+                    )}
+                  </TableCell>
+                ))}
+                {rowActions.length > 0 && <TableCell>Actions</TableCell>}
+              </TableRow>
+            </TableHead>
+            <TableBody>
+              {data.map((item) => (
+                <GenericTableRow<T, K>
+                  key={String(item[idKey])}
+                  data={item}
+                  columnDefinitions={columnDefinitions}
+                  idKey={idKey}
+                  isSelected={selectedIds.includes(item[idKey] as RowId)}
+                  onSelect={onSelect}
+                  actions={rowActions}
+                />
+              ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+        <TablePagination
+          className="flex-none"
+          rowsPerPageOptions={rowsPerPageOptions}
+          component="div"
+          count={totalCount}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={(_, newPage) => onRequestPageChange(newPage)}
+          onRowsPerPageChange={(event) =>
+            onRequestRowsPerPageChange(parseInt(event.target.value, 10))
+          }
+          ActionsComponent={TablePaginationActions}
+        />
+      </Stack>
+    </Paper>
+  );
+};

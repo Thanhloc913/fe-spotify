@@ -4,7 +4,8 @@ import { Button, Stack, TextField } from "@mui/material";
 import { FC, useMemo, useState } from "react";
 import { AddGenreModal } from "../../components/admin/AddGenreModal";
 import { EditGenreModal } from "../../components/admin/EditGenreModal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

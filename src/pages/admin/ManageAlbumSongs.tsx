@@ -1,90 +1,90 @@
 import AddIcon from "@mui/icons-material/Add";
-import SearchIcon from "@mui/icons-material/Search";
-import { Button, Stack, TextField } from "@mui/material";
-import { FC, useEffect, useMemo, useState } from "react";
+import { Avatar, Button, Stack } from "@mui/material";
+import { FC, useEffect, useState } from "react";
 import {
-  AddGenre2FormProps,
-  AddGenre2Modal,
-} from "../../components/admin/AddGenre2Modal";
+  createAlbumSongs,
+  deleteAlbumSongs,
+  getSongsByAlbumId,
+} from "../../api/musicApi";
+import AddAlbumSongModal, {
+  AddAlbumSongFormProps,
+} from "../../components/admin/AddAlbumSongModal";
 import {
-  EditGenre2FormProps,
-  EditGenre2Modal,
-} from "../../components/admin/EditGenre2Modal";
-import {
-  GenericTableActionEdit,
+  GenericTable,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";
 import { PreviewModal } from "../../components/admin/PreviewModal";
-import { ApiPaginatedResult, ApiGenreType } from "../../types/api";
 import {
-  createGenre,
-  deleteGenres,
-  editGenre,
-  getGenres,
-} from "../../api/musicApi";
-import { useAdminLoading } from "../../store/paginationStore";
+  useAdminLoading,
+  useAdminLoadingState,
+} from "../../store/paginationStore";
+import { ApiAlbumType, ApiPaginatedResult, ApiSongType } from "../../types/api";
 
-type Genre2 = ApiGenreType;
+type Song = ApiSongType;
 type Paginated<T> = ApiPaginatedResult<T>;
-
-type Genre2TableColumnNames = Pick<
-  Genre2,
-  "id" | "name" | "description" | "createdAt" | "updatedAt"
+type SongTableColumnNames = Pick<
+  Song,
+  | "id"
+  | "backgroundUrl"
+  | "title"
+  | "description"
+  | "artistId"
+  | "duration"
+  | "songType"
 >;
 
-type Genre2TableColumnDefinition = {
-  id: keyof Genre2TableColumnNames;
+type SongTableColumnDefinition = {
+  id: keyof SongTableColumnNames;
   label: string;
   sortable: boolean;
-  render?: (value: Genre2) => React.ReactNode;
+  render?: (value: Song) => React.ReactNode;
 };
 
 // Define which columns to show and how to render them
-const genre2TableColumnDefinitions: Genre2TableColumnDefinition[] = [
+const songTableColumnDefinitions: SongTableColumnDefinition[] = [
   { id: "id", label: "ID", sortable: true },
-  { id: "name", label: "Name", sortable: true },
+  {
+    id: "backgroundUrl",
+    label: "Background",
+    sortable: false,
+    render: (song) =>
+      song.backgroundUrl ? (
+        <Avatar
+          src={song.backgroundUrl}
+          variant="rounded"
+          sx={{ width: 50, height: 50 }}
+        />
+      ) : null,
+  },
+  { id: "title", label: "Title", sortable: true },
   { id: "description", label: "Description", sortable: false },
-  {
-    id: "createdAt",
-    label: "Created",
-    sortable: true,
-    render: (value: Genre2) => new Date(value.createdAt).toLocaleString(),
-  },
-  {
-    id: "updatedAt",
-    label: "Updated",
-    sortable: true,
-    render: (value: Genre2) => new Date(value.updatedAt).toLocaleString(),
-  },
+  { id: "artistId", label: "Artist ID", sortable: true },
+  { id: "duration", label: "Duration", sortable: true },
+  { id: "songType", label: "Song Type", sortable: true },
 ] as const;
 
-interface Genre2TableActionEditProps {
-  data: Genre2[]; // Only the current page rows
+interface AlbumSongsTableProps {
+  data: Song[]; // Only the current page rows
   selectedIds: RowId[];
   onSelect: (id: RowId, isSelected: boolean) => void;
   onSelectAll: (isSelected: boolean) => void;
-  onEdit: (id: RowId) => void;
   onDelete: (selectedIds: RowId[]) => void;
-  onRequestSort: (
-    column: keyof Genre2TableColumnNames,
-    order: SortOrder
-  ) => void;
+  onRequestSort: (column: keyof SongTableColumnNames, order: SortOrder) => void;
   onRequestPageChange: (newPage: number) => void;
   onRequestRowsPerPageChange: (rowsPerPage: number) => void;
   order: SortOrder;
-  orderBy: keyof Genre2TableColumnNames;
+  orderBy: keyof SongTableColumnNames;
   page: number;
   rowsPerPage: number;
   totalCount: number;
 }
 
-const Genre2TableActionEdit: FC<Genre2TableActionEditProps> = ({
+const AlbumSongsTable: FC<AlbumSongsTableProps> = ({
   data,
   selectedIds,
   onSelect,
   onSelectAll,
-  onEdit,
   onDelete,
   onRequestSort,
   onRequestPageChange,
@@ -96,21 +96,19 @@ const Genre2TableActionEdit: FC<Genre2TableActionEditProps> = ({
   totalCount,
 }) => {
   return (
-    <GenericTableActionEdit<Genre2, "id">
-      label="Genre2s"
-      pluralEntityName="Genre2s"
+    <GenericTable<Song, "id">
+      label="Songs"
+      pluralEntityName="Songs"
       data={data}
-      columnDefinitions={genre2TableColumnDefinitions}
+      columnDefinitions={songTableColumnDefinitions}
       idKey="id"
       selectedIds={selectedIds}
       onSelect={onSelect}
       onSelectAll={onSelectAll}
-      onEdit={onEdit}
+      rowActions={[]}
       onDelete={onDelete}
       onRequestSort={(column, order) => {
-        const def = genre2TableColumnDefinitions.find(
-          (def) => def.id === column
-        );
+        const def = songTableColumnDefinitions.find((def) => def.id === column);
         if (def) {
           onRequestSort(def.id, order);
         }
@@ -126,24 +124,19 @@ const Genre2TableActionEdit: FC<Genre2TableActionEditProps> = ({
   );
 };
 
-const ManageGenre2s = () => {
-  const [search, setSearch] = useState("");
-  const [openEditModal, setOpenEditModal] = useState(false);
-  const [editingGenre2Id, setEditingGenre2Id] = useState<RowId | null>(null);
+const ManageAlbumSongs = ({ album }: { album: ApiAlbumType }) => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(10);
   const [selectedItems, setSelectedItems] = useState<RowId[]>([]);
-  const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">(
-    "desc"
-  );
+  const [columnSortOrder, setColumnSortOrder] = useState<"asc" | "desc">("asc");
   const [columnSortOrderBy, setColumnSortOrderBy] =
-    useState<keyof Genre2TableColumnNames>("updatedAt");
+    useState<keyof SongTableColumnNames>("id");
 
   const [openPreviewModal, setOpenPreviewModal] = useState(false);
   const [submittedData, setSubmittedData] = useState<unknown>(null);
   const [openAddModal, setOpenAddModal] = useState(false);
 
-  const [displayingResult, setDisplayingResult] = useState<Paginated<Genre2>>({
+  const [displayingResult, setDisplayingResult] = useState<Paginated<Song>>({
     result: [],
     currentPage: 1,
     total: 0,
@@ -151,12 +144,19 @@ const ManageGenre2s = () => {
   });
   const [refreshKey, setRefreshKey] = useState(0);
   const loading = useAdminLoading();
+  const { id: albumId } = album;
+
+  const handleRequestSort = (property: keyof SongTableColumnNames) => {
+    const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
+    setColumnSortOrder(isAsc ? "desc" : "asc");
+    setColumnSortOrderBy(property);
+  };
 
   useEffect(() => {
-    const getGenresFromApi = async () => {
+    const getSongsFromApi = async () => {
       await loading(async () => {
-        const pagedResult = await getGenres({
-          name: search,
+        const pagedResult = await getSongsByAlbumId({
+          albumId: albumId,
           page: page + 1,
           pageSize: rowsPerPage,
         });
@@ -174,27 +174,28 @@ const ManageGenre2s = () => {
         console.log("paged result", pagedResult);
       })();
     };
-    getGenresFromApi();
+    getSongsFromApi();
   }, [
-    search,
     page,
     rowsPerPage,
     columnSortOrder,
     columnSortOrderBy,
     refreshKey,
     loading,
+    albumId,
   ]);
-
-  const handleRequestSort = (property: keyof Genre2TableColumnNames) => {
-    const isAsc = columnSortOrderBy === property && columnSortOrder === "asc";
-    setColumnSortOrder(isAsc ? "desc" : "asc");
-    setColumnSortOrderBy(property);
-  };
 
   const handleSelectAllClick = async (isSelected: boolean) => {
     if (isSelected) {
       const newSelecteds = (
-        await getGenres({ name: search, page: 1, pageSize: 100 })
+        await loading(
+          async () =>
+            await getSongsByAlbumId({
+              albumId: album.id,
+              page: page + 1,
+              pageSize: rowsPerPage,
+            })
+        )()
       ).result.map((s) => s.id);
       setSelectedItems(newSelecteds);
     } else {
@@ -221,24 +222,17 @@ const ManageGenre2s = () => {
     setPage(0);
   };
 
-  const handleEditGenre2 = (selectedId: RowId) => {
-    setEditingGenre2Id(selectedId);
-    setOpenEditModal(true);
-  };
-
-  const editingGenre2 = useMemo(
-    () => displayingResult.result.find((u) => u.id === editingGenre2Id),
-    [displayingResult.result, editingGenre2Id]
-  );
-
   const handleOpenPreview = (data: unknown) => {
     setSubmittedData(data);
     setOpenPreviewModal(true);
   };
 
-  const handleDeleteGenre2s = async (selectedIds: RowId[]) => {
+  const handleDelete = async (selectedIds: RowId[]) => {
     try {
-      const result = await deleteGenres(selectedIds as string[]);
+      const result = await deleteAlbumSongs({
+        albumID: albumId,
+        songIDs: selectedIds as string[],
+      });
       handleOpenPreview(result);
       setSelectedItems([]);
       setRefreshKey((k) => k + 1);
@@ -247,10 +241,18 @@ const ManageGenre2s = () => {
     }
   };
 
-  const handleCreate = async (data: AddGenre2FormProps) => {
+  const loadingState = useAdminLoadingState();
+  const handleCloseModal = (onClose: () => void) => {
+    if (loadingState.count === 0) onClose();
+  };
+
+  const handleCreate = async (data: AddAlbumSongFormProps) => {
     await loading(async () => {
       try {
-        const result = await createGenre(data);
+        const result = await createAlbumSongs({
+          albumID: albumId,
+          songIDs: data.songIds,
+        });
         handleOpenPreview(result);
         setRefreshKey((k) => k + 1);
         setOpenAddModal(false);
@@ -260,46 +262,25 @@ const ManageGenre2s = () => {
     })();
   };
 
-  const handleEdit = async (data: EditGenre2FormProps, entity: Genre2) => {
-    await loading(async () => {
-      try {
-        const result = await editGenre({ ...data, id: entity.id });
-        handleOpenPreview(result);
-        setRefreshKey((k) => k + 1);
-        setOpenEditModal(false);
-      } catch (error) {
-        handleOpenPreview(error);
-      }
-    })();
-  };
-
   return (
     <>
-      <Stack className="h-full">
+      <Stack className="flex-auto overflow-y-auto">
         <Stack
-          direction="row"
+          direction="row-reverse"
           spacing={2}
           alignItems="center"
           sx={{ marginBottom: "1rem" }}
         >
-          <SearchIcon />
-          <TextField
-            label="Search"
-            variant="outlined"
-            fullWidth
-            onBlur={(e) => setSearch(e.target.value)}
-          />
           <Button variant="contained" onClick={() => setOpenAddModal(true)}>
             <AddIcon />
           </Button>
         </Stack>
-        <Genre2TableActionEdit
+        <AlbumSongsTable
           data={displayingResult.result}
           selectedIds={selectedItems}
           onSelect={handleClick}
           onSelectAll={handleSelectAllClick}
-          onEdit={handleEditGenre2}
-          onDelete={handleDeleteGenre2s}
+          onDelete={handleDelete}
           onRequestSort={handleRequestSort}
           onRequestPageChange={handleChangePage}
           onRequestRowsPerPageChange={handleChangeRowsPerPage}
@@ -309,19 +290,11 @@ const ManageGenre2s = () => {
           rowsPerPage={rowsPerPage}
           totalCount={displayingResult.total}
         />
-        {editingGenre2 && (
-          <EditGenre2Modal
-            open={openEditModal}
-            onClose={() => setOpenEditModal(false)}
-            onSubmit={handleEdit}
-            genre2={editingGenre2}
-          />
-        )}
       </Stack>
       {openAddModal && (
-        <AddGenre2Modal
+        <AddAlbumSongModal
           open={openAddModal}
-          onClose={() => setOpenAddModal(false)}
+          onClose={() => handleCloseModal(() => setOpenAddModal(false))}
           onSubmit={handleCreate}
         />
       )}
@@ -334,4 +307,4 @@ const ManageGenre2s = () => {
   );
 };
 
-export default ManageGenre2s;
+export default ManageAlbumSongs;

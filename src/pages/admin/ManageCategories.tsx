@@ -4,7 +4,8 @@ import { Avatar, Button, Stack, TextField } from "@mui/material";
 import { FC, useMemo, useState } from "react";
 import { AddCategoryModal } from "../../components/admin/AddCategoryModal";
 import { EditCategoryModal } from "../../components/admin/EditCategoryModal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

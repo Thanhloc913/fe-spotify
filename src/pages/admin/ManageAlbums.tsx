@@ -11,7 +11,8 @@ import {
 import { FC, useMemo, useState } from "react";
 import { AddAlbumModal } from "../../components/admin/AddAlbumModal";
 import { EditAlbumModal } from "../../components/admin/EditAlbumModal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

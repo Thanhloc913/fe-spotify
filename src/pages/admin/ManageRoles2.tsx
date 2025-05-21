@@ -10,7 +10,8 @@ import {
   EditRole2FormProps,
   EditRole2Modal,
 } from "../../components/admin/EditRole2Modal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

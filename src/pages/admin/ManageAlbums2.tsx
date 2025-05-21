@@ -10,7 +10,8 @@ import {
   EditAlbum2FormProps,
   EditAlbum2Modal,
 } from "../../components/admin/EditAlbum2Modal";
-import GenericTableActionEdit, {
+import {
+  GenericTableActionEdit,
   RowId,
   SortOrder,
 } from "../../components/admin/GenericTable";

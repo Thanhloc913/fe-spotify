@@ -4,8 +4,10 @@ import { MockApi } from "../lib/mocks/playerApi";
 import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
 import {
+  ApiAlbumSongType,
   ApiAlbumType,
   ApiCreateAlbumRequest,
+  ApiCreateAlbumSongsRequest,
   ApiCreateGenreRequest,
   ApiDeleteAlbumsRequest,
   ApiDeleteGenresRequest,
@@ -16,6 +18,7 @@ import {
   ApiGenreType,
   ApiGetAlbumRequest,
   ApiGetGenreRequest,
+  ApiGetSongsByAlbumIdRequest,
   ApiPaginatedResult,
   ApiResponse as ApiResponseV2,
   ApiSongCreateRequest,
@@ -24,8 +27,8 @@ import {
 } from "../types/api";
 import { PlayerState } from "../types/index";
 import { getToken } from "../utils/auth";
-import { getCsrfToken } from "./storageApi";
 import { apiRequest } from "./authApi";
+import { getCsrfToken } from "./storageApi";
 
 let audio: HTMLAudioElement | null = null;
 
@@ -554,6 +557,35 @@ export async function deleteAlbums(ids: string[]): Promise<unknown> {
   const body: ApiDeleteAlbumsRequest = { ids };
   return apiRequest<unknown, ApiDeleteAlbumsRequest>(
     "http://localhost:8082/album/delete",
+    "POST",
+    body
+  );
+}
+
+export async function getSongsByAlbumId(
+  body: ApiGetSongsByAlbumIdRequest = { albumId: "", page: 1, pageSize: 100 }
+): Promise<ApiPaginatedResult<ApiSongType>> {
+  return apiRequest<
+    ApiPaginatedResult<ApiSongType>,
+    ApiGetSongsByAlbumIdRequest
+  >("http://localhost:8082/songs", "POST", body);
+}
+
+export async function createAlbumSongs(
+  body: ApiCreateAlbumSongsRequest
+): Promise<ApiAlbumSongType[]> {
+  return apiRequest<ApiAlbumSongType[], ApiCreateAlbumSongsRequest>(
+    "http://localhost:8082/album-song/create",
+    "POST",
+    body
+  );
+}
+
+export async function deleteAlbumSongs(
+  body: ApiCreateAlbumSongsRequest
+): Promise<ApiAlbumSongType[]> {
+  return apiRequest<ApiAlbumSongType[], ApiCreateAlbumSongsRequest>(
+    "http://localhost:8082/album-song/delete",
     "POST",
     body
   );
