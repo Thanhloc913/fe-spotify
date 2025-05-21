@@ -93,7 +93,6 @@ const AlbumDetail = () => {
       coverUrl: track.backgroundUrl || track.coverUrl || album?.coverUrl
     };
     
-    console.log('Đang phát bài hát với thông tin:', JSON.stringify(enhancedTrack, null, 2));
     setCurrentTrack(enhancedTrack);
     playTrack();
   };
