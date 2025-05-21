@@ -405,7 +405,7 @@ export const GenericTableActionEdit = <
                       selectedIds.length > 0 && selectedIds.length < totalCount
                     }
                     checked={
-                      data.length > 0 && selectedIds.length === totalCount
+                      data.length > 0 && selectedIds.length >= totalCount
                     }
                     onChange={(e) => onSelectAll(e.target.checked)}
                     slotProps={{

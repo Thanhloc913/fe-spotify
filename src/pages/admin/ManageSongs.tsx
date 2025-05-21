@@ -497,7 +497,7 @@ const ManageSongs = () => {
             label="Search"
             variant="outlined"
             fullWidth
-            onChange={(e) => setSearch(e.target.value)}
+            onBlur={(e) => setSearch(e.target.value)}
           />
           <Button variant="contained" onClick={() => setOpenAddModal(true)}>
             <AddIcon />

@@ -4,8 +4,13 @@ import { MockApi } from "../lib/mocks/playerApi";
 import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
 import {
+  ApiCreateGenreRequest,
+  ApiDeleteGenresRequest,
   ApiDeleteSongsRequest,
+  ApiEditGenreRequest,
   ApiFavoriteSongType,
+  ApiGenreType,
+  ApiGetGenreRequest,
   ApiPaginatedResult,
   ApiResponse as ApiResponseV2,
   ApiSongCreateRequest,
@@ -445,4 +450,70 @@ export async function deleteSongs(ids: string[]): Promise<ApiSongType> {
     "POST",
     { ids }
   );
+}
+
+export async function getGenres(
+  body: ApiGetGenreRequest = { page: 1, pageSize: 100 }
+): Promise<ApiPaginatedResult<ApiGenreType>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "X-CSRFToken": (await getCsrfToken()) || "",
+    Authorization: `Bearer ${getAuthToken() || ""}`,
+  };
+
+  try {
+    const response = await fetch("http://localhost:8082/genres", {
+      method: "POST",
+      headers,
+      credentials: "include",
+      body: JSON.stringify(body),
+    });
+    if (response.status === 404) {
+      return {
+        result: [],
+        currentPage: 1,
+        total: 0,
+        totalPages: 0,
+      };
+    }
+    const result: ApiResponse<ApiPaginatedResult<ApiGenreType>> =
+      await response.json();
+    console.log("Response:", result);
+    return result.data;
+  } catch (error) {
+    console.error("Error:", error);
+    return Promise.reject(error);
+  }
+}
+
+export async function createGenre(
+  body: ApiCreateGenreRequest
+): Promise<ApiGenreType> {
+  return apiRequest<ApiGenreType, ApiCreateGenreRequest>(
+    "http://localhost:8082/genre/create",
+    "POST",
+    body
+  );
+}
+
+export async function editGenre(body: ApiEditGenreRequest): Promise<ApiGenreType> {
+  return apiRequest<ApiGenreType, ApiEditGenreRequest>(
+    "http://localhost:8082/genre/update",
+    "POST",
+    body
+  );
+}
+
+export async function deleteGenres(ids: string[]): Promise<unknown> {
+  const body: ApiDeleteGenresRequest = { ids };
+  return apiRequest<unknown, ApiDeleteGenresRequest>(
+    "http://localhost:8082/genre/delete",
+    "POST",
+    body
+  );
+}
+
+// Helper function to get authorization token from localStorage
+export function getAuthToken() {
+  return localStorage.getItem("access_token");
 }
