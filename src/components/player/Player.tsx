@@ -15,8 +15,8 @@ import {
 } from 'react-icons/fa';
 import { usePlayerStore } from '../../store/playerStore';
 import { Link } from 'react-router-dom';
-import { addFavoriteTrack, getFavoriteTracks, removeFavoriteTrack, getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
-import { getStorageById, getImageUrl } from '../../api/storageApi';
+import { addFavoriteTrack, removeFavoriteTrack, getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
+import { musicApi } from '../../api/musicApi';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -56,47 +56,27 @@ const Player: React.FC = () => {
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
-  // Handle play/pause - removed currentTrack from dependencies
+  // Lưu lại progress khi bài hát bị tạm dừng
+  const [savedProgress, setSavedProgress] = useState<number>(0);
+  
   useEffect(() => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.play().catch(() => {
-          // Autoplay was prevented
-          console.log('Autoplay prevented');
-        });
-      } else {
-        audioRef.current.pause();
-      }
+    if (!isPlaying) {
+      setSavedProgress(progress);
     }
-  }, [isPlaying]); // currentTrack is implicitly covered by the src change
+  }, [isPlaying, progress]);
 
-  // Lấy file URL từ storageId khi track thay đổi
   useEffect(() => {
     if (!currentTrack) return;
     
-    console.log('========== TRACK INFO DEBUG ==========');
-    console.log('Current track full data:', JSON.stringify(currentTrack, null, 2));
-    console.log('Track ID:', currentTrack.id);
-    console.log('storageId:', currentTrack.storageId);
-    console.log('storageImageId:', currentTrack.storageImageId);
-    console.log('coverUrl:', currentTrack.coverUrl);
-    console.log('songUrl:', currentTrack.songUrl);
-    console.log('======================================');
-    
     const fetchAudioUrl = async () => {
       try {
-        console.log('Current track:', currentTrack);
-        
-        // Kiểm tra có songUrl không (từ API mới)
         if (currentTrack.songUrl) {
-          console.log('Sử dụng songUrl từ API:', currentTrack.songUrl);
           setAudioUrl(currentTrack.songUrl);
           return;
         }
         
         // Nếu đã có sẵn previewUrl thì dùng luôn
         if (currentTrack.previewUrl) {
-          console.log('Sử dụng previewUrl:', currentTrack.previewUrl);
           setAudioUrl(currentTrack.previewUrl);
           return;
         }
@@ -107,24 +87,34 @@ const Player: React.FC = () => {
       }
     };
     
-    // Call the fetchAudioUrl function to actually fetch and set the audio URL
     fetchAudioUrl();
     
   }, [currentTrack]);
 
-  // Update audio src when currentTrack changes
   useEffect(() => {
     if (audioRef.current && currentTrack && audioUrl) {
+      const wasPlaying = isPlaying;
       audioRef.current.load();
-      if (isPlaying) {
+      
+      // Nếu có savedProgress và là cùng một bài hát
+      const currentId = localStorage.getItem('current_track_id');
+      const isSameTrack = currentId === currentTrack.id;
+      
+      if (isSameTrack && savedProgress > 0) {
+        audioRef.current.currentTime = savedProgress;
+      }
+      
+      // Lưu ID bài hát hiện tại
+      localStorage.setItem('current_track_id', currentTrack.id);
+      
+      if (wasPlaying) {
         audioRef.current.play().catch(() => {
           console.log('Autoplay prevented after track change');
         });
       }
     }
-  }, [currentTrack, isPlaying, audioUrl]);
+  }, [currentTrack, isPlaying, audioUrl, savedProgress]);
 
-  // Update progress
   useEffect(() => {
     const timer = setInterval(() => {
       const media = getMediaRef();
@@ -135,7 +125,6 @@ const Player: React.FC = () => {
     return () => clearInterval(timer);
   }, [isPlaying, setProgress, showVideo]);
 
-  // Handle volume change
   useEffect(() => {
     if (audioRef.current) {
       const normalizedVolume = Math.max(0, Math.min(1, volume));
@@ -143,7 +132,6 @@ const Player: React.FC = () => {
     }
   }, [volume, isMuted]);
 
-  // Handle track end
   const handleTrackEnd = () => {
     if (repeat === 'track') {
       const media = getMediaRef();
@@ -152,7 +140,6 @@ const Player: React.FC = () => {
         media.play();
       }
     } else {
-      // Khi hết nhạc, dừng player
       usePlayerStore.getState().pauseTrack();
     }
   };
@@ -193,29 +180,51 @@ const Player: React.FC = () => {
 
   useEffect(() => {
     if (!currentTrack) return setLiked(false);
-    getFavoriteTracks().then(tracks => {
-      setLiked(tracks.some(t => t.id === currentTrack.id));
-    });
+    
+    const checkLikedStatus = async () => {
+      try {
+        const likedSongs = await musicApi.getLikedSongs();
+        setLiked(likedSongs.some(song => song.id === currentTrack.id));
+      } catch (error) {
+        console.error('Lỗi khi kiểm tra trạng thái liked:', error);
+        setLiked(false);
+      }
+    };
+    
+    checkLikedStatus();
+    
     // Listen for liked-changed event
     const handler = () => {
-      getFavoriteTracks().then(tracks => {
-        setLiked(tracks.some(t => t.id === currentTrack.id));
-      });
+      checkLikedStatus();
     };
+    
     window.addEventListener('liked-changed', handler);
     return () => window.removeEventListener('liked-changed', handler);
   }, [currentTrack]);
 
   const handleToggleFavorite = async () => {
     if (!currentTrack) return;
-    if (liked) {
-      await removeFavoriteTrack(currentTrack.id);
-      setLiked(false);
-    } else {
-      await addFavoriteTrack(currentTrack);
-      setLiked(true);
+    const profileId = localStorage.getItem("profile_id") || "";
+    
+    try {
+      if (liked) {
+        await musicApi.deleteFavorite(profileId, currentTrack.id);
+        setLiked(false);
+        // Dispatch custom event với thông tin chi tiết
+        window.dispatchEvent(new CustomEvent('liked-changed', {
+          detail: { songId: currentTrack.id, action: 'unlike' }
+        }));
+      } else {
+        await musicApi.createFavorite(profileId, currentTrack.id);
+        setLiked(true);
+        // Dispatch custom event với thông tin chi tiết
+        window.dispatchEvent(new CustomEvent('liked-changed', {
+          detail: { songId: currentTrack.id, action: 'like' }
+        }));
+      }
+    } catch (error) {
+      console.error("Lỗi xử lý favorite:", error);
     }
-    window.dispatchEvent(new Event('liked-changed'));
   };
 
   const handleToggleTrackInPlaylist = async (playlistId: string, checked: boolean) => {
@@ -277,22 +286,13 @@ const Player: React.FC = () => {
   const handleLoadedMetadata = () => {
     const media = getMediaRef();
     if (media) {
-      // Cập nhật duration từ file audio thực tế
       const realDuration = media.duration;
-      console.log('Duration từ file audio:', realDuration);
       
       // So sánh các duration khác nhau
       const metadataMs = currentTrack?.durationMs || 0;
       const metadataSec = metadataMs / 1000;
       const apiDuration = duration;
       
-      console.log('Duration comparison:');
-      console.log('- Từ metadata (ms):', metadataMs);
-      console.log('- Từ metadata (s):', metadataSec);
-      console.log('- Từ API:', apiDuration);
-      console.log('- Từ file thực tế:', realDuration);
-      
-      // Luôn ưu tiên duration từ file audio thực tế
       usePlayerStore.getState().setDuration(realDuration);
     }
   };
@@ -304,6 +304,19 @@ const Player: React.FC = () => {
     }
     return audioRef.current;
   };
+
+  // Xử lý khi play/pause
+  useEffect(() => {
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.play().catch(() => {
+          console.log('Autoplay prevented');
+        });
+      } else {
+        audioRef.current.pause();
+      }
+    }
+  }, [isPlaying]);
 
   if (!currentTrack) return null;
 

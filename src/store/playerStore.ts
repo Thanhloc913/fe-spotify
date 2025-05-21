@@ -41,19 +41,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   showVideo: false,
   isVideoModalOpen: false,
   setCurrentTrack: (track) => {
+    const { currentTrack } = get();
+    const isSameTrack = currentTrack?.id === track.id;
+    
     set({ 
       currentTrack: track, 
       duration: track.durationMs / 1000,
-      progress: 0,
-      // Reset showVideo when changing tracks
+      progress: isSameTrack ? get().progress : 0,
       showVideo: false,
       isVideoModalOpen: false
     });
     
-    // Call the API to set the current track
-    musicApi.setTrack(track.id).catch(error => {
-      console.error('Error setting track:', error);
-    });
+    if (!isSameTrack) {
+      musicApi.setTrack(track.id).catch(error => {
+        console.error('Error setting track:', error);
+      });
+    }
   },
   playTrack: async () => {
     const { currentTrack } = get();

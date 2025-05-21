@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { FaHeart } from "react-icons/fa";
+import { FaHeart, FaPlay, FaPause } from "react-icons/fa";
 import { musicApi } from "../api";
 import { ApiSongType } from "../types/api";
 import { ApiProfileType } from "../types/api";
 import { getProfilesByIds } from "../api/profileApi";
+import { usePlayerStore } from "../store/playerStore";
 
 type LikedSongsInfo = ApiSongType & {
   artistName: string;
@@ -20,11 +21,14 @@ const formatDuration = (seconds: number) => {
 
 const LikedSongs = () => {
   const [favs, setFavs] = useState<LikedSongsInfo[]>([]);
-  // const { setCurrentTrack, playTrack } = usePlayerStore();
+  const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } = usePlayerStore();
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const fetchLikedSongs = async () => {
+    console.log("Đang tải danh sách bài hát yêu thích...");
+    try {
       const songs: ApiSongType[] = await musicApi.getLikedSongs();
+      console.log("Đã tải xong:", songs.length, "bài hát");
+      
       const artistIds = Array.from(new Set(songs.map((s) => s.artistId)));
       const artists: ApiProfileType[] = await getProfilesByIds(artistIds);
       const artistMap = Object.fromEntries(artists.map((a) => [a.id, a]));
@@ -36,17 +40,50 @@ const LikedSongs = () => {
           isFav: true,
         }))
       );
+    } catch (error) {
+      console.error("Lỗi khi tải bài hát yêu thích:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchLikedSongs();
+    
+    // Lắng nghe sự kiện từ Player.tsx
+    const handleLikedChanged = (event: Event) => {
+      console.log("Đã nhận sự kiện liked-changed");
+      
+      // Kiểm tra xem có custom data từ event không
+      if (event instanceof CustomEvent && event.detail) {
+        const { songId, action } = event.detail;
+        console.log("Chi tiết sự kiện:", songId, action);
+        
+        // Cập nhật trực tiếp trạng thái
+        if (action === 'unlike' && songId) {
+          console.log("Xóa bài hát khỏi danh sách:", songId);
+          setFavs(currentFavs => currentFavs.filter(song => song.id !== songId));
+          return;
+        }
+      }
+      
+      // Nếu không có data chi tiết thì tải lại toàn bộ
+      fetchLikedSongs();
     };
-    fetchData();
+    
+    window.addEventListener('liked-changed', handleLikedChanged);
+    return () => window.removeEventListener('liked-changed', handleLikedChanged);
   }, []);
 
   const handleUnFav = async (track: LikedSongsInfo) => {
     const currentProfileId = localStorage.getItem("profile_id");
     if (!currentProfileId) return;
     await musicApi.deleteFavorite(currentProfileId, track.id);
-    setFavs((tracks) =>
-      tracks.map((t) => (t.id === track.id ? { ...t, isFav: false } : t))
-    );
+    // Xóa bài hát khỏi danh sách hoàn toàn thay vì chỉ đánh dấu
+    setFavs((tracks) => tracks.filter((t) => t.id !== track.id));
+    
+    // Dispatch với thông tin chi tiết
+    window.dispatchEvent(new CustomEvent('liked-changed', {
+      detail: { songId: track.id, action: 'unlike' }
+    }));
   };
 
   const handleReFav = async (track: LikedSongsInfo) => {
@@ -56,6 +93,38 @@ const LikedSongs = () => {
     setFavs((tracks) =>
       tracks.map((t) => (t.id === track.id ? { ...t, isFav: true } : t))
     );
+    
+    // Dispatch với thông tin chi tiết
+    window.dispatchEvent(new CustomEvent('liked-changed', {
+      detail: { songId: track.id, action: 'like' }
+    }));
+  };
+  
+  const handlePlayTrack = (track: LikedSongsInfo) => {
+    if (currentTrack?.id === track.id) {
+      togglePlay();
+    } else {
+      // Đảm bảo có đủ thông tin cần thiết cho Track type
+      const enhancedTrack = {
+        id: track.id,
+        title: track.title,
+        artistId: track.artistId,
+        artistName: track.artistName,
+        albumId: "", // Không có trong ApiSongType
+        albumName: "", // Không có trong ApiSongType
+        coverUrl: track.backgroundUrl,
+        previewUrl: track.songUrl,
+        durationMs: track.duration * 1000,
+        explicit: false, // Mặc định 
+        popularity: 0, // Mặc định
+        songUrl: track.songUrl,
+        backgroundUrl: track.backgroundUrl,
+        songType: track.songType
+      };
+      
+      setCurrentTrack(enhancedTrack as any);
+      playTrack();
+    }
   };
 
   return (
@@ -76,6 +145,7 @@ const LikedSongs = () => {
           <thead>
             <tr className="text-white/70 text-sm border-b border-white/10">
               <th className="py-2 px-2 font-normal">#</th>
+              <th className="py-2 px-2 font-normal"></th>
               <th className="py-2 px-2 font-normal">Tiêu đề</th>
               <th className="py-2 px-2 font-normal">Nghệ sĩ</th>
               <th className="py-2 px-2 font-normal text-right">Thời lượng</th>
@@ -83,18 +153,23 @@ const LikedSongs = () => {
             </tr>
           </thead>
           <tbody>
-            {favs.map((track) => (
+            {favs.map((track, index) => (
               <tr
                 key={track.id}
                 className="hover:bg-white/5 group transition cursor-pointer"
               >
-                <td className="py-2 px-2 text-white/70 w-8">{track.id}</td>
+                <td className="py-2 px-2 text-white/70 w-8">{index + 1}</td>
+                <td className="py-2 px-2 w-8">
+                  <button
+                    onClick={() => handlePlayTrack(track)}
+                    className="text-white/70 hover:text-white"
+                  >
+                    {currentTrack?.id === track.id && isPlaying ? <FaPause /> : <FaPlay />}
+                  </button>
+                </td>
                 <td
                   className="py-2 px-2 flex items-center gap-3"
-                  onClick={() => {
-                    // setCurrentTrack(track);
-                    // playTrack();
-                  }}
+                  onClick={() => handlePlayTrack(track)}
                 >
                   <img
                     src={track.backgroundUrl}

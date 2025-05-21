@@ -4,6 +4,7 @@ import { Artist, Track, Album } from '../types';
 import { artistsApi } from '../api';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
+import { FaPlay, FaPause } from 'react-icons/fa';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -29,7 +30,7 @@ const ArtistDetail = () => {
   const [artist, setArtist] = useState<ExtendedArtist | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { setCurrentTrack, playTrack } = usePlayerStore();
+  const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } = usePlayerStore();
 
   useEffect(() => {
     const fetchArtistData = async () => {
@@ -76,16 +77,47 @@ const ArtistDetail = () => {
   }, [id]);
 
   const handlePlayTrack = (track: Track) => {
-    // Sử dụng trực tiếp backgroundUrl và songUrl từ API
-    const enhancedTrack = {
-      ...track,
-      // Ưu tiên sử dụng backgroundUrl, sau đó đến coverUrl
-      coverUrl: track.backgroundUrl || track.coverUrl
-    };
-    
-    console.log('Đang phát bài hát với thông tin:', enhancedTrack);
-    setCurrentTrack(enhancedTrack);
-    playTrack();
+    if (currentTrack?.id === track.id) {
+      // Nếu là bài hát hiện tại đang phát, toggle play/pause
+      togglePlay();
+    } else {
+      // Nếu là bài hát mới, phát bài hát đó
+      
+      // Xác định songType dựa trên URL hoặc thông tin từ API
+      let songType = track.songType || "SONG";
+      
+      // Nếu URL chứa từ khóa video, hoặc có đuôi .mp4, .webm, v.v. thì đây là video
+      const songUrl = track.songUrl || track.previewUrl || "";
+      if (songUrl && (
+        songUrl.includes("/videos/") || 
+        songUrl.includes("video") || 
+        songUrl.match(/\.(mp4|webm|ogg|mov)($|\?)/i)
+      )) {
+        songType = "MUSIC_VIDEO";
+      }
+      
+      console.log("Loại bài hát xác định:", songType);
+      
+      // Sử dụng trực tiếp backgroundUrl và songUrl từ API
+      const enhancedTrack = {
+        ...track,
+        // Đảm bảo đủ các trường cần thiết cho Track type
+        coverUrl: track.backgroundUrl || track.coverUrl || '',
+        previewUrl: track.songUrl || track.previewUrl || '',
+        albumId: track.albumId || '',
+        albumName: track.albumName || '',
+        explicit: track.explicit || false,
+        popularity: track.popularity || 0,
+        songUrl: track.songUrl || track.previewUrl || '',
+        backgroundUrl: track.backgroundUrl || track.coverUrl || '',
+        songType: songType,
+        durationMs: track.durationMs || 0
+      };
+      
+      console.log('Đang phát bài hát với thông tin:', enhancedTrack);
+      setCurrentTrack(enhancedTrack);
+      playTrack();
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -138,50 +170,70 @@ const ArtistDetail = () => {
             <div className="col-span-4 text-gray-400">Album</div>
             <div className="col-span-2 text-gray-400">Duration</div>
           </div>
-          {artist.topTracks.map((track, index) => (
-            <div
-              key={track.id}
-              className="grid grid-cols-12 gap-4 p-4 hover:bg-gray-700 transition-colors cursor-pointer"
-              onClick={() => handlePlayTrack(track)}
-            >
-              <div className="col-span-1 text-gray-400">{index + 1}</div>
-              <div className="col-span-5 flex items-center gap-4">
-                <div className="relative">
-                  <img
-                    src={track.backgroundUrl || track.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
-                    alt={track.title}
-                    className="w-10 h-10 rounded"
-                  />
-                </div>
-                <div>
-                  <Link
-                    to={`/track/${track.id}`}
-                    className="text-white hover:underline"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    {track.title}
-                  </Link>
-                  {track.explicit && (
-                    <span className="ml-2 text-xs bg-gray-600 px-1 rounded">
-                      E
-                    </span>
+          {artist.topTracks.map((track, index) => {
+            const isCurrentTrack = currentTrack?.id === track.id;
+            const isCurrentlyPlaying = isCurrentTrack && isPlaying;
+            
+            return (
+              <div
+                key={track.id}
+                className={`grid grid-cols-12 gap-4 p-4 hover:bg-gray-700 transition-colors cursor-pointer group ${isCurrentTrack ? 'bg-gray-700' : ''}`}
+                onClick={() => handlePlayTrack(track)}
+              >
+                <div className="col-span-1 flex items-center justify-center">
+                  {isCurrentTrack && isCurrentlyPlaying ? (
+                    <FaPause className="text-green-500" />
+                  ) : isCurrentTrack ? (
+                    <FaPlay className="text-green-500" />
+                  ) : (
+                    <>
+                      <span className="text-gray-400 group-hover:hidden">
+                        {index + 1}
+                      </span>
+                      <span className="text-gray-400 hidden group-hover:inline-block">
+                        <FaPlay className="hover:text-green-500" />
+                      </span>
+                    </>
                   )}
                 </div>
+                <div className="col-span-5 flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={track.backgroundUrl || track.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
+                      alt={track.title}
+                      className="w-10 h-10 rounded"
+                    />
+                  </div>
+                  <div>
+                    <Link
+                      to={`/track/${track.id}`}
+                      className={`hover:underline ${isCurrentTrack ? 'text-green-500' : 'text-white'}`}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      {track.title}
+                    </Link>
+                    {track.explicit && (
+                      <span className="ml-2 text-xs bg-gray-600 px-1 rounded">
+                        E
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="col-span-4">
+                  <Link
+                    to={`/album/${track.albumId}`}
+                    className="text-gray-400 hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {track.albumName}
+                  </Link>
+                </div>
+                <div className="col-span-2 text-gray-400">
+                  {formatDuration(track.durationMs)}
+                </div>
               </div>
-              <div className="col-span-4">
-                <Link
-                  to={`/album/${track.albumId}`}
-                  className="text-gray-400 hover:underline"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  {track.albumName}
-                </Link>
-              </div>
-              <div className="col-span-2 text-gray-400">
-                {formatDuration(track.durationMs)}
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
