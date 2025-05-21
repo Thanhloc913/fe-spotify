@@ -53,13 +53,48 @@ export default function Search() {
   // Thêm state để lưu URL ảnh
   const [songImages, setSongImages] = useState<Record<string, string>>({});
 
-  // Load liked tracks
+  // Tách hàm loadLikedTracks ra để có thể tái sử dụng
+  const loadLikedTracks = async () => {
+    try {
+      const tracks = await musicApi.getLikedSongs();
+      console.log("Đã tải xong danh sách yêu thích:", tracks.length, "bài hát");
+      setLikedTracks(tracks.map((t: any) => t.id));
+    } catch (error) {
+      console.error("Lỗi khi tải bài hát yêu thích:", error);
+    }
+  };
+
+  // Load liked tracks khi component mount và lắng nghe sự kiện liked-changed
   useEffect(() => {
-    const loadLikedTracks = async () => {
-      const tracks = await getFavoriteTracks();
-      setLikedTracks(tracks.map((t: Track) => t.id));
-    };
     loadLikedTracks();
+    
+    // Lắng nghe sự kiện từ các component khác
+    const handleLikedChanged = (event: Event) => {
+      console.log("Search.tsx: Đã nhận sự kiện liked-changed");
+      
+      // Kiểm tra xem có custom data từ event không
+      if (event instanceof CustomEvent && event.detail) {
+        const { songId, action } = event.detail;
+        console.log("Chi tiết sự kiện:", songId, action);
+        
+        // Cập nhật trực tiếp trạng thái mà không cần gọi API lại
+        if (action === 'unlike' && songId) {
+          console.log("Xóa bài hát khỏi danh sách yêu thích:", songId);
+          setLikedTracks(currentLiked => currentLiked.filter(id => id !== songId));
+          return;
+        } else if (action === 'like' && songId) {
+          console.log("Thêm bài hát vào danh sách yêu thích:", songId);
+          setLikedTracks(currentLiked => [...currentLiked, songId]);
+          return;
+        }
+      }
+      
+      // Nếu không có data chi tiết thì tải lại toàn bộ
+      loadLikedTracks();
+    };
+    
+    window.addEventListener('liked-changed', handleLikedChanged);
+    return () => window.removeEventListener('liked-changed', handleLikedChanged);
   }, []);
 
   const query = keyword ? decodeURIComponent(keyword) : '';
@@ -82,6 +117,13 @@ export default function Search() {
       .finally(() => setSearchLoading(false));
   }, [query]);
 
+  // Thêm useEffect để tải lại danh sách yêu thích mỗi khi tìm kiếm xong
+  useEffect(() => {
+    if (searchResult && searchResult.result && searchResult.result.length > 0) {
+      loadLikedTracks();
+    }
+  }, [searchResult]);
+
   useEffect(() => {
     if (!searchResult || !searchResult.result) return;
     const artistIds = Array.from(new Set(searchResult.result.map((song: any) => String(song.artistId)).filter(Boolean))) as string[];
@@ -89,10 +131,8 @@ export default function Search() {
     // Lấy tất cả ID nghệ sĩ cần tìm
     artistIds.forEach(async (id: string) => {
       try {
-        console.log(`Đang lấy thông tin nghệ sĩ ID: ${id}`);
         const profile = await getProfileByAccountID(id);
         if (profile && profile.fullName) {
-          console.log(`Tìm thấy nghệ sĩ: ${profile.fullName}`);
           setArtistNames(prev => ({ ...prev, [id]: profile.fullName }));
         } else {
           console.log(`Không tìm thấy thông tin nghệ sĩ ID: ${id}`);
@@ -166,7 +206,6 @@ export default function Search() {
         durationMs: track.durationMs || (track.duration ? track.duration * 1000 : 0)
       };
       
-      console.log('Đang phát bài hát với thông tin:', JSON.stringify(enhancedTrack, null, 2));
       setCurrentTrack(enhancedTrack);
       playTrack();
     }
@@ -192,14 +231,32 @@ export default function Search() {
   };
 
   const handleToggleFavorite = async (track: any) => {
-    if (likedTracks.includes(track.id)) {
-      await removeFavoriteTrack(track.id);
-      setLikedTracks(likedTracks.filter(id => id !== track.id));
-    } else {
-      await addFavoriteTrack(track);
-      setLikedTracks([...likedTracks, track.id]);
+    const profileId = localStorage.getItem("profile_id");
+    if (!profileId) return;
+    
+    try {
+      if (likedTracks.includes(track.id)) {
+        // Bỏ thích bài hát
+        await musicApi.deleteFavorite(profileId, track.id);
+        setLikedTracks(likedTracks.filter(id => id !== track.id));
+        
+        // Dispatch custom event với thông tin chi tiết
+        window.dispatchEvent(new CustomEvent('liked-changed', {
+          detail: { songId: track.id, action: 'unlike' }
+        }));
+      } else {
+        // Thêm vào yêu thích
+        await musicApi.createFavorite(profileId, track.id);
+        setLikedTracks([...likedTracks, track.id]);
+        
+        // Dispatch custom event với thông tin chi tiết
+        window.dispatchEvent(new CustomEvent('liked-changed', {
+          detail: { songId: track.id, action: 'like' }
+        }));
+      }
+    } catch (error) {
+      console.error("Lỗi khi thực hiện yêu thích:", error);
     }
-    window.dispatchEvent(new Event('liked-changed'));
   };
 
   const handleAddToPlaylist = async (playlistId: string) => {

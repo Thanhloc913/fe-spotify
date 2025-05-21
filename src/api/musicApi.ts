@@ -286,9 +286,6 @@ export const musicApi = {
     pageSize: number = 10
   ): Promise<ApiResponse<ApiPaginatedResult<ApiSongType>>> => {
     try {
-      console.log(
-        `Tìm kiếm bài hát với tiêu đề: ${title}, page: ${page}, pageSize: ${pageSize}`
-      );
 
       if (USE_MOCK_DATA) {
         const filtered = mockData.tracks.filter((t) =>
@@ -328,12 +325,6 @@ export const musicApi = {
         }
       );
 
-      console.log(
-        "Response từ API tìm kiếm:",
-        JSON.stringify(res.data, null, 2)
-      );
-
-      // Log thông tin về storageImageId
       if (res.data && res.data.result && res.data.result.length > 0) {
         res.data.result.forEach((song: any, index: number) => {
           console.log(
@@ -356,10 +347,8 @@ export const musicApi = {
       profileId: localStorage.getItem("profile_id"),
     });
     const favList: ApiFavoriteSongType[] = favRes.data.data.result;
-    console.log("favorite list", favList);
 
     const songList = await getSongsByIds(favList.map((fav) => fav.songID));
-    console.log("favorite song list", songList);
     return songList;
   },
 
