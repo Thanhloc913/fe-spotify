@@ -39,6 +39,7 @@ export const ControlledFileInput = <TFieldValues extends FieldValues>({
             error={!!error}
             clearIconButtonProps={{
               title: "Remove",
+              "aria-label": "Remove file",
               children: <CloseIcon fontSize="small" />,
             }}
             InputProps={{

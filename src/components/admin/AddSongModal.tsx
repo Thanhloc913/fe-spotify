@@ -6,10 +6,13 @@ import {
   Button,
   Box,
   InputAdornment,
+  Card,
+  CardMedia,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import TextFieldArray from "./TextFieldArray";
 import { ControlledFileInput } from "./ControlledFileInput";
+import { useMemo } from "react";
 
 // Define the form data interface
 export interface AddSongFormProps {
@@ -34,7 +37,7 @@ export const AddSongModal: React.FC<AddSongModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const { control, register, handleSubmit } = useForm<AddSongFormProps>({
+  const { control, register, handleSubmit, watch } = useForm<AddSongFormProps>({
     defaultValues: {
       title: "",
       description: "",
@@ -45,6 +48,22 @@ export const AddSongModal: React.FC<AddSongModalProps> = ({
       background: null,
     },
   });
+
+  const selectedSongFile = watch("song");
+  const songPreviewUrl = useMemo(
+    () =>
+      selectedSongFile != null ? URL.createObjectURL(selectedSongFile) : null,
+    [selectedSongFile]
+  );
+
+  const selectedBackgroundFile = watch("background");
+  const backgroundPreviewUrl = useMemo(
+    () =>
+      selectedBackgroundFile != null
+        ? URL.createObjectURL(selectedBackgroundFile)
+        : null,
+    [selectedBackgroundFile]
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -95,6 +114,7 @@ export const AddSongModal: React.FC<AddSongModalProps> = ({
               },
             }}
           />
+
           <ControlledFileInput
             title="Music or Video song file"
             name="song"
@@ -102,6 +122,24 @@ export const AddSongModal: React.FC<AddSongModalProps> = ({
             required
             control={control}
           />
+          {selectedSongFile && (
+            <Typography variant="subtitle2" sx={{ mt: 1 }} gutterBottom>
+              Selected Song: {selectedSongFile.name}
+            </Typography>
+          )}
+          {songPreviewUrl && (
+            <Card sx={{ mt: 2, mb: 2 }}>
+              <CardMedia
+                component={
+                  selectedSongFile?.type.startsWith("audio") ? "audio" : "video"
+                }
+                controls
+                src={songPreviewUrl}
+                sx={{ width: "100%", maxHeight: 300, objectFit: "contain" }}
+              />
+            </Card>
+          )}
+
           <ControlledFileInput
             title="Background image file"
             name="background"
@@ -109,6 +147,21 @@ export const AddSongModal: React.FC<AddSongModalProps> = ({
             required
             control={control}
           />
+          {selectedBackgroundFile && (
+            <Typography variant="subtitle2" sx={{ mt: 1 }} gutterBottom>
+              Selected Background: {selectedBackgroundFile.name}
+            </Typography>
+          )}
+          {backgroundPreviewUrl && (
+            <Card sx={{ mt: 2, mb: 2 }}>
+              <CardMedia
+                component="img"
+                image={backgroundPreviewUrl}
+                alt="Background preview"
+                sx={{ maxHeight: 300, objectFit: "contain" }}
+              />
+            </Card>
+          )}
           <TextFieldArray
             control={control}
             name="albumIds"

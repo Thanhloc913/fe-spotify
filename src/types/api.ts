@@ -162,10 +162,10 @@ export type ApiStorageCreateResponse = {
 };
 
 // album create
-export type ApiAlbumCreateRequest = {
+export type ApiCreateAlbumRequest = {
   name: string;
   description: string;
-  storageImageId: string;
+  storageImageId: string | null;
   artistId: string;
 };
 
@@ -178,7 +178,25 @@ export type ApiAlbumType = {
   name: string;
   description: string;
   storageImageId: string;
+  backgroundUrl: string | null;
   artistId: string;
+};
+
+export type ApiGetAlbumRequest = ApiPagedRequest & {
+  name?: string;
+};
+
+export type ApiEditAlbumRequest = {
+  id: string;
+  name: string;
+  description: string;
+  artistId: string;
+  storageImageId: string | null;
+  removeImage: boolean;
+};
+
+export type ApiDeleteAlbumsRequest = {
+  ids: string[];
 };
 
 // storage upload req
@@ -333,6 +351,7 @@ export type ApiSongUpdateRequest = {
   duration: number; // Duration in seconds
   description: string;
   songType: "MUSIC_VIDEO" | "SONG"; // Extend as needed
+  removeImage: boolean;
 };
 
 export type ApiDeleteSongsRequest = {

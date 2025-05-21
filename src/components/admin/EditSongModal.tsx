@@ -19,11 +19,11 @@ import {
 } from "@mui/material";
 import { DateTimePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
-import React from "react";
 import { useForm } from "react-hook-form";
 import { ApiSongType } from "../../types/api";
 import { ControlledFileInput } from "./ControlledFileInput";
 import ModalSection from "./ModalSection";
+import { useMemo } from "react";
 
 // Form fields for editing a song
 export interface EditSongFormProps {
@@ -64,6 +64,15 @@ export const EditSongModal: React.FC<EditSongModalProps> = ({
         removeBackground: false,
       },
     });
+
+  const selectedBackgroundFile = watch("background");
+  const selectedBackground = useMemo(
+    () =>
+      selectedBackgroundFile != null
+        ? URL.createObjectURL(selectedBackgroundFile)
+        : null,
+    [selectedBackgroundFile]
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -140,6 +149,7 @@ export const EditSongModal: React.FC<EditSongModalProps> = ({
 
           {/* Media Section */}
           <ModalSection title="Media Files">
+            {/* Song File Preview */}
             <Typography variant="subtitle2" gutterBottom>
               Current {song.songType === "SONG" ? "Audio" : "Video"}:
               {song.songUrl ? "Attached" : "None"}
@@ -174,6 +184,7 @@ export const EditSongModal: React.FC<EditSongModalProps> = ({
               />
             )}
 
+            {/* Background File Upload and Preview */}
             <ControlledFileInput
               name="background"
               label="Upload New Background"
@@ -187,21 +198,37 @@ export const EditSongModal: React.FC<EditSongModalProps> = ({
               fullWidth
             />
 
-            {song.backgroundUrl && (
-              <FormControlLabel
-                control={
-                  <Checkbox
-                    {...register("removeBackground")}
-                    checked={watch("removeBackground")}
-                    onChange={(e) =>
-                      setValue("removeBackground", e.target.checked)
-                    }
-                  />
-                }
-                label="Remove current background image"
-                sx={{ mt: 1 }}
-              />
+            {selectedBackgroundFile && (
+              <Typography variant="subtitle2" sx={{ mt: 1 }} gutterBottom>
+                Selected Background: {selectedBackgroundFile.name}
+              </Typography>
             )}
+
+            {selectedBackground && (
+              <Card sx={{ mt: 2, mb: 2 }}>
+                <CardMedia
+                  component="img"
+                  image={selectedBackground}
+                  alt="New background preview"
+                  sx={{ maxHeight: 300, objectFit: "contain" }}
+                />
+              </Card>
+            )}
+
+            <FormControlLabel
+              control={
+                <Checkbox
+                  {...register("removeBackground")}
+                  checked={watch("removeBackground")}
+                  onChange={(e) =>
+                    setValue("removeBackground", e.target.checked)
+                  }
+                  disabled={!song.backgroundUrl}
+                />
+              }
+              label="Remove current background image"
+              sx={{ mt: 1 }}
+            />
           </ModalSection>
 
           {/* System Information Section */}

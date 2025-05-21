@@ -4,12 +4,17 @@ import { MockApi } from "../lib/mocks/playerApi";
 import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
 import {
+  ApiAlbumType,
+  ApiCreateAlbumRequest,
   ApiCreateGenreRequest,
+  ApiDeleteAlbumsRequest,
   ApiDeleteGenresRequest,
   ApiDeleteSongsRequest,
+  ApiEditAlbumRequest,
   ApiEditGenreRequest,
   ApiFavoriteSongType,
   ApiGenreType,
+  ApiGetAlbumRequest,
   ApiGetGenreRequest,
   ApiPaginatedResult,
   ApiResponse as ApiResponseV2,
@@ -496,7 +501,9 @@ export async function createGenre(
   );
 }
 
-export async function editGenre(body: ApiEditGenreRequest): Promise<ApiGenreType> {
+export async function editGenre(
+  body: ApiEditGenreRequest
+): Promise<ApiGenreType> {
   return apiRequest<ApiGenreType, ApiEditGenreRequest>(
     "http://localhost:8082/genre/update",
     "POST",
@@ -508,6 +515,45 @@ export async function deleteGenres(ids: string[]): Promise<unknown> {
   const body: ApiDeleteGenresRequest = { ids };
   return apiRequest<unknown, ApiDeleteGenresRequest>(
     "http://localhost:8082/genre/delete",
+    "POST",
+    body
+  );
+}
+
+export async function getAlbums(
+  body: ApiGetAlbumRequest = { page: 1, pageSize: 100 }
+): Promise<ApiPaginatedResult<ApiAlbumType>> {
+  return apiRequest<ApiPaginatedResult<ApiAlbumType>, ApiGetAlbumRequest>(
+    "http://localhost:8082/albums",
+    "POST",
+    body
+  );
+}
+
+export async function createAlbum(
+  body: ApiCreateAlbumRequest
+): Promise<ApiAlbumType> {
+  return apiRequest<ApiAlbumType, ApiCreateAlbumRequest>(
+    "http://localhost:8082/album/create",
+    "POST",
+    body
+  );
+}
+
+export async function editAlbum(
+  body: ApiEditAlbumRequest
+): Promise<ApiAlbumType> {
+  return apiRequest<ApiAlbumType, ApiEditAlbumRequest>(
+    "http://localhost:8082/album/update",
+    "POST",
+    body
+  );
+}
+
+export async function deleteAlbums(ids: string[]): Promise<unknown> {
+  const body: ApiDeleteAlbumsRequest = { ids };
+  return apiRequest<unknown, ApiDeleteAlbumsRequest>(
+    "http://localhost:8082/album/delete",
     "POST",
     body
   );

@@ -422,9 +422,10 @@ const ManageSongs = () => {
           id: song.id, // Required - existing song ID
           title: data.title || song.title,
           duration: data.duration || song.duration,
-          storageImageId: null,
+          storageImageId: "",
           description: data.description || song.description,
           songType: song.songType, // Keep original type unless you want to change it
+          removeImage: data.removeBackground,
         };
 
         // Handle background image update if provided
