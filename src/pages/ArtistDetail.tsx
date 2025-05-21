@@ -6,8 +6,10 @@ import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
 import { FaPlay, FaPause, FaEllipsisV } from 'react-icons/fa';
 import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
-import { createSongV2 } from '../api/musicApi';
-import { getUserAlbums, addTrackToPlaylist, removeTrackFromPlaylist } from '../api/user';
+import { createSongV2, updateSong } from '../api/musicApi';
+import { deleteSong } from '../api/songApi';
+import { EditSongModal, EditSongFormProps } from '../components/admin/EditSongModal';
+import { ApiSongType, ApiSongUpdateRequest } from '../types/api';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -37,12 +39,6 @@ interface SongSubmittedData {
   songData?: Record<string, unknown>;
   logs?: Record<string, unknown>;
   error?: string;
-}
-
-interface AlbumPopup {
-  id: string;
-  name: string;
-  trackIds: string[];
 }
 
 const ArtistDetail = () => {
@@ -84,10 +80,9 @@ const ArtistDetail = () => {
 
   // State cho action menu từng track
   const [actionTrackId, setActionTrackId] = useState<string | null>(null);
-  const [showAlbumPopup, setShowAlbumPopup] = useState(false);
-  const [albumPopupTrackId, setAlbumPopupTrackId] = useState<string | null>(null);
-  const [albums, setAlbums] = useState<AlbumPopup[]>([]);
-  const [albumLoading, setAlbumLoading] = useState(false);
+
+  const [openEditModal, setOpenEditModal] = useState(false);
+  const [editingSong, setEditingSong] = useState<ApiSongType | null>(null);
 
   useEffect(() => {
     const fetchArtistData = async () => {
@@ -393,55 +388,114 @@ const ArtistDetail = () => {
   // Kiểm tra quyền hiển thị nút
   const isOwner = typeof window !== 'undefined' && localStorage.getItem('profile_id') === id;
 
-  // Xử lý mở popup chọn album
-  const openAlbumPopup = async (trackId: string) => {
-    setAlbumLoading(true);
-    setAlbumPopupTrackId(trackId);
-    setShowAlbumPopup(true);
-    try {
-      const userAlbums = await getUserAlbums();
-      setAlbums(
-        (userAlbums as Album[]).map((al): AlbumPopup => ({
-          id: al.id,
-          name: al.title || '',
-          trackIds: Array.isArray(al.tracks)
-            ? al.tracks.map((t: string | { id: string }) => typeof t === 'string' ? t : t.id)
-            : [],
-        }))
-      );
-    } catch {
-      setAlbums([]);
-    } finally {
-      setAlbumLoading(false);
-    }
-  };
-
-  // Xử lý thêm/xóa track khỏi album
-  const handleToggleTrackInAlbum = async (albumId: string, checked: boolean) => {
-    if (!albumPopupTrackId) return;
-    if (checked) {
-      await addTrackToPlaylist(albumId, albumPopupTrackId);
-    } else {
-      await removeTrackFromPlaylist(albumId, albumPopupTrackId);
-    }
-    // Refresh albums UI
-    const userAlbums = await getUserAlbums();
-    setAlbums(
-      (userAlbums as Album[]).map((al): AlbumPopup => ({
-        id: al.id,
-        name: al.title || '',
-        trackIds: Array.isArray(al.tracks)
-          ? al.tracks.map((t: string | { id: string }) => typeof t === 'string' ? t : t.id)
-          : [],
-      }))
-    );
-  };
-
   // Xử lý xóa bài hát (giả lập, bạn có thể thay bằng API thực tế)
-  const handleDeleteTrack = (trackId: string) => {
-    // TODO: Gọi API xóa bài hát khỏi artist/topTracks nếu có
-    alert('Xóa bài hát: ' + trackId);
+  const handleDeleteTrack = async (trackId: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa bài hát này?')) return;
+    try {
+      const response = await deleteSong(trackId);
+      if (response.success) {
+        // Xóa thành công, cập nhật lại danh sách topTracks
+        setArtist((prev) => prev
+          ? { ...prev, topTracks: prev.topTracks.filter(track => track.id !== trackId) }
+          : prev
+        );
+      } else {
+        alert('Xóa thất bại: ' + (response.message || 'Không rõ nguyên nhân'));
+      }
+    } catch (err) {
+      alert('Lỗi khi xóa bài hát: ' + (err as Error).message);
+    }
     setActionTrackId(null);
+  };
+
+  const handleEditSong = (song: Track) => {
+    // Convert Track to ApiSongType (mapping các trường cần thiết)
+    const s = song as unknown as { createdAt?: string | null; updatedAt?: string | null; deletedAt?: string | null; description?: string };
+    const apiSong: ApiSongType = {
+      id: song.id,
+      title: song.title,
+      artistId: song.artistId || artist?.id || '',
+      songType: song.songType || 'SONG',
+      duration: song.durationMs || 0,
+      description: s.description || '',
+      backgroundUrl: song.backgroundUrl || song.coverUrl || '',
+      songUrl: song.songUrl || song.previewUrl || '',
+      createdAt: s.createdAt || '',
+      updatedAt: s.updatedAt || '',
+      deletedAt: s.deletedAt || '',
+      isActive: true,
+      // Các trường khác nếu cần
+    };
+    setEditingSong(apiSong);
+    setOpenEditModal(true);
+  };
+
+  const handleCloseEditModal = () => {
+    setOpenEditModal(false);
+    setEditingSong(null);
+  };
+
+  const handleEditSubmit = async (data: EditSongFormProps, song: ApiSongType) => {
+    try {
+      const actorId = localStorage.getItem('profile_id');
+      if (!actorId) throw new Error('Không tìm thấy ID nghệ sĩ!');
+      const updatePayload: ApiSongUpdateRequest = {
+        id: song.id,
+        title: data.title || song.title,
+        duration: data.duration || song.duration,
+        description: data.description || song.description,
+        songType: song.songType,
+        removeImage: data.removeBackground,
+        storageImageId: '',
+      };
+      if (data.background) {
+        const uploadResult = await uploadFile(data.background as File);
+        if (!uploadResult.success || !uploadResult.data) throw new Error(uploadResult.message || 'Upload ảnh thất bại');
+        const storageResult = await createStorageData({
+          fileName: uploadResult.data.fileName,
+          fileType: uploadResult.data.fileType,
+          userId: actorId,
+          fileUrl: uploadResult.data.fileUrl,
+          fileSize: uploadResult.data.fileSize,
+          description: `Background image for ${data.title}`,
+        });
+        if (!storageResult.success || !storageResult.data) throw new Error('Tạo storage entry thất bại');
+        updatePayload.storageImageId = storageResult.data.id || '';
+      } else if (data.removeBackground) {
+        updatePayload.storageImageId = '';
+      }
+      
+      // Gọi API updateSong và không kiểm tra result.success nữa
+      await updateSong(updatePayload);
+      
+      // Cập nhật UI
+      setArtist((prev) => prev
+        ? {
+            ...prev,
+            topTracks: prev.topTracks.map((t) =>
+              t.id === song.id
+                ? {
+                    ...t,
+                    title: updatePayload.title,
+                    durationMs: updatePayload.duration,
+                    description: updatePayload.description,
+                    songType: updatePayload.songType,
+                    backgroundUrl: updatePayload.storageImageId ? (data.background ? '' : t.backgroundUrl) : t.backgroundUrl,
+                  }
+                : t
+            ),
+          }
+        : prev
+      );
+      
+      // Hiển thị thông báo thành công
+      alert('Cập nhật bài hát thành công!');
+      
+      // Đóng modal
+      handleCloseEditModal();
+    } catch (err) {
+      alert('Lỗi khi cập nhật bài hát: ' + (err as Error).message);
+    }
   };
 
   if (loading) return <div>Loading...</div>;
@@ -571,19 +625,21 @@ const ArtistDetail = () => {
                   {actionTrackId === track.id && (
                     <div className="absolute right-0 top-10 bg-gray-900 border border-gray-700 rounded shadow-lg z-50 min-w-[160px]">
                       {isOwner && (
-                        <button
-                          className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-red-400"
-                          onClick={() => handleDeleteTrack(track.id)}
-                        >
-                          Xóa bài hát
-                        </button>
+                        <>
+                          <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-700"
+                            onClick={() => { handleEditSong(track); setActionTrackId(null); }}
+                          >
+                            Chỉnh sửa bài hát
+                          </button>
+                          <button
+                            className="block w-full text-left px-4 py-2 hover:bg-gray-700 text-red-400"
+                            onClick={() => handleDeleteTrack(track.id)}
+                          >
+                            Xóa bài hát
+                          </button>
+                        </>
                       )}
-                      <button
-                        className="block w-full text-left px-4 py-2 hover:bg-gray-700"
-                        onClick={() => { openAlbumPopup(track.id); setActionTrackId(null); }}
-                      >
-                        Thêm vào album
-                      </button>
                     </div>
                   )}
                 </div>
@@ -591,34 +647,6 @@ const ArtistDetail = () => {
             );
           })}
         </div>
-        {/* Popup chọn album để thêm track */}
-        {showAlbumPopup && (
-          <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-            <div className="bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-xs">
-              <h2 className="text-lg font-bold text-white mb-4">Thêm vào album</h2>
-              {albumLoading ? (
-                <div className="text-white">Đang tải danh sách album...</div>
-              ) : (
-                <ul>
-                  {albums.map(al => {
-                    const checked = Boolean(al.trackIds && albumPopupTrackId && al.trackIds.includes(albumPopupTrackId));
-                    return (
-                      <li key={al.id} className="mb-2 flex items-center gap-2">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={e => handleToggleTrackInAlbum(al.id, e.target.checked)}
-                        />
-                        <span className={checked ? 'text-spotify-green font-semibold' : 'text-white'}>{al.name}</span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              <button className="mt-4 px-4 py-2 rounded bg-gray-700 text-white w-full" onClick={() => setShowAlbumPopup(false)}>Đóng</button>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Albums */}
@@ -814,6 +842,15 @@ const ArtistDetail = () => {
             </form>
           </div>
         </div>
+      )}
+
+      {editingSong && (
+        <EditSongModal
+          open={openEditModal}
+          onClose={handleCloseEditModal}
+          onSubmit={handleEditSubmit}
+          song={editingSong}
+        />
       )}
     </div>
   );

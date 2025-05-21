@@ -256,21 +256,21 @@ export const musicApi = {
   },
 
   // Get track by ID
-  getTrack: async (trackId: string): Promise<ApiResponse<Track>> => {
+  getTrack: async (trackId: string): Promise<ApiResponse<Track | null>> => {
     try {
       if (USE_MOCK_DATA) {
         const track = mockData.tracks.find((t) => t.id === trackId);
         if (!track) {
-          return createResponse(null as any, 404, "Track not found");
+          return createResponse(null, 404, "Track not found");
         }
         return createResponse(track);
       }
 
       // Real API implementation would go here
-      return createResponse(null as any, 500, "Not implemented");
+      return createResponse(null, 500, "Not implemented");
     } catch (error) {
       console.error("Error getting track:", error);
-      return createResponse(null as any, 500, "Failed to get track");
+      return createResponse(null, 500, "Failed to get track");
     }
   },
 
@@ -286,12 +286,11 @@ export const musicApi = {
     pageSize: number = 10
   ): Promise<ApiResponse<ApiPaginatedResult<ApiSongType>>> => {
     try {
-
       if (USE_MOCK_DATA) {
         const filtered = mockData.tracks.filter((t) =>
           t.title.toLowerCase().includes(title.toLowerCase())
         );
-        // @ts-ignore
+        // @ts-expect-error: mockData.tracks có thể không đúng type với ApiPaginatedResult<ApiSongType>
         return createResponse({
           result: filtered.slice((page - 1) * pageSize, page * pageSize),
           currentPage: page,
@@ -326,12 +325,15 @@ export const musicApi = {
       );
 
       if (res.data && res.data.result && res.data.result.length > 0) {
-        res.data.result.forEach((song: any, index: number) => {
-          console.log(
-            `Song ${index + 1} - storageId: ${
-              song.storageId
-            }, storageImageId: ${song.storageImageId}`
-          );
+        res.data.result.forEach((song: unknown, index: number) => {
+          if (typeof song === 'object' && song !== null && 'storageId' in song && 'storageImageId' in song) {
+            const s = song as { storageId?: string; storageImageId?: string };
+            console.log(
+              `Song ${index + 1} - storageId: ${
+                s.storageId
+              }, storageImageId: ${s.storageImageId}`
+            );
+          }
         });
       }
 
@@ -403,9 +405,9 @@ export const createSong = async (songData: {
     });
     const data = await response.json();
     return { status: response.status, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi khi tạo bài hát:", error);
-    return { status: 500, data: { error: error.message } };
+    return { status: 500, data: { error: (error as Error).message } };
   }
 };
 
@@ -418,14 +420,18 @@ export const createSongV2 = async (
     Authorization: `Bearer ${localStorage.getItem("access_token")}`,
   };
 
-  const response = await fetch("http://localhost:8082/song/create", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(songData),
-    credentials: "include",
-  });
-
-  return await response.json();
+  try {
+    const response = await fetch("http://localhost:8082/song/create", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(songData),
+      credentials: "include",
+    });
+    return await response.json();
+  } catch (error: unknown) {
+    console.error("Lỗi khi tạo bài hát:", error);
+    throw error;
+  }
 };
 
 export async function updateSong(
