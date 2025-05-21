@@ -6,10 +6,11 @@ import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
 import { FaPlay, FaPause, FaEllipsisV } from 'react-icons/fa';
 import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
-import { createSongV2, updateSong } from '../api/musicApi';
+import { createSongV2, updateSong, editAlbum } from '../api/musicApi';
 import { deleteSong } from '../api/songApi';
 import { EditSongModal, EditSongFormProps } from '../components/admin/EditSongModal';
-import { ApiSongType, ApiSongUpdateRequest } from '../types/api';
+import { ApiSongType, ApiSongUpdateRequest, ApiAlbumType, ApiEditAlbumRequest } from '../types/api';
+import { EditAlbum2Modal, EditAlbum2FormProps } from '../components/admin/EditAlbum2Modal';
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -83,6 +84,9 @@ const ArtistDetail = () => {
 
   const [openEditModal, setOpenEditModal] = useState(false);
   const [editingSong, setEditingSong] = useState<ApiSongType | null>(null);
+
+  const [openEditAlbumModal, setOpenEditAlbumModal] = useState(false);
+  const [editingAlbum, setEditingAlbum] = useState<ApiAlbumType | null>(null);
 
   useEffect(() => {
     const fetchArtistData = async () => {
@@ -498,6 +502,83 @@ const ArtistDetail = () => {
     }
   };
 
+  const handleEditAlbum = (album: Album) => {
+    // Convert Album to ApiAlbumType
+    const apiAlbum: ApiAlbumType = {
+      ...album,
+      name: String(album.title || ''),
+      description: String((album as { description?: string }).description || ''),
+      storageImageId: String((album as { storageImageId?: string }).storageImageId || ''),
+      createdAt: String((album as { createdAt?: string }).createdAt || ''),
+      updatedAt: String((album as { updatedAt?: string }).updatedAt || ''),
+      deletedAt: String((album as { deletedAt?: string }).deletedAt || ''),
+      isActive: true,
+      backgroundUrl: String((album as { backgroundUrl?: string }).backgroundUrl || album.coverUrl || ''),
+    };
+    setEditingAlbum(apiAlbum);
+    setOpenEditAlbumModal(true);
+  };
+
+  const handleCloseEditAlbumModal = () => {
+    setOpenEditAlbumModal(false);
+    setEditingAlbum(null);
+  };
+
+  const handleEditAlbumSubmit = async (data: EditAlbum2FormProps, album: ApiAlbumType) => {
+    try {
+      const actorId = localStorage.getItem('profile_id');
+      if (!actorId) throw new Error('Không tìm thấy ID nghệ sĩ!');
+      // Chuẩn bị payload update
+      const updatePayload: ApiEditAlbumRequest = {
+        id: album.id,
+        name: data.name,
+        description: data.description,
+        artistId: data.artistId,
+        storageImageId: '',
+        removeImage: !!data.removeCoverImage,
+      };
+      if (data.coverImage) {
+        const uploadResult = await uploadFile(data.coverImage as File);
+        if (!uploadResult.success || !uploadResult.data) throw new Error(uploadResult.message || 'Upload ảnh thất bại');
+        const storageResult = await createStorageData({
+          fileName: uploadResult.data.fileName,
+          fileType: uploadResult.data.fileType,
+          userId: actorId,
+          fileUrl: uploadResult.data.fileUrl,
+          fileSize: uploadResult.data.fileSize,
+          description: `Album cover image for ${data.name}`,
+        });
+        if (!storageResult.success || !storageResult.data) throw new Error('Tạo storage entry thất bại');
+        updatePayload.storageImageId = storageResult.data.id || '';
+      } else if (data.removeCoverImage) {
+        updatePayload.storageImageId = '';
+      }
+      await editAlbum(updatePayload);
+      // Cập nhật UI (có thể reload lại artist data hoặc cập nhật trực tiếp)
+      setArtist((prev) => prev
+        ? {
+            ...prev,
+            albums: prev.albums.map((a) =>
+              a.id === album.id
+                ? {
+                    ...a,
+                    name: data.name,
+                    description: data.description,
+                    artistId: data.artistId,
+                    coverUrl: updatePayload.storageImageId ? (data.coverImage ? '' : a.coverUrl) : a.coverUrl,
+                  }
+                : a
+            ),
+          }
+        : prev
+      );
+      alert('Cập nhật album thành công!');
+      handleCloseEditAlbumModal();
+    } catch (err) {
+      alert('Lỗi khi cập nhật album: ' + (err as Error).message);
+    }
+  };
+
   if (loading) return <div>Loading...</div>;
   if (error || !artist) return (
     <div className="flex flex-col items-center justify-center min-h-screen bg-black text-white p-8">
@@ -655,30 +736,38 @@ const ArtistDetail = () => {
           <h2 className="text-2xl font-bold mb-4">Albums</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
             {artist.albums.map(album => {
-              // Lấy backgroundUrl từ album, ép kiểu để TypeScript chấp nhận
               const albumExt = album as ExtendedAlbum;
               const albumImgUrl = album.coverUrl || albumExt.backgroundUrl;
               
               return (
-                <Link
-                  key={album.id}
-                  to={`/album/${album.id}`}
-                  className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  <img
-                    src={albumImgUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
-                    alt={album.title}
-                    className="w-full aspect-square object-cover rounded-lg mb-2"
-                    onError={(e) => {
-                      const currentSrc = e.currentTarget.src;
-                      if (!currentSrc.startsWith('data:image/')) {
-                        e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=';
-                      }
-                    }}
-                  />
-                  <h3 className="font-medium">{album.title}</h3>
-                  <p className="text-sm text-gray-400">{album.releaseDate.split('-')[0]}</p>
-                </Link>
+                <div key={album.id} className="relative group">
+                  <Link
+                    to={`/album/${album.id}`}
+                    className="bg-gray-800 p-4 rounded-lg hover:bg-gray-700 transition-colors block"
+                  >
+                    <img
+                      src={albumImgUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
+                      alt={album.title}
+                      className="w-full aspect-square object-cover rounded-lg mb-2"
+                      onError={(e) => {
+                        const currentSrc = e.currentTarget.src;
+                        if (!currentSrc.startsWith('data:image/')) {
+                          e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=';
+                        }
+                      }}
+                    />
+                    <h3 className="font-medium">{album.title}</h3>
+                    <p className="text-sm text-gray-400">{album.releaseDate.split('-')[0]}</p>
+                  </Link>
+                  {isOwner && (
+                    <button
+                      className="absolute top-2 right-2 p-2 bg-gray-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => handleEditAlbum(album)}
+                    >
+                      <FaEllipsisV />
+                    </button>
+                  )}
+                </div>
               );
             })}
           </div>
@@ -850,6 +939,15 @@ const ArtistDetail = () => {
           onClose={handleCloseEditModal}
           onSubmit={handleEditSubmit}
           song={editingSong}
+        />
+      )}
+
+      {editingAlbum && (
+        <EditAlbum2Modal
+          open={openEditAlbumModal}
+          onClose={handleCloseEditAlbumModal}
+          onSubmit={handleEditAlbumSubmit}
+          album2={editingAlbum}
         />
       )}
     </div>
