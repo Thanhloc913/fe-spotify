@@ -4,7 +4,7 @@ import { updateProfile, getProfile } from '../api/profileApi';
 import { useUser } from '../contexts/UserContext';
 import { getAccountById, verifyCurrentPassword, updatePassword } from '../api/authApi';
 import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
-import { createSong } from '../api/musicApi';
+import { createSong, createSongV2 } from '../api/musicApi';
 
 const formatDate = (dateStr: string | undefined | null) => {
   if (!dateStr) return 'N/A';
@@ -56,12 +56,17 @@ const Profile = () => {
     title: '',
     description: '',
     file: undefined as File | undefined,
-    coverImage: undefined as File | undefined
+    coverImage: undefined as File | undefined,
+    albumIds: [] as string[],
+    duration: 0,
+    songType: 'SONG' as 'SONG' | 'MUSIC_VIDEO'
   });
+  const [userAlbums, setUserAlbums] = useState<any[]>([]);
   const [isCreatingMusic, setIsCreatingMusic] = useState(false);
   const [musicCreationError, setMusicCreationError] = useState('');
   const [musicCreationMessage, setMusicCreationMessage] = useState('');
   const [isMusicUploading, setIsMusicUploading] = useState(false);
+  const [submittedData, setSubmittedData] = useState<any>(null);
 
   useEffect(() => {
     const fetchArtist = async () => {
@@ -245,7 +250,7 @@ const Profile = () => {
     }
   };
 
-  // Hàm xử lý tạo bài hát mới
+  // Cập nhật hàm xử lý tạo bài hát mới theo cấu trúc của ManageSongs.tsx
   const handleMusicSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsCreatingMusic(true);
@@ -253,107 +258,215 @@ const Profile = () => {
     setMusicCreationError('');
     setIsMusicUploading(true);
 
+    const logs: Record<string, unknown> = {};
+    let finalCreateSongResult = null;
+
     try {
-      // Get profile ID from localStorage
-      const profileId = localStorage.getItem('profile_id');
-      
-      if (!profileId) {
-        throw new Error('Không tìm thấy ID nghệ sĩ!');
+      if (musicData.albumIds.length <= 0) {
+        throw new Error("Phải chọn ít nhất một album cho bài hát");
       }
       
+      const actorId = localStorage.getItem("profile_id");
+      if (!actorId) {
+        throw new Error("Không tìm thấy ID nghệ sĩ!");
+      }
+      logs["actorId"] = actorId;
+
       if (!musicData.file) {
-        throw new Error('Vui lòng chọn file nhạc!');
+        throw new Error("Vui lòng chọn file nhạc!");
       }
 
-      // 1. Upload music file
-      const musicUploadResult = await uploadFile(musicData.file);
-      
-      if (!musicUploadResult || !musicUploadResult.success) {
-        throw new Error('Lỗi khi tải file nhạc lên');
+      // 1. Tải file nhạc lên
+      const songUploadResult = await uploadFile(musicData.file);
+      logs["songUploadResult"] = {
+        success: songUploadResult.success,
+        message: songUploadResult.message,
+        error: songUploadResult.error,
+        status: songUploadResult.status,
+        fileName: songUploadResult.data?.fileName,
+      };
+
+      if (!songUploadResult.success || !songUploadResult.data) {
+        throw new Error(
+          songUploadResult?.message || "Không thể tải file nhạc lên."
+        );
       }
-      
-      // 2. Get the uploaded music file information
-      const { fileName: musicFileName, fileType: musicFileType, fileUrl: musicFileUrl, fileSize: musicFileSize } = musicUploadResult.data;
-      
-      // 3. Create storage data for music file
-      const musicStorageResult = await createStorageData({
-        fileName: musicFileName,
-        fileType: musicFileType,
-        userId: profileId,
-        fileUrl: musicFileUrl,
-        fileSize: musicFileSize,
-        description: 'Music file'
+      const songFileInfo = songUploadResult.data;
+
+      // 2. Tạo storage entry cho file nhạc
+      const songStorageResult = await createStorageData({
+        fileName: songFileInfo.fileName,
+        fileType: songFileInfo.fileType,
+        userId: actorId,
+        fileUrl: songFileInfo.fileUrl,
+        fileSize: songFileInfo.fileSize,
+        description: `File am nhac ${songFileInfo.fileName}`,
       });
-      
-      if (!musicStorageResult || !musicStorageResult.success) {
-        throw new Error('Lỗi khi tạo dữ liệu lưu trữ cho file nhạc');
+      logs["songStorageResult"] = {
+        success: songStorageResult.success,
+        message: songStorageResult.message,
+        error: songStorageResult.error,
+        status: songStorageResult.status,
+        storageId: songStorageResult.data?.id,
+      };
+
+      if (!songStorageResult.success || !songStorageResult.data) {
+        throw new Error(
+          songStorageResult.error?.message ||
+            "Không thể tạo storage entry cho file nhạc."
+        );
       }
-      
-      const musicStorageId = musicStorageResult.data.id;
-      
-      // 4. Upload cover image if provided
-      let imageStorageId = null;
-      
+      const songStorageId = songStorageResult.data.id;
+      let storageImageId: string | null = null;
+      logs["songStorageId"] = songStorageId;
+
+      // 3. Tải ảnh nền lên (nếu có)
       if (musicData.coverImage) {
-        const imageUploadResult = await uploadFile(musicData.coverImage);
-        
-        if (!imageUploadResult || !imageUploadResult.success) {
-          throw new Error('Lỗi khi tải ảnh bìa lên');
+        const backgroundUploadResult = await uploadFile(musicData.coverImage);
+        logs["backgroundUploadResult"] = backgroundUploadResult;
+
+        if (!backgroundUploadResult.success) {
+          throw new Error(
+            backgroundUploadResult?.message ||
+              "Không thể tải ảnh nền lên."
+          );
+        } else if (backgroundUploadResult.data) {
+          const backgroundImageInfo = backgroundUploadResult.data;
+          const backgroundStorageResult = await createStorageData({
+            fileName: backgroundImageInfo.fileName,
+            fileType: backgroundImageInfo.fileType,
+            userId: actorId,
+            fileUrl: backgroundImageInfo.fileUrl,
+            fileSize: backgroundImageInfo.fileSize,
+            description: `File hinh anh ${backgroundImageInfo.fileName} cho ${songFileInfo.fileName}`,
+          });
+          logs["backgroundStorageResult"] = backgroundStorageResult;
+
+          if (
+            !backgroundStorageResult.success ||
+            !backgroundStorageResult.data
+          ) {
+            throw new Error(
+              backgroundStorageResult.message ||
+                "Không thể tạo storage entry cho ảnh nền."
+            );
+          } else {
+            storageImageId = backgroundStorageResult.data.id;
+            logs["storageImageId"] = storageImageId;
+          }
         }
-        
-        // Get the uploaded image file information
-        const { fileName: imageFileName, fileType: imageFileType, fileUrl: imageFileUrl, fileSize: imageFileSize } = imageUploadResult.data;
-        
-        // Create storage data for image file
-        const imageStorageResult = await createStorageData({
-          fileName: imageFileName,
-          fileType: imageFileType,
-          userId: profileId,
-          fileUrl: imageFileUrl,
-          fileSize: imageFileSize,
-          description: 'Song cover image'
-        });
-        
-        if (!imageStorageResult || !imageStorageResult.success) {
-          throw new Error('Lỗi khi tạo dữ liệu lưu trữ cho ảnh bìa');
-        }
-        
-        imageStorageId = imageStorageResult.data.id;
+      } else {
+        logs["backgroundSkipped"] = "Không có ảnh nền được chọn.";
+      }
+
+      // 4. Xác định loại nhạc
+      const songType: "SONG" | "MUSIC_VIDEO" = songFileInfo.fileType.includes(
+        "audio"
+      )
+        ? "SONG"
+        : "MUSIC_VIDEO";
+      logs["songType"] = songType;
+
+      setIsMusicUploading(false);
+
+      // 5. Tạo bài hát với API giống như trong ManageSongs.tsx
+      const createSongRequest = {
+        title: musicData.title,
+        artistId: actorId,
+        genreId: musicData.albumIds, // Sử dụng albumIds làm genreId
+        storageId: songStorageId,
+        storageImageId: storageImageId,
+        duration: musicData.duration || Math.floor(Math.random() * 180 + 120), // Nếu không có duration thì tạo random từ 120-300s
+        description: musicData.description,
+        albumId: musicData.albumIds,
+        songType,
+      };
+      logs["createSongRequest"] = createSongRequest;
+
+      finalCreateSongResult = await createSongV2(createSongRequest);
+      logs["createSongResult"] = finalCreateSongResult;
+
+      if (!finalCreateSongResult.success) {
+        throw new Error(
+          finalCreateSongResult?.message ||
+            `Không thể tạo bài hát: ${finalCreateSongResult.message}`
+        );
       }
       
-      setIsMusicUploading(false);
+      setSubmittedData({ songData: finalCreateSongResult.data, logs });
+      setMusicCreationMessage('Tạo bài hát thành công!');
       
-      // 5. Create song with the storage IDs
-      const songResult = await createSong({
-        title: musicData.title,
-        description: musicData.description,
-        fileId: musicStorageId,
-        imageId: imageStorageId || undefined,
-        artistId: profileId
+      // Reset form data
+      setMusicData({
+        title: '',
+        description: '',
+        file: undefined,
+        coverImage: undefined,
+        albumIds: [],
+        duration: 0,
+        songType: 'SONG'
       });
       
-      if (songResult.status === 200 || songResult.status === 201) {
-        setMusicCreationMessage('Tạo bài hát thành công!');
-        setMusicData({
-          title: '',
-          description: '',
-          file: undefined,
-          coverImage: undefined
-        });
-        
-        // Close modal after a delay
-        setTimeout(() => {
-          setShowCreateMusicModal(false);
-          setMusicCreationMessage('');
-        }, 2000);
-      } else {
-        throw new Error(songResult.data.error || 'Lỗi khi tạo bài hát');
-      }
+      // Close modal after a delay
+      setTimeout(() => {
+        setShowCreateMusicModal(false);
+        setMusicCreationMessage('');
+      }, 2000);
     } catch (err) {
-      setMusicCreationError(err instanceof Error ? err.message : 'Có lỗi xảy ra khi tạo bài hát');
+      console.error("Lỗi khi tạo bài hát:", err);
+      setMusicCreationError((err as Error).message || "Có lỗi xảy ra khi tạo bài hát");
+      setSubmittedData({ error: (err as Error).message, logs });
     } finally {
       setIsCreatingMusic(false);
       setIsMusicUploading(false);
+    }
+  };
+
+  // Thêm hàm để tải danh sách album của người dùng
+  useEffect(() => {
+    const loadUserAlbums = async () => {
+      if (showCreateMusicModal) {
+        try {
+          // Thay bằng API call thực tế để lấy album của người dùng hiện tại
+          const profileId = localStorage.getItem('profile_id');
+          if (profileId) {
+            // Ví dụ: const albums = await getAlbumsByArtistId(profileId);
+            // setUserAlbums(albums);
+            
+            // Tạm thời để mảng rỗng hoặc mẫu để testing
+            setUserAlbums([
+              { id: 'album1', name: 'Album 1' },
+              { id: 'album2', name: 'Album 2' }
+            ]);
+          }
+        } catch (error) {
+          console.error("Lỗi khi tải album:", error);
+        }
+      }
+    };
+    
+    loadUserAlbums();
+  }, [showCreateMusicModal]);
+
+  const handleAlbumSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
+    setMusicData({...musicData, albumIds: selectedOptions});
+  };
+  
+  const handleAudioFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setMusicData({...musicData, file});
+      
+      // Thêm code để đọc thời lượng của file audio nếu có thể
+      const audio = new Audio();
+      audio.src = URL.createObjectURL(file);
+      audio.onloadedmetadata = () => {
+        setMusicData(prevData => ({
+          ...prevData,
+          duration: Math.floor(audio.duration)
+        }));
+      };
     }
   };
 
@@ -603,7 +716,7 @@ const Profile = () => {
       {/* Create Music Modal */}
       {showCreateMusicModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md">
+          <div className="bg-gray-800 rounded-lg p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-bold mb-4">Tạo Bài Hát Mới</h3>
             <form onSubmit={handleMusicSubmit} className="space-y-4">
               <div>
@@ -625,14 +738,35 @@ const Profile = () => {
                 />
               </div>
               <div>
+                <label className="block text-gray-400 mb-1">Album</label>
+                <select
+                  multiple
+                  value={musicData.albumIds}
+                  onChange={handleAlbumSelectionChange}
+                  className="w-full p-2 rounded bg-gray-900 text-white"
+                  required
+                >
+                  {userAlbums.map(album => (
+                    <option key={album.id} value={album.id}>{album.name}</option>
+                  ))}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">Giữ phím Ctrl để chọn nhiều album</p>
+              </div>
+              <div>
                 <label className="block text-gray-400 mb-1">File nhạc</label>
                 <input
                   type="file"
-                  accept="audio/*"
-                  onChange={(e) => setMusicData({...musicData, file: e.target.files ? e.target.files[0] : undefined})}
+                  accept="audio/*,video/*"
+                  onChange={handleAudioFileChange}
                   className="w-full p-2 rounded bg-gray-900 text-white"
                   required
                 />
+                {musicData.file && (
+                  <p className="mt-1 text-sm text-gray-400">
+                    Đã chọn: {musicData.file.name} ({Math.round(musicData.file.size / 1024)} KB)
+                    {musicData.duration > 0 && ` - Thời lượng: ${Math.floor(musicData.duration / 60)}:${(musicData.duration % 60).toString().padStart(2, '0')}`}
+                  </p>
+                )}
               </div>
               <div>
                 <label className="block text-gray-400 mb-1">Ảnh bìa</label>
@@ -642,6 +776,11 @@ const Profile = () => {
                   onChange={(e) => setMusicData({...musicData, coverImage: e.target.files ? e.target.files[0] : undefined})}
                   className="w-full p-2 rounded bg-gray-900 text-white"
                 />
+                {musicData.coverImage && (
+                  <p className="mt-1 text-sm text-gray-400">
+                    Đã chọn: {musicData.coverImage.name} ({Math.round(musicData.coverImage.size / 1024)} KB)
+                  </p>
+                )}
               </div>
               <div className="flex gap-2">
                 <button 
