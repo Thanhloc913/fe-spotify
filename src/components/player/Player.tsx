@@ -8,12 +8,14 @@ import {
   FaHeart,
   FaList,
   FaVolumeMute,
-  FaVideo
+  FaVideo,
+  FaComments
 } from 'react-icons/fa';
 import { usePlayerStore } from '../../store/playerStore';
 import { Link } from 'react-router-dom';
 import { getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
 import { musicApi } from '../../api/musicApi';
+import ChatBox from './ChatBox';
 
 // Thêm định nghĩa kiểu dữ liệu
 interface Playlist {
@@ -65,6 +67,8 @@ const Player: React.FC = () => {
 
   // Lưu lại progress khi bài hát bị tạm dừng
   const [savedProgress, setSavedProgress] = useState<number>(0);
+  
+  const [openChat, setOpenChat] = useState(false);
   
   useEffect(() => {
     if (!isPlaying) {
@@ -445,6 +449,10 @@ const Player: React.FC = () => {
             className="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
             style={{ background: volumeBg }}
           />
+          {/* Nút mở chat */}
+          <button onClick={() => setOpenChat(true)} className="ml-2 focus:outline-none">
+            <FaComments className="w-6 h-6 text-gray-400 hover:text-green-400" />
+          </button>
         </div>
       </div>
 
@@ -491,6 +499,8 @@ const Player: React.FC = () => {
           </div>
         </div>
       )}
+
+      <ChatBox open={openChat} onClose={() => setOpenChat(false)} />
     </div>
   );
 };
