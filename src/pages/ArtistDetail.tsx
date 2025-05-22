@@ -4,18 +4,18 @@ import { Artist, Track, Album } from '../types';
 import { artistsApi } from '../api';
 import { Link } from 'react-router-dom';
 import { usePlayerStore } from '../store/playerStore';
-import { FaPlay, FaPause, FaEllipsisV } from 'react-icons/fa';
+import { FaPlay, FaPause, FaEllipsisV, FaTrash } from 'react-icons/fa';
 import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
 import { createSongV2, updateSong, editAlbum } from '../api/musicApi';
 import { deleteSong } from '../api/songApi';
-import { EditSongModal, EditSongFormProps } from '../components/admin/EditSongModal';
+import { EditSongModalCopy, EditSongFormProps } from '../components/admin/EditSongModalCopy';
 import { ApiSongType, ApiSongUpdateRequest, ApiAlbumType, ApiEditAlbumRequest } from '../types/api';
-import { EditAlbum2Modal, EditAlbum2FormProps } from '../components/admin/EditAlbum2Modal';
+import { EditAlbum2ModalCopy, EditAlbum2FormProps } from '../components/admin/EditAlbum2ModalCopy';
 
-const formatDuration = (ms: number) => {
-  const minutes = Math.floor(ms / 60000);
-  const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+const formatDuration = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${minutes}:${secs.toString().padStart(2, '0')}`;
 };
 
 // Define the extended artist interface that includes API response data
@@ -87,6 +87,8 @@ const ArtistDetail = () => {
 
   const [openEditAlbumModal, setOpenEditAlbumModal] = useState(false);
   const [editingAlbum, setEditingAlbum] = useState<ApiAlbumType | null>(null);
+
+  const [deletingAlbumId, setDeletingAlbumId] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchArtistData = async () => {
@@ -420,7 +422,7 @@ const ArtistDetail = () => {
       title: song.title,
       artistId: song.artistId || artist?.id || '',
       songType: song.songType || 'SONG',
-      duration: song.durationMs || 0,
+      duration: Math.floor((song.durationMs || 0) / 1000),
       description: s.description || '',
       backgroundUrl: song.backgroundUrl || song.coverUrl || '',
       songUrl: song.songUrl || song.previewUrl || '',
@@ -446,7 +448,7 @@ const ArtistDetail = () => {
       const updatePayload: ApiSongUpdateRequest = {
         id: song.id,
         title: data.title || song.title,
-        duration: data.duration || song.duration,
+        duration: song.duration,
         description: data.description || song.description,
         songType: song.songType,
         removeImage: data.removeBackground,
@@ -533,7 +535,7 @@ const ArtistDetail = () => {
         id: album.id,
         name: data.name,
         description: data.description,
-        artistId: data.artistId,
+        artistId: album.artistId,
         storageImageId: '',
         removeImage: !!data.removeCoverImage,
       };
@@ -564,7 +566,7 @@ const ArtistDetail = () => {
                     ...a,
                     name: data.name,
                     description: data.description,
-                    artistId: data.artistId,
+                    artistId: album.artistId,
                     coverUrl: updatePayload.storageImageId ? (data.coverImage ? '' : a.coverUrl) : a.coverUrl,
                   }
                 : a
@@ -576,6 +578,20 @@ const ArtistDetail = () => {
       handleCloseEditAlbumModal();
     } catch (err) {
       alert('Lỗi khi cập nhật album: ' + (err as Error).message);
+    }
+  };
+
+  // Xử lý xóa album (chỉ xóa khỏi UI, chưa gọi API)
+  const handleDeleteAlbum = async (albumId: string) => {
+    if (!window.confirm('Bạn có chắc muốn xóa album này?')) return;
+    setDeletingAlbumId(albumId);
+    try {
+      setArtist((prev) => prev
+        ? { ...prev, albums: prev.albums.filter(album => album.id !== albumId) }
+        : prev
+      );
+    } finally {
+      setDeletingAlbumId(null);
     }
   };
 
@@ -694,7 +710,7 @@ const ArtistDetail = () => {
                   </div>
                 </div>
                 <div className="col-span-2 text-gray-400">
-                  {formatDuration(track.durationMs)}
+                  {formatDuration(Math.floor((track.durationMs || 0) / 1000))}
                 </div>
                 <div className="col-span-2 flex items-center justify-end relative" onClick={e => e.stopPropagation()}>
                   <button
@@ -760,12 +776,23 @@ const ArtistDetail = () => {
                     <p className="text-sm text-gray-400">{album.releaseDate.split('-')[0]}</p>
                   </Link>
                   {isOwner && (
-                    <button
-                      className="absolute top-2 right-2 p-2 bg-gray-700 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => handleEditAlbum(album)}
-                    >
-                      <FaEllipsisV />
-                    </button>
+                    <div className="absolute top-2 right-2 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                      <button
+                        className="p-2 bg-gray-700 rounded-full hover:bg-gray-600"
+                        onClick={() => handleEditAlbum(album)}
+                        title="Chỉnh sửa album"
+                      >
+                        <FaEllipsisV />
+                      </button>
+                      <button
+                        className="p-2 bg-gray-700 rounded-full hover:bg-red-600 text-red-400 disabled:opacity-50"
+                        onClick={() => handleDeleteAlbum(album.id)}
+                        title="Xóa album"
+                        disabled={deletingAlbumId === album.id}
+                      >
+                        <FaTrash />
+                      </button>
+                    </div>
                   )}
                 </div>
               );
@@ -934,7 +961,7 @@ const ArtistDetail = () => {
       )}
 
       {editingSong && (
-        <EditSongModal
+        <EditSongModalCopy
           open={openEditModal}
           onClose={handleCloseEditModal}
           onSubmit={handleEditSubmit}
@@ -943,7 +970,7 @@ const ArtistDetail = () => {
       )}
 
       {editingAlbum && (
-        <EditAlbum2Modal
+        <EditAlbum2ModalCopy
           open={openEditAlbumModal}
           onClose={handleCloseEditAlbumModal}
           onSubmit={handleEditAlbumSubmit}

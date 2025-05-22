@@ -328,11 +328,11 @@ export const musicApi = {
         res.data.result.forEach((song: unknown, index: number) => {
           if (typeof song === 'object' && song !== null && 'storageId' in song && 'storageImageId' in song) {
             const s = song as { storageId?: string; storageImageId?: string };
-            console.log(
-              `Song ${index + 1} - storageId: ${
+          console.log(
+            `Song ${index + 1} - storageId: ${
                 s.storageId
               }, storageImageId: ${s.storageImageId}`
-            );
+          );
           }
         });
       }
@@ -421,13 +421,13 @@ export const createSongV2 = async (
   };
 
   try {
-    const response = await fetch("http://localhost:8082/song/create", {
-      method: "POST",
-      headers,
-      body: JSON.stringify(songData),
-      credentials: "include",
-    });
-    return await response.json();
+  const response = await fetch("http://localhost:8082/song/create", {
+    method: "POST",
+    headers,
+    body: JSON.stringify(songData),
+    credentials: "include",
+  });
+  return await response.json();
   } catch (error: unknown) {
     console.error("Lỗi khi tạo bài hát:", error);
     throw error;
