@@ -1,12 +1,17 @@
 import axios from "axios";
 import {
+  ApiAccountType,
+  ApiCreateAccountRequest,
   ApiCreateRoleRequest,
+  ApiDeleteAccountRequest,
   ApiDeleteRolesRequest,
   ApiEditRoleRequest,
+  ApiGetAccountRequest,
   ApiGetRoleRequest,
   ApiPaginatedResult,
   ApiResponse,
   ApiRoleType,
+  ApiUpdateAccountRequest,
 } from "../types/api";
 
 const axiosClient = axios.create({
@@ -445,6 +450,58 @@ export async function deleteRoles(ids: string[]): Promise<unknown> {
     "http://localhost:8080/role/delete",
     "POST",
     body
+  );
+}
+
+export async function getAccounts(
+  body: ApiGetAccountRequest = { page: 1, pageSize: 100 }
+): Promise<ApiPaginatedResult<ApiAccountType>> {
+  return apiRequest<ApiPaginatedResult<ApiAccountType>, typeof body>(
+    "http://localhost:8080/account/find",
+    "POST",
+    body
+  );
+}
+
+export async function createAccount(
+  body: ApiCreateAccountRequest
+): Promise<ApiAccountType> {
+  return apiRequest<ApiAccountType, typeof body>(
+    "http://localhost:8080/account/create",
+    "POST",
+    body
+  );
+}
+
+export async function editAccount(
+  body: ApiUpdateAccountRequest
+): Promise<ApiAccountType> {
+  return apiRequest<ApiAccountType, typeof body>(
+    "http://localhost:8080/account/update",
+    "POST",
+    body
+  );
+}
+
+export async function deleteAccount(id: string): Promise<unknown> {
+  return apiRequest<unknown, ApiDeleteAccountRequest>(
+    "http://localhost:8080/account/delete",
+    "POST",
+    { id }
+  );
+}
+
+export async function deleteAccountMany(
+  body: ApiDeleteAccountRequest[]
+): Promise<PromiseSettledResult<ApiAccountType>[]> {
+  return Promise.allSettled(
+    body.map((req) =>
+      apiRequest<ApiAccountType, ApiDeleteAccountRequest>(
+        "http://localhost:8080/account/delete",
+        "POST",
+        req
+      )
+    )
   );
 }
 

@@ -7,8 +7,10 @@ import {
   ApiAlbumSongType,
   ApiAlbumType,
   ApiCreateAlbumRequest,
+  ApiCreateAlbumSongRequest,
   ApiCreateAlbumSongsRequest,
   ApiCreateGenreRequest,
+  ApiDeleteAlbumSongRequest,
   ApiDeleteAlbumsRequest,
   ApiDeleteGenresRequest,
   ApiDeleteSongsRequest,
@@ -329,13 +331,18 @@ export const musicApi = {
 
       if (res.data && res.data.result && res.data.result.length > 0) {
         res.data.result.forEach((song: unknown, index: number) => {
-          if (typeof song === 'object' && song !== null && 'storageId' in song && 'storageImageId' in song) {
+          if (
+            typeof song === "object" &&
+            song !== null &&
+            "storageId" in song &&
+            "storageImageId" in song
+          ) {
             const s = song as { storageId?: string; storageImageId?: string };
-          console.log(
-            `Song ${index + 1} - storageId: ${
-                s.storageId
-              }, storageImageId: ${s.storageImageId}`
-          );
+            console.log(
+              `Song ${index + 1} - storageId: ${s.storageId}, storageImageId: ${
+                s.storageImageId
+              }`
+            );
           }
         });
       }
@@ -424,13 +431,13 @@ export const createSongV2 = async (
   };
 
   try {
-  const response = await fetch("http://localhost:8082/song/create", {
-    method: "POST",
-    headers,
-    body: JSON.stringify(songData),
-    credentials: "include",
-  });
-  return await response.json();
+    const response = await fetch("http://localhost:8082/song/create", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(songData),
+      credentials: "include",
+    });
+    return await response.json();
   } catch (error: unknown) {
     console.error("Lỗi khi tạo bài hát:", error);
     throw error;
@@ -576,6 +583,30 @@ export async function createAlbumSongs(
   );
 }
 
+export async function deleteAlbumSong(
+  body: ApiCreateAlbumSongRequest
+): Promise<ApiAlbumSongType> {
+  return apiRequest<ApiAlbumSongType, ApiCreateAlbumSongRequest>(
+    "http://localhost:8082/album-song/delete",
+    "POST",
+    body
+  );
+}
+
+export async function deleteAlbumSongMany(
+  body: ApiDeleteAlbumSongRequest[]
+): Promise<PromiseSettledResult<ApiAlbumSongType>[]> {
+  return Promise.allSettled(
+    body.map((req) =>
+      apiRequest<ApiAlbumSongType, ApiDeleteAlbumSongRequest>(
+        "http://localhost:8082/album-song/delete",
+        "POST",
+        req
+      )
+    )
+  );
+}
+
 export async function deleteAlbumSongs(
   body: ApiCreateAlbumSongsRequest
 ): Promise<ApiAlbumSongType[]> {
@@ -592,69 +623,77 @@ export function getAuthToken() {
 }
 
 // Lấy tất cả bài hát của artist theo artistId
-export async function getSongsByArtistId(artistId: string): Promise<ApiSongType[]> {
+export async function getSongsByArtistId(
+  artistId: string
+): Promise<ApiSongType[]> {
   const headers = {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCsrfToken() || '',
-    Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCsrfToken() || "",
+    Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
   };
   try {
-    const response = await fetch('http://localhost:8082/songs', {
-      method: 'POST',
+    const response = await fetch("http://localhost:8082/songs", {
+      method: "POST",
       headers,
-      credentials: 'include',
+      credentials: "include",
       body: JSON.stringify({ artistId }),
     });
     const data = await response.json();
-    console.log('API getSongsByArtistId response:', data);
-    return (data.data?.result || data.result || data.songs || []);
+    console.log("API getSongsByArtistId response:", data);
+    return data.data?.result || data.result || data.songs || [];
   } catch (error) {
-    console.error('Lỗi khi lấy danh sách bài hát của artist:', error);
+    console.error("Lỗi khi lấy danh sách bài hát của artist:", error);
     return [];
   }
 }
 
 // Xóa 1 bài hát khỏi album
-export async function removeSongFromAlbum(albumID: string, songID: string): Promise<boolean> {
+export async function removeSongFromAlbum(
+  albumID: string,
+  songID: string
+): Promise<boolean> {
   const headers = {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCsrfToken() || '',
-    Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCsrfToken() || "",
+    Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
   };
   try {
-    const response = await fetch('http://localhost:8082/album-song/delete', {
-      method: 'POST',
+    const response = await fetch("http://localhost:8082/album-song/delete", {
+      method: "POST",
       headers,
-      credentials: 'include',
+      credentials: "include",
       body: JSON.stringify({ albumID, songID }),
     });
     const data = await response.json();
     return response.status === 200 && data.success;
   } catch (error) {
-    console.error('Lỗi khi xóa bài hát khỏi album:', error);
+    console.error("Lỗi khi xóa bài hát khỏi album:", error);
     return false;
   }
 }
 
 // Gọi API cập nhật danh sách bài hát cho album
-export async function createOrUpdateAlbumSongs(albumID: string, songIDs: string[]): Promise<{ success: boolean; error?: string }> {
+export async function createOrUpdateAlbumSongs(
+  albumID: string,
+  songIDs: string[]
+): Promise<{ success: boolean; error?: string }> {
   const headers = {
-    'Content-Type': 'application/json',
-    'X-CSRFToken': getCsrfToken() || '',
-    'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+    "Content-Type": "application/json",
+    "X-CSRFToken": getCsrfToken() || "",
+    Authorization: `Bearer ${localStorage.getItem("access_token") || ""}`,
   };
   try {
-    const res = await fetch('http://localhost:8082/album-song/create', {
-      method: 'POST',
+    const res = await fetch("http://localhost:8082/album-song/create", {
+      method: "POST",
       headers,
-      credentials: 'include',
-      body: JSON.stringify({ albumID, songIDs })
+      credentials: "include",
+      body: JSON.stringify({ albumID, songIDs }),
     });
     const data = await res.json();
     if (res.status === 200) {
       return { success: true };
     } else {
-      return { success: false, error: data?.error || 'Không rõ nguyên nhân' };
+      return { success: false, error: data?.error || "Không rõ nguyên nhân" };
     }
   } catch (err) {
     return { success: false, error: (err as Error).message };

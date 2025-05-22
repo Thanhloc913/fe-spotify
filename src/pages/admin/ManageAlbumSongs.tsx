@@ -3,7 +3,7 @@ import { Avatar, Button, Stack } from "@mui/material";
 import { FC, useEffect, useState } from "react";
 import {
   createAlbumSongs,
-  deleteAlbumSongs,
+  deleteAlbumSongMany,
   getSongsByAlbumId,
 } from "../../api/musicApi";
 import AddAlbumSongModal, {
@@ -229,10 +229,11 @@ const ManageAlbumSongs = ({ album }: { album: ApiAlbumType }) => {
 
   const handleDelete = async (selectedIds: RowId[]) => {
     try {
-      const result = await deleteAlbumSongs({
-        albumID: albumId,
-        songIDs: selectedIds as string[],
-      });
+      const result = await deleteAlbumSongMany(
+        selectedIds.map((id) => {
+          return { albumID: albumId, songID: id as string };
+        })
+      );
       handleOpenPreview(result);
       setSelectedItems([]);
       setRefreshKey((k) => k + 1);

@@ -1,20 +1,22 @@
-import { Route, Navigate } from "react-router-dom";
-import ManageGenres from "./ManageGenres";
-import ManageRoles from "./ManageRoles";
-import ManageUsers from "./ManageUsers";
-import ManageArtists from "./ManageArtists";
+import { Navigate, Route } from "react-router-dom";
+import ManageAccounts from "./ManageAccounts";
 import ManageAlbums from "./ManageAlbums";
-import ManageTracks from "./ManageTracks";
-import ManagePlaylists from "./ManagePlaylists";
+import ManageAlbums2 from "./ManageAlbums2";
+import ManageArtists from "./ManageArtists";
 import ManageCategories from "./ManageCategories";
+import ManageGenres from "./ManageGenres";
+import ManageGenres2 from "./ManageGenres2";
+import ManagePlaylists from "./ManagePlaylists";
+import ManageRoles from "./ManageRoles";
 import ManageRoles2 from "./ManageRoles2";
 import ManageSongs from "./ManageSongs";
-import ManageGenres2 from "./ManageGenres2";
-import ManageAlbums2 from "./ManageAlbums2";
+import ManageTracks from "./ManageTracks";
+import ManageUsers from "./ManageUsers";
 
 export const AdminRoutes = (
   <>
-    <Route index element={<Navigate to="songs2" replace />} />
+    <Route index element={<Navigate to="accounts2" replace />} />
+    <Route path="accounts2" element={<ManageAccounts />} />
     <Route path="songs2" element={<ManageSongs />} />
     <Route path="roles2" element={<ManageRoles2 />} />
     <Route path="genres2" element={<ManageGenres2 />} />

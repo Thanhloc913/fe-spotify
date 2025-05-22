@@ -22,6 +22,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAdminLoadingState } from "../store/paginationStore";
 
 const links = [
+  { path: "accounts2", label: "Accounts2", icon: <MdPerson /> },
   { path: "songs2", label: "Songs2", icon: <MdQueueMusic /> },
   { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
   { path: "genres2", label: "Genres2", icon: <MdMusicNote /> },
