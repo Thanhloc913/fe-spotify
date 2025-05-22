@@ -1,13 +1,10 @@
 import type React from 'react';
 import { useEffect, useState, useRef } from 'react';
 import {
-  FaPlayCircle,
-  FaPauseCircle,
   FaStepForward,
   FaStepBackward,
   FaVolumeUp,
   FaRandom,
-  FaRedo,
   FaHeart,
   FaList,
   FaVolumeMute,
@@ -15,8 +12,20 @@ import {
 } from 'react-icons/fa';
 import { usePlayerStore } from '../../store/playerStore';
 import { Link } from 'react-router-dom';
-import { addFavoriteTrack, removeFavoriteTrack, getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
+import { getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
 import { musicApi } from '../../api/musicApi';
+
+// Thêm định nghĩa kiểu dữ liệu
+interface Playlist {
+  id: string;
+  name: string;
+  trackIds: string[];
+}
+
+// Định nghĩa cấu trúc cửa sổ toàn cục
+interface CustomWindow extends Window {
+  __globalVideoRef?: HTMLVideoElement;
+}
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
@@ -41,7 +50,6 @@ const Player: React.FC = () => {
     skipToNext,
     skipToPrevious,
     setCurrentTrack,
-    setShowVideo,
     showVideo,
     toggleVideoModal
   } = usePlayerStore();
@@ -49,12 +57,11 @@ const Player: React.FC = () => {
   const [isMuted, setIsMuted] = useState(false);
   const [prevVolume, setPrevVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement>(null);
-  const progressRef = useRef<HTMLDivElement>(null);
   const [showPlaylistPopup, setShowPlaylistPopup] = useState(false);
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [liked, setLiked] = useState(false);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const [coverUrl] = useState<string | null>(null);
 
   // Lưu lại progress khi bài hát bị tạm dừng
   const [savedProgress, setSavedProgress] = useState<number>(0);
@@ -156,28 +163,6 @@ const Player: React.FC = () => {
     }
   };
 
-  // Handle progress bar click
-  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (progressRef.current) {
-      const rect = progressRef.current.getBoundingClientRect();
-      const percent = (e.clientX - rect.left) / rect.width;
-      const newTime = percent * duration;
-      const media = getMediaRef();
-      if (media) {
-        media.currentTime = newTime;
-      }
-      setProgress(newTime);
-    }
-  };
-
-  // Toggle repeat
-  const handleRepeatClick = () => {
-    const repeatModes: ('off' | 'track' | 'context')[] = ['off', 'track', 'context'];
-    const currentIndex = repeatModes.indexOf(repeat);
-    const nextIndex = (currentIndex + 1) % repeatModes.length;
-    setRepeat(repeatModes[nextIndex]);
-  };
-
   useEffect(() => {
     if (!currentTrack) return setLiked(false);
     
@@ -258,7 +243,9 @@ const Player: React.FC = () => {
         if (typeof state.volume === 'number') setVolume(state.volume);
         if (typeof state.repeat === 'string') setRepeat(state.repeat);
         if (typeof state.shuffle === 'boolean') toggleShuffle();
-      } catch { }
+      } catch (error) {
+        console.error("Error restoring player state:", error);
+      }
     }
     // eslint-disable-next-line
   }, []);
@@ -287,20 +274,17 @@ const Player: React.FC = () => {
     const media = getMediaRef();
     if (media) {
       const realDuration = media.duration;
-      
-      // So sánh các duration khác nhau
-      const metadataMs = currentTrack?.durationMs || 0;
-      const metadataSec = metadataMs / 1000;
-      const apiDuration = duration;
-      
       usePlayerStore.getState().setDuration(realDuration);
     }
   };
 
   // Helper để lấy ref video nếu đang showVideo
   const getMediaRef = () => {
-    if (showVideo && typeof window !== 'undefined' && (window as any).__globalVideoRef) {
-      return (window as any).__globalVideoRef as HTMLVideoElement;
+    if (showVideo && typeof window !== 'undefined') {
+      const customWindow = window as unknown as CustomWindow;
+      if (customWindow.__globalVideoRef) {
+        return customWindow.__globalVideoRef;
+      }
     }
     return audioRef.current;
   };
@@ -326,7 +310,7 @@ const Player: React.FC = () => {
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/4">
           <img
-            src={coverUrl || (currentTrack as any).backgroundUrl || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
+            src={coverUrl || (currentTrack.backgroundUrl as string) || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
             alt={currentTrack.title}
             className="w-14 h-14 rounded"
             onError={(e) => {
@@ -489,7 +473,7 @@ const Player: React.FC = () => {
           <div className="bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-xs">
             <h2 className="text-lg font-bold text-white mb-4">Thêm vào playlist</h2>
             <ul>
-              {playlists.map((pl: any) => {
+              {playlists.map((pl: Playlist) => {
                 const checked = pl.trackIds.includes(currentTrack.id);
                 return (
                   <li key={pl.id} className="mb-2 flex items-center gap-2">

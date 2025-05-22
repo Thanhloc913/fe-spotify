@@ -24,7 +24,6 @@ const LikedSongs = () => {
   const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } = usePlayerStore();
 
   const fetchLikedSongs = async () => {
-    console.log("Đang tải danh sách bài hát yêu thích...");
     try {
       const songs: ApiSongType[] = await musicApi.getLikedSongs();
       console.log("Đã tải xong:", songs.length, "bài hát");
