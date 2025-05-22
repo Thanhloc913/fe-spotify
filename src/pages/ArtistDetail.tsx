@@ -11,6 +11,7 @@ import { deleteSong } from '../api/songApi';
 import { EditSongModalCopy, EditSongFormProps } from '../components/admin/EditSongModalCopy';
 import { ApiSongType, ApiSongUpdateRequest, ApiAlbumType, ApiEditAlbumRequest } from '../types/api';
 import { EditAlbum2ModalCopy, EditAlbum2FormProps } from '../components/admin/EditAlbum2ModalCopy';
+import { getAlbums } from '../api/musicApi';
 
 const formatDuration = (seconds: number) => {
   const minutes = Math.floor(seconds / 60);
@@ -353,25 +354,22 @@ const ArtistDetail = () => {
       setIsMusicUploading(false);
     }
   };
-  // Load danh sách album của user khi mở modal tạo nhạc
+  // Load danh sách album thật của artist khi mở modal tạo nhạc
   useEffect(() => {
     const loadUserAlbums = async () => {
-      if (showCreateMusicModal) {
+      if (showCreateMusicModal && id) {
         try {
-          const profileId = localStorage.getItem('profile_id');
-          if (profileId) {
-            setUserAlbums([
-              { id: 'album1', name: 'Album 1' },
-              { id: 'album2', name: 'Album 2' }
-            ]);
-          }
+          const albumsRes = await getAlbums();
+          const albums = (albumsRes.result || []).filter((a: { artistId?: string }) => a.artistId === id);
+          setUserAlbums(albums.map((a: { id: string; title?: string; name?: string }) => ({ id: a.id, name: String(a.title || a.name || '') })));
         } catch (error) {
+          setUserAlbums([]);
           console.error('Lỗi khi tải album:', error);
         }
       }
     };
     loadUserAlbums();
-  }, [showCreateMusicModal]);
+  }, [showCreateMusicModal, id]);
   const handleAlbumSelectionChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
     setMusicData({ ...musicData, albumIds: selectedOptions });
@@ -581,19 +579,54 @@ const ArtistDetail = () => {
     }
   };
 
-  // Xử lý xóa album (chỉ xóa khỏi UI, chưa gọi API)
+  // Xử lý xóa album (gọi API thực tế)
   const handleDeleteAlbum = async (albumId: string) => {
     if (!window.confirm('Bạn có chắc muốn xóa album này?')) return;
     setDeletingAlbumId(albumId);
     try {
-      setArtist((prev) => prev
-        ? { ...prev, albums: prev.albums.filter(album => album.id !== albumId) }
-        : prev
-      );
+      // Gọi API xóa album
+      const res = await fetch('http://localhost:8082/album/delete', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': getCsrfToken() || '',
+          'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        },
+        credentials: 'include',
+        body: JSON.stringify({ id: albumId })
+      });
+      const data = await res.json();
+      if (res.status === 200) {
+        setArtist((prev) => prev
+          ? { ...prev, albums: prev.albums.filter(album => album.id !== albumId) }
+          : prev
+        );
+      } else {
+        alert('Xóa album thất bại: ' + (data?.error || 'Không rõ nguyên nhân'));
+      }
+    } catch (err) {
+      alert('Lỗi khi xóa album: ' + (err as Error).message);
     } finally {
       setDeletingAlbumId(null);
     }
   };
+
+  // Helper lấy CSRF token từ cookie
+  function getCsrfToken() {
+    const name = 'csrftoken';
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
 
   if (loading) return <div>Loading...</div>;
   if (error || !artist) return (

@@ -558,3 +558,73 @@ export async function deleteAlbums(ids: string[]): Promise<unknown> {
 export function getAuthToken() {
   return localStorage.getItem("access_token");
 }
+
+// Lấy tất cả bài hát của artist theo artistId
+export async function getSongsByArtistId(artistId: string): Promise<ApiSongType[]> {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken() || '',
+    Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+  };
+  try {
+    const response = await fetch('http://localhost:8082/songs', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ artistId }),
+    });
+    const data = await response.json();
+    console.log('API getSongsByArtistId response:', data);
+    return (data.data?.result || data.result || data.songs || []);
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách bài hát của artist:', error);
+    return [];
+  }
+}
+
+// Xóa 1 bài hát khỏi album
+export async function removeSongFromAlbum(albumID: string, songID: string): Promise<boolean> {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken() || '',
+    Authorization: `Bearer ${localStorage.getItem('access_token') || ''}`,
+  };
+  try {
+    const response = await fetch('http://localhost:8082/album-song/delete', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ albumID, songID }),
+    });
+    const data = await response.json();
+    return response.status === 200 && data.success;
+  } catch (error) {
+    console.error('Lỗi khi xóa bài hát khỏi album:', error);
+    return false;
+  }
+}
+
+// Gọi API cập nhật danh sách bài hát cho album
+export async function createOrUpdateAlbumSongs(albumID: string, songIDs: string[]): Promise<{ success: boolean; error?: string }> {
+  const headers = {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken() || '',
+    'Authorization': `Bearer ${localStorage.getItem('access_token') || ''}`
+  };
+  try {
+    const res = await fetch('http://localhost:8082/album-song/create', {
+      method: 'POST',
+      headers,
+      credentials: 'include',
+      body: JSON.stringify({ albumID, songIDs })
+    });
+    const data = await res.json();
+    if (res.status === 200) {
+      return { success: true };
+    } else {
+      return { success: false, error: data?.error || 'Không rõ nguyên nhân' };
+    }
+  } catch (err) {
+    return { success: false, error: (err as Error).message };
+  }
+}
