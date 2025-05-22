@@ -11,7 +11,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { ApiAlbumType } from "../../types/api";
-import { ControlledFileInput } from "./ControlledFileInput";
+import { ControlledFileInput } from "../admin/ControlledFileInput";
 
 export interface EditAlbum2FormProps {
   name: string;

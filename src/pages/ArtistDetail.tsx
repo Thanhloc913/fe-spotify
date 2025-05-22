@@ -8,9 +8,9 @@ import { FaPlay, FaPause, FaEllipsisV, FaTrash } from 'react-icons/fa';
 import { uploadFile, createStorageData, createAlbum } from '../api/storageApi';
 import { createSongV2, updateSong, editAlbum } from '../api/musicApi';
 import { deleteSong } from '../api/songApi';
-import { EditSongModalCopy, EditSongFormProps } from '../components/admin/EditSongModalCopy';
+import { EditSongModalCopy, EditSongFormProps } from '../components/modal/EditSongModalCopy';
 import { ApiSongType, ApiSongUpdateRequest, ApiAlbumType, ApiEditAlbumRequest } from '../types/api';
-import { EditAlbum2ModalCopy, EditAlbum2FormProps } from '../components/admin/EditAlbum2ModalCopy';
+import { EditAlbum2ModalCopy, EditAlbum2FormProps } from '../components/modal/EditAlbum2ModalCopy';
 import { getAlbums } from '../api/musicApi';
 
 const formatDuration = (seconds: number) => {

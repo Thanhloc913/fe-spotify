@@ -13,7 +13,7 @@ import {
 } from "@mui/material";
 import { useForm } from "react-hook-form";
 import { ApiSongType } from "../../types/api";
-import { ControlledFileInput } from "./ControlledFileInput";
+import { ControlledFileInput } from "../admin/ControlledFileInput";
 import { useMemo } from "react";
 
 export interface EditSongFormProps {
