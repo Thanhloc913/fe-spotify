@@ -143,6 +143,15 @@ export default function Navbar() {
               >
                 Hồ sơ
               </button>
+              <button
+                className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md"
+                onClick={() => {
+                  setShowMenu(false);
+                  navigate("/artist/" + localStorage.getItem("profile_id"));
+                }}
+              >
+                Trang cá nhân
+              </button>
               <button className="block w-full text-left px-4 py-2 text-white hover:bg-[#242424] rounded-md">
                 Hỗ trợ
               </button>

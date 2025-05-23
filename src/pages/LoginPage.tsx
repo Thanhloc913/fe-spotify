@@ -23,7 +23,7 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4 overflow-y-auto">
       <div className="bg-[#121212] p-6 rounded-lg w-full max-w-sm shadow-lg">
         <div className="text-center mb-8">
           <FaSpotify className="text-spotify-green text-5xl mx-auto mb-4" />

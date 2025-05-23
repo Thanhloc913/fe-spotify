@@ -1,13 +1,17 @@
 import React, { useEffect } from "react";
 import { Box, Button, Card, CardContent, Typography } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CancelIcon from "@mui/icons-material/Cancel";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useNavigate } from "react-router-dom";
 import { getProfilesByIds, updateProfile } from "../api/profileApi";
+import CircularProgress from "@mui/material/CircularProgress";
 
 enum PaymentStatus {
   Processing = "processing",
   Success = "success",
   Failed = "failed",
+  AlreadyPaid = "already_paid",
 }
 
 const PremiumPaymentProcessed: React.FC = () => {
@@ -22,7 +26,18 @@ const PremiumPaymentProcessed: React.FC = () => {
         const pId = localStorage.getItem("profile_id");
         if (!pId) throw new Error("No profile id found");
         const profile = (await getProfilesByIds([pId]))[0];
-        await updateProfile({ ...profile, isPremium: true });
+        if (profile.isPremium) {
+          setStatus(PaymentStatus.AlreadyPaid);
+          return;
+        }
+        const resultProfile = await updateProfile({
+          ...profile,
+          isPremium: true,
+        });
+        if (!resultProfile.isPremium) {
+          setStatus(PaymentStatus.Failed);
+          return;
+        }
         setStatus(PaymentStatus.Success);
       } catch (error: unknown) {
         console.error(error);
@@ -46,6 +61,7 @@ const PremiumPaymentProcessed: React.FC = () => {
       >
         <CardContent sx={{ textAlign: "center", py: 6 }}>
           <Box display="flex" justifyContent="center" mb={2}>
+            <CircularProgress size={"4rem"} sx={{ color: "#4caf50", mr: 2 }} />
             <span
               className="material-icons"
               style={{ fontSize: 48, color: "#4caf50" }}
@@ -102,6 +118,49 @@ const PremiumPaymentProcessed: React.FC = () => {
         </CardContent>
       </Card>
     );
+  } else if (status === PaymentStatus.AlreadyPaid) {
+    content = (
+      <Card
+        sx={{
+          borderRadius: 4,
+          bgcolor: "#232323",
+          color: "#fff",
+          boxShadow: 6,
+          minWidth: 350,
+        }}
+      >
+        <CardContent sx={{ textAlign: "center", py: 6 }}>
+          <WarningAmberIcon color="warning" sx={{ fontSize: 64, mb: 2 }} />
+          <Typography
+            variant="h4"
+            fontWeight="bold"
+            gutterBottom
+            color="warning.main"
+          >
+            Bạn đã có Premium rồi!
+          </Typography>
+          <Typography variant="body1" color="gray" sx={{ mb: 4 }}>
+            Bạn đã là thành viên Premium. Chúng tôi sẽ hoàn trả thanh toán trong
+            thời gian sớm nhất.
+          </Typography>
+          <Button
+            variant="contained"
+            color="warning"
+            size="large"
+            sx={{
+              px: 6,
+              py: 1.5,
+              fontWeight: "bold",
+              fontSize: 18,
+              borderRadius: 8,
+            }}
+            onClick={() => navigate("/")}
+          >
+            Quay lại trang chủ
+          </Button>
+        </CardContent>
+      </Card>
+    );
   } else {
     content = (
       <Card
@@ -115,12 +174,7 @@ const PremiumPaymentProcessed: React.FC = () => {
       >
         <CardContent sx={{ textAlign: "center", py: 6 }}>
           <Box display="flex" justifyContent="center" mb={2}>
-            <span
-              className="material-icons"
-              style={{ fontSize: 64, color: "#f44336" }}
-            >
-              error
-            </span>
+            <CancelIcon color="error" sx={{ fontSize: 64, mb: 2 }} />
           </Box>
           <Typography variant="h4" fontWeight="bold" gutterBottom color="error">
             Thanh toán thất bại!
