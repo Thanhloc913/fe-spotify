@@ -15,7 +15,7 @@ import ManageUsers from "./ManageUsers";
 
 export const AdminRoutes = (
   <>
-    <Route index element={<Navigate to="accounts2" replace />} />
+    <Route index element={<Navigate to="songs2" replace />} />
     <Route path="accounts2" element={<ManageAccounts />} />
     <Route path="songs2" element={<ManageSongs />} />
     <Route path="roles2" element={<ManageRoles2 />} />

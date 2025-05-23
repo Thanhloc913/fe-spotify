@@ -22,19 +22,19 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAdminLoadingState } from "../store/paginationStore";
 
 const links = [
-  { path: "accounts2", label: "Accounts2", icon: <MdPerson /> },
+  // { path: "accounts2", label: "Accounts2", icon: <MdPerson /> },
   { path: "songs2", label: "Songs2", icon: <MdQueueMusic /> },
   { path: "roles2", label: "Roles2", icon: <MdSecurity /> },
   { path: "genres2", label: "Genres2", icon: <MdMusicNote /> },
   { path: "albums2", label: "Albums2", icon: <MdPlaylistPlay /> },
-  { path: "users", label: "Users", icon: <MdPerson /> },
-  { path: "artists", label: "Artists", icon: <MdLibraryMusic /> },
-  { path: "albums", label: "Albums", icon: <MdAlbum /> },
-  { path: "tracks", label: "Tracks", icon: <MdQueueMusic /> },
-  { path: "playlists", label: "Playlists", icon: <MdPlaylistPlay /> },
-  { path: "genres", label: "Genres", icon: <MdMusicNote /> },
-  { path: "categories", label: "Categories", icon: <MdCategory /> },
-  { path: "roles", label: "Roles", icon: <MdSecurity /> },
+  // { path: "users", label: "Users", icon: <MdPerson /> },
+  // { path: "artists", label: "Artists", icon: <MdLibraryMusic /> },
+  // { path: "albums", label: "Albums", icon: <MdAlbum /> },
+  // { path: "tracks", label: "Tracks", icon: <MdQueueMusic /> },
+  // { path: "playlists", label: "Playlists", icon: <MdPlaylistPlay /> },
+  // { path: "genres", label: "Genres", icon: <MdMusicNote /> },
+  // { path: "categories", label: "Categories", icon: <MdCategory /> },
+  // { path: "roles", label: "Roles", icon: <MdSecurity /> },
   // ...Array.from({ length: 20 }, (_, index) => ({
   //   path: `playlists`,
   //   label: `Test Overflow ${index + 1}`,
