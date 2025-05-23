@@ -16,7 +16,7 @@ import { Link } from 'react-router-dom';
 import { getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
 import { musicApi } from '../../api/musicApi';
 import ChatBox from './ChatBox';
-import { getProfile, getProfilesByIds } from '../../api/profileApi';
+import { getProfilesByIds } from '../../api/profileApi';
 
 // Thêm định nghĩa kiểu dữ liệu
 interface Playlist {

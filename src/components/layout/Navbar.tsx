@@ -1,9 +1,10 @@
-import { Search, Library, Bell, Home } from "lucide-react";
-import { useLocation, NavLink, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Bell, Home, Library } from "lucide-react";
+import { useEffect, useState } from "react";
 import { FaSearch, FaSpotify } from "react-icons/fa";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import { removeToken } from "../../utils/auth";
+import { getIsPremium, getProfilesByIds } from "../../api/profileApi";
 
 interface User {
   id: string;
@@ -16,12 +17,20 @@ export default function Navbar() {
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
   const [searchValue, setSearchValue] = useState("");
-  const location = useLocation();
   const { artist } = useUser();
 
   useEffect(() => {
     console.log("artist in Navbar:", artist);
   }, [artist]);
+
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+  useEffect(() => {
+    const checkIsPremium = async () => {
+      const isPremium = await getIsPremium();
+      setIsPremium(isPremium ?? false);
+    };
+    checkIsPremium();
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,12 +77,37 @@ export default function Navbar() {
         >
           <Library className="h-5 w-5" />
         </button>
-        <button
+        {!isPremium ? (
+          <button
+            className="ml-2 px-4 py-1 rounded-full bg-spotify-green text-black font-semibold hover:bg-green-600 transition"
+            onClick={() => navigate("/premium")}
+          >
+            Buy Premium
+          </button>
+        ) : (
+          <span className="ml-2 flex items-center text-spotify-green font-semibold">
+            Premium
+            <svg
+              className="ml-1 w-5 h-5 text-spotify-green"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </span>
+        )}
+        {/* <button
           className="ml-2 text-gray-400 hover:text-white"
           onClick={() => navigate("/admin")}
         >
           Admin
-        </button>
+        </button> */}
       </div>
 
       <div className="flex items-center gap-4">

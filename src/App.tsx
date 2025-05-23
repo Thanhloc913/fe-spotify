@@ -23,6 +23,8 @@ import Search from "./pages/Search";
 import AdminLayout from "./components/AdminLayout";
 import GlobalProvider from "./GlobalProvider";
 import { AdminRoutes } from "./pages/admin/AdminRoutes";
+import PremiumPage from "./pages/PremiumPage";
+import PremiumPaymentProcessed from "./pages/PremiumPaymentProcessed";
 
 document.body.classList.add("dark");
 
@@ -35,6 +37,12 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/premium" element={<PremiumPage />} />
+            <Route
+              path="/premium-payment-processed"
+              element={<PremiumPaymentProcessed />}
+            />
+
             <Route
               path="/"
               element={

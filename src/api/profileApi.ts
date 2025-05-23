@@ -48,6 +48,7 @@ export const updateProfile = async (profileData: {
   bio: string;
   phoneNumber: string;
   avatarUrl: string;
+  isPremium?: boolean | null;
 }) => {
   const csrfToken = getCsrfToken();
   const response = await profileApi.post("/profile/update", profileData, {
@@ -61,14 +62,11 @@ export const updateProfile = async (profileData: {
 
 export const getProfileByAccountID = async (accountID: string) => {
   const csrfToken = getCsrfToken();
-  const response = await profileApi.get(
-    `/artist/${accountID}`,
-    {
-      headers: {
-        'X-CSRFToken': csrfToken,
-      },
-    }
-  );
+  const response = await profileApi.get(`/artist/${accountID}`, {
+    headers: {
+      "X-CSRFToken": csrfToken,
+    },
+  });
   if (!response.data.success) throw new Error(response.data.message);
   return response.data.data;
 };
@@ -100,6 +98,13 @@ export const getProfilesByIds = async (
     },
   });
   return response.data.data;
+};
+
+export const getIsPremium = async (): Promise<boolean> => {
+  const pId = localStorage.getItem("profile_id");
+  if (!pId) return false;
+  const profile = (await getProfilesByIds([pId]))[0];
+  return !!profile.isPremium;
 };
 
 export default profileApi;
