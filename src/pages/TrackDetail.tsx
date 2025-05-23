@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Track } from '../types';
-import { getTrackById } from '../api/tracks';
-import { Link } from 'react-router-dom';
-import { usePlayerStore } from '../store/playerStore';
-import { MdOndemandVideo } from 'react-icons/md';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Track } from "../types";
+import { getTrackById } from "../api/tracks";
+import { Link } from "react-router-dom";
+import { usePlayerStore } from "../store/playerStore";
+import { MdOndemandVideo } from "react-icons/md";
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 const TrackDetail = () => {
@@ -17,7 +17,8 @@ const TrackDetail = () => {
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { playTrack, currentTrack, setCurrentTrack, openMusicVideo } = usePlayerStore();
+  const { playTrack, currentTrack, setCurrentTrack, openMusicVideo } =
+    usePlayerStore();
 
   useEffect(() => {
     const fetchTrackData = async () => {
@@ -26,22 +27,22 @@ const TrackDetail = () => {
 
         const response = await getTrackById(id);
         const trackData = response.data;
-        
+
         // Check and set songType if not present
         if (!trackData.songType) {
-          if (trackData.songUrl && trackData.songUrl.includes('/videos/')) {
-            trackData.songType = 'MUSIC_VIDEO';
+          if (trackData.songUrl && trackData.songUrl.includes("/videos/")) {
+            trackData.songType = "MUSIC_VIDEO";
           } else {
-            trackData.songType = 'SONG';
+            trackData.songType = "SONG";
           }
         }
-        
-        console.log('Loaded track with data:', trackData);
-        console.log('Song type:', trackData.songType);
+
+        console.log("Loaded track with data:", trackData);
+        console.log("Song type:", trackData.songType);
 
         setTrack(trackData);
       } catch (err) {
-        setError('Failed to fetch track data');
+        setError("Failed to fetch track data");
         console.error(err);
       } finally {
         setLoading(false);
@@ -53,8 +54,8 @@ const TrackDetail = () => {
 
   const handlePlayTrack = () => {
     if (track) {
-      console.log('Playing track from TrackDetail:', track);
-      console.log('Track song type:', track.songType);
+      console.log("Playing track from TrackDetail:", track);
+      console.log("Track song type:", track.songType);
       setCurrentTrack(track);
       playTrack();
     }
@@ -62,11 +63,11 @@ const TrackDetail = () => {
 
   const handleWatchVideo = () => {
     if (track) {
-      console.log('Opening music video for:', track);
-      
+      console.log("Opening music video for:", track);
+
       // Ensure the track is set as current
       setCurrentTrack(track);
-      
+
       // Then open the video
       openMusicVideo();
     }
@@ -123,7 +124,8 @@ const TrackDetail = () => {
             </Link>
           </div>
           <p className="text-gray-500 mt-2">
-            {formatDuration(track.durationMs)} • {track.explicit ? 'Explicit' : 'Clean'}
+            {formatDuration(track.durationMs)} •{" "}
+            {track.explicit ? "Explicit" : "Clean"}
             {track.songType && <span> • {track.songType}</span>}
           </p>
           <div className="flex gap-3 mt-4">
@@ -131,11 +133,11 @@ const TrackDetail = () => {
               onClick={handlePlayTrack}
               className="bg-green-500 text-white px-6 py-2 rounded-full hover:bg-green-600 transition-colors"
             >
-              {currentTrack?.id === track.id ? 'Playing' : 'Play'}
+              {currentTrack?.id === track.id ? "Playing" : "Play"}
             </button>
-            
-            {track.songType === 'MUSIC_VIDEO' && (
-              <button 
+
+            {track.songType === "MUSIC_VIDEO" && (
+              <button
                 onClick={handleWatchVideo}
                 className="bg-blue-600 text-white px-4 py-2 rounded-full hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
@@ -171,4 +173,4 @@ const TrackDetail = () => {
   );
 };
 
-export default TrackDetail; 
+export default TrackDetail;

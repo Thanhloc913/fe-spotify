@@ -1,5 +1,5 @@
-import type React from 'react';
-import { useEffect, useState, useRef } from 'react';
+import type React from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   FaStepForward,
   FaStepBackward,
@@ -9,14 +9,18 @@ import {
   FaList,
   FaVolumeMute,
   FaVideo,
-  FaComments
-} from 'react-icons/fa';
-import { usePlayerStore } from '../../store/playerStore';
-import { Link } from 'react-router-dom';
-import { getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
-import { musicApi } from '../../api/musicApi';
-import ChatBox from './ChatBox';
-import { getProfilesByIds } from '../../api/profileApi';
+  FaComments,
+} from "react-icons/fa";
+import { usePlayerStore } from "../../store/playerStore";
+import { Link } from "react-router-dom";
+import {
+  getUserPlaylists,
+  addTrackToPlaylist,
+  removeTrackFromPlaylist,
+} from "../../api/user";
+import { musicApi } from "../../api/musicApi";
+import ChatBox from "./ChatBox";
+import { getProfilesByIds } from "../../api/profileApi";
 
 // Thêm định nghĩa kiểu dữ liệu
 interface Playlist {
@@ -33,7 +37,7 @@ interface CustomWindow extends Window {
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 const Player: React.FC = () => {
@@ -54,7 +58,7 @@ const Player: React.FC = () => {
     skipToPrevious,
     setCurrentTrack,
     showVideo,
-    toggleVideoModal
+    toggleVideoModal,
   } = usePlayerStore();
 
   const [isMuted, setIsMuted] = useState(false);
@@ -68,9 +72,9 @@ const Player: React.FC = () => {
 
   // Lưu lại progress khi bài hát bị tạm dừng
   const [savedProgress, setSavedProgress] = useState<number>(0);
-  
+
   const [openChat, setOpenChat] = useState(false);
-  
+
   useEffect(() => {
     if (!isPlaying) {
       setSavedProgress(progress);
@@ -79,49 +83,47 @@ const Player: React.FC = () => {
 
   useEffect(() => {
     if (!currentTrack) return;
-    
+
     const fetchAudioUrl = async () => {
       try {
         if (currentTrack.songUrl) {
           setAudioUrl(currentTrack.songUrl);
           return;
         }
-        
+
         // Nếu đã có sẵn previewUrl thì dùng luôn
         if (currentTrack.previewUrl) {
           setAudioUrl(currentTrack.previewUrl);
           return;
         }
-        
       } catch (error) {
-        console.error('Lỗi khi lấy URL audio:', error);
+        console.error("Lỗi khi lấy URL audio:", error);
         setAudioUrl(null);
       }
     };
-    
+
     fetchAudioUrl();
-    
   }, [currentTrack]);
 
   useEffect(() => {
     if (audioRef.current && currentTrack && audioUrl) {
       const wasPlaying = isPlaying;
       audioRef.current.load();
-      
+
       // Nếu có savedProgress và là cùng một bài hát
-      const currentId = localStorage.getItem('current_track_id');
+      const currentId = localStorage.getItem("current_track_id");
       const isSameTrack = currentId === currentTrack.id;
-      
+
       if (isSameTrack && savedProgress > 0) {
         audioRef.current.currentTime = savedProgress;
       }
-      
+
       // Lưu ID bài hát hiện tại
-      localStorage.setItem('current_track_id', currentTrack.id);
-      
+      localStorage.setItem("current_track_id", currentTrack.id);
+
       if (wasPlaying) {
         audioRef.current.play().catch(() => {
-          console.log('Autoplay prevented after track change');
+          console.log("Autoplay prevented after track change");
         });
       }
     }
@@ -145,7 +147,7 @@ const Player: React.FC = () => {
   }, [volume, isMuted]);
 
   const handleTrackEnd = () => {
-    if (repeat === 'track') {
+    if (repeat === "track") {
       const media = getMediaRef();
       if (media) {
         media.currentTime = 0;
@@ -170,54 +172,61 @@ const Player: React.FC = () => {
 
   useEffect(() => {
     if (!currentTrack) return setLiked(false);
-    
+
     const checkLikedStatus = async () => {
       try {
         const likedSongs = await musicApi.getLikedSongs();
-        setLiked(likedSongs.some(song => song.id === currentTrack.id));
+        setLiked(likedSongs.some((song) => song.id === currentTrack.id));
       } catch (error) {
-        console.error('Lỗi khi kiểm tra trạng thái liked:', error);
+        console.error("Lỗi khi kiểm tra trạng thái liked:", error);
         setLiked(false);
       }
     };
-    
+
     checkLikedStatus();
-    
+
     // Listen for liked-changed event
     const handler = () => {
       checkLikedStatus();
     };
-    
-    window.addEventListener('liked-changed', handler);
-    return () => window.removeEventListener('liked-changed', handler);
+
+    window.addEventListener("liked-changed", handler);
+    return () => window.removeEventListener("liked-changed", handler);
   }, [currentTrack]);
 
   const handleToggleFavorite = async () => {
     if (!currentTrack) return;
     const profileId = localStorage.getItem("profile_id") || "";
-    
+
     try {
       if (liked) {
         await musicApi.deleteFavorite(profileId, currentTrack.id);
         setLiked(false);
         // Dispatch custom event với thông tin chi tiết
-        window.dispatchEvent(new CustomEvent('liked-changed', {
-          detail: { songId: currentTrack.id, action: 'unlike' }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("liked-changed", {
+            detail: { songId: currentTrack.id, action: "unlike" },
+          })
+        );
       } else {
         await musicApi.createFavorite(profileId, currentTrack.id);
         setLiked(true);
         // Dispatch custom event với thông tin chi tiết
-        window.dispatchEvent(new CustomEvent('liked-changed', {
-          detail: { songId: currentTrack.id, action: 'like' }
-        }));
+        window.dispatchEvent(
+          new CustomEvent("liked-changed", {
+            detail: { songId: currentTrack.id, action: "like" },
+          })
+        );
       }
     } catch (error) {
       console.error("Lỗi xử lý favorite:", error);
     }
   };
 
-  const handleToggleTrackInPlaylist = async (playlistId: string, checked: boolean) => {
+  const handleToggleTrackInPlaylist = async (
+    playlistId: string,
+    checked: boolean
+  ) => {
     if (!currentTrack) return;
     if (checked) {
       await addTrackToPlaylist(playlistId, currentTrack.id);
@@ -227,7 +236,7 @@ const Player: React.FC = () => {
     // Refresh playlists to update UI
     const pls = await getUserPlaylists();
     setPlaylists(pls);
-    window.dispatchEvent(new Event('playlist-changed'));
+    window.dispatchEvent(new Event("playlist-changed"));
   };
 
   const openPlaylistPopup = async () => {
@@ -238,16 +247,17 @@ const Player: React.FC = () => {
 
   // Khôi phục trạng thái player từ localStorage khi load lại trang
   useEffect(() => {
-    const saved = localStorage.getItem('player_state');
+    const saved = localStorage.getItem("player_state");
     if (saved) {
       try {
         const state = JSON.parse(saved);
         if (state.currentTrack) setCurrentTrack(state.currentTrack);
-        if (typeof state.isPlaying === 'boolean' && state.isPlaying) togglePlay();
-        if (typeof state.progress === 'number') setProgress(state.progress);
-        if (typeof state.volume === 'number') setVolume(state.volume);
-        if (typeof state.repeat === 'string') setRepeat(state.repeat);
-        if (typeof state.shuffle === 'boolean') toggleShuffle();
+        if (typeof state.isPlaying === "boolean" && state.isPlaying)
+          togglePlay();
+        if (typeof state.progress === "number") setProgress(state.progress);
+        if (typeof state.volume === "number") setVolume(state.volume);
+        if (typeof state.repeat === "string") setRepeat(state.repeat);
+        if (typeof state.shuffle === "boolean") toggleShuffle();
       } catch (error) {
         console.error("Error restoring player state:", error);
       }
@@ -263,9 +273,9 @@ const Player: React.FC = () => {
       progress,
       volume,
       repeat,
-      shuffle
+      shuffle,
     };
-    localStorage.setItem('player_state', JSON.stringify(state));
+    localStorage.setItem("player_state", JSON.stringify(state));
   }, [currentTrack, isPlaying, progress, volume, repeat, shuffle]);
 
   // Custom style cho progress và volume
@@ -285,7 +295,7 @@ const Player: React.FC = () => {
 
   // Helper để lấy ref video nếu đang showVideo
   const getMediaRef = () => {
-    if (showVideo && typeof window !== 'undefined') {
+    if (showVideo && typeof window !== "undefined") {
       const customWindow = window as unknown as CustomWindow;
       if (customWindow.__globalVideoRef) {
         return customWindow.__globalVideoRef;
@@ -299,7 +309,7 @@ const Player: React.FC = () => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.play().catch(() => {
-          console.log('Autoplay prevented');
+          console.log("Autoplay prevented");
         });
       } else {
         audioRef.current.pause();
@@ -309,15 +319,15 @@ const Player: React.FC = () => {
 
   // xu ly khi nhan nut download
   const handleDownloadRequest = async () => {
-    const pId = localStorage.getItem("profile_id")
+    const pId = localStorage.getItem("profile_id");
     if (!pId) return;
-    const profile = (await getProfilesByIds([pId]))[0]
+    const profile = (await getProfilesByIds([pId]))[0];
     if (audioUrl && profile.isPremium) {
       window.open(audioUrl);
     } else {
-      alert('Bạn không có quyền tải xuống bài hát này.');
+      alert("Bạn không có quyền tải xuống bài hát này.");
     }
-  }
+  };
 
   if (!currentTrack) return null;
 
@@ -327,34 +337,53 @@ const Player: React.FC = () => {
         {/* Track Info */}
         <div className="flex items-center gap-4 w-1/4">
           <img
-            src={coverUrl || (currentTrack.backgroundUrl as string) || currentTrack.coverUrl || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4='}
+            src={
+              coverUrl ||
+              (currentTrack.backgroundUrl as string) ||
+              currentTrack.coverUrl ||
+              "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4="
+            }
             alt={currentTrack.title}
             className="w-14 h-14 rounded"
             onError={(e) => {
               // Tránh vòng lặp vô hạn khi ảnh fallback cũng lỗi
               // Chỉ thay đổi src nếu src hiện tại không phải ảnh base64
               const currentSrc = e.currentTarget.src;
-              if (!currentSrc.startsWith('data:image/')) {
-                e.currentTarget.src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=';
+              if (!currentSrc.startsWith("data:image/")) {
+                e.currentTarget.src =
+                  "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMTAwIiB2aWV3Qm94PSIwIDAgMTAwIDEwMCI+PHJlY3Qgd2lkdGg9IjEwMCIgaGVpZ2h0PSIxMDAiIGZpbGw9IiMzMzMiLz48dGV4dCB4PSI1MCIgeT0iNTAiIGZvbnQtc2l6ZT0iMjAiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIiBmaWxsPSIjZmZmIj5NdXNpYzwvdGV4dD48L3N2Zz4=";
               }
             }}
           />
           <div>
             <p className="text-white font-medium">{currentTrack.title}</p>
             <p className="text-gray-400 text-sm">
-              <Link to={`/artist/${currentTrack.artistId}`} className="hover:underline text-white/80">
+              <Link
+                to={`/artist/${currentTrack.artistId}`}
+                className="hover:underline text-white/80"
+              >
                 {currentTrack.artistName}
               </Link>
             </p>
           </div>
           {/* Favorite & Add to Playlist & Video buttons */}
-          <button onClick={handleToggleFavorite} className={`ml-2 ${liked ? 'text-spotify-green hover:text-spotify-green' : 'text-gray-400 hover:text-spotify-green'}`}>
+          <button
+            onClick={handleToggleFavorite}
+            className={`ml-2 ${
+              liked
+                ? "text-spotify-green hover:text-spotify-green"
+                : "text-gray-400 hover:text-spotify-green"
+            }`}
+          >
             <FaHeart className="w-5 h-5" />
           </button>
-          <button onClick={openPlaylistPopup} className="ml-2 text-gray-400 hover:text-green-400">
+          <button
+            onClick={openPlaylistPopup}
+            className="ml-2 text-gray-400 hover:text-green-400"
+          >
             <FaList className="w-5 h-5" />
           </button>
-          {currentTrack.songType === 'MUSIC_VIDEO' && (
+          {currentTrack.songType === "MUSIC_VIDEO" && (
             <button
               onClick={toggleVideoModal}
               className={`ml-2 text-gray-400 hover:text-spotify-green`}
@@ -369,7 +398,9 @@ const Player: React.FC = () => {
           <div className="flex items-center gap-4 mb-2">
             <button
               onClick={toggleShuffle}
-              className={`text-gray-400 hover:text-green ${shuffle ? 'text-green-500' : ''}`}
+              className={`text-gray-400 hover:text-green ${
+                shuffle ? "text-green-500" : ""
+              }`}
             >
               <FaRandom className="w-5 h-5" />
             </button>
@@ -384,11 +415,19 @@ const Player: React.FC = () => {
               className="bg-white text-black rounded-full p-2 hover:scale-105 transition-transform"
             >
               {isPlaying ? (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M5 3a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2V5a2 2 0 00-2-2H5zm6 4a1 1 0 10-2 0v6a1 1 0 102 0V7zm-4 1a1 1 0 10-2 0v4a1 1 0 102 0V8z" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                <svg
+                  className="w-5 h-5"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
                   <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
                 </svg>
               )}
@@ -400,8 +439,10 @@ const Player: React.FC = () => {
               <FaStepForward className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setRepeat(repeat === 'off' ? 'track' : 'off')}
-              className={`text-gray-400 hover:text-white ${repeat === 'track' ? 'text-green-500' : ''}`}
+              onClick={() => setRepeat(repeat === "off" ? "track" : "off")}
+              className={`text-gray-400 hover:text-white ${
+                repeat === "track" ? "text-green-500" : ""
+              }`}
             >
               <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                 <path d="M5 4a1 1 0 00-2 0v7.268a2 2 0 000 3.464V16a1 1 0 102 0v-1.268a2 2 0 000-3.464V4zM11 4a1 1 0 10-2 0v1.268a2 2 0 000 3.464V16a1 1 0 102 0V8.732a2 2 0 000-3.464V4zM16 3a1 1 0 011 1v7.268a2 2 0 010 3.464V16a1 1 0 11-2 0v-1.268a2 2 0 010-3.464V4a1 1 0 011-1z" />
@@ -467,12 +508,25 @@ const Player: React.FC = () => {
             className="ml-2 focus:outline-none"
             title="Tải xuống"
           >
-            <svg className="w-6 h-6 text-gray-400 hover:text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+            <svg
+              className="w-6 h-6 text-gray-400 hover:text-green-400"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2}
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16"
+              />
             </svg>
           </button>
           {/* Nút mở chat */}
-          <button onClick={() => setOpenChat(true)} className="ml-2 focus:outline-none">
+          <button
+            onClick={() => setOpenChat(true)}
+            className="ml-2 focus:outline-none"
+          >
             <FaComments className="w-6 h-6 text-gray-400 hover:text-green-400" />
           </button>
         </div>
@@ -482,10 +536,10 @@ const Player: React.FC = () => {
       {!showVideo && (
         <audio
           ref={audioRef}
-          src={audioUrl || ''}
+          src={audioUrl || ""}
           onEnded={handleTrackEnd}
           onLoadedMetadata={handleLoadedMetadata}
-          loop={repeat === 'track'}
+          loop={repeat === "track"}
         >
           {/* Added caption track to satisfy the linter */}
           <track
@@ -501,7 +555,9 @@ const Player: React.FC = () => {
       {showPlaylistPopup && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
           <div className="bg-gray-900 p-6 rounded-lg shadow-lg w-full max-w-xs">
-            <h2 className="text-lg font-bold text-white mb-4">Thêm vào playlist</h2>
+            <h2 className="text-lg font-bold text-white mb-4">
+              Thêm vào playlist
+            </h2>
             <ul>
               {playlists.map((pl: Playlist) => {
                 const checked = pl.trackIds.includes(currentTrack.id);
@@ -510,14 +566,29 @@ const Player: React.FC = () => {
                     <input
                       type="checkbox"
                       checked={checked}
-                      onChange={e => handleToggleTrackInPlaylist(pl.id, e.target.checked)}
+                      onChange={(e) =>
+                        handleToggleTrackInPlaylist(pl.id, e.target.checked)
+                      }
                     />
-                    <span className={checked ? 'text-spotify-green font-semibold' : 'text-white'}>{pl.name}</span>
+                    <span
+                      className={
+                        checked
+                          ? "text-spotify-green font-semibold"
+                          : "text-white"
+                      }
+                    >
+                      {pl.name}
+                    </span>
                   </li>
                 );
               })}
             </ul>
-            <button className="mt-4 px-4 py-2 rounded bg-gray-700 text-white w-full" onClick={() => setShowPlaylistPopup(false)}>Đóng</button>
+            <button
+              className="mt-4 px-4 py-2 rounded bg-gray-700 text-white w-full"
+              onClick={() => setShowPlaylistPopup(false)}
+            >
+              Đóng
+            </button>
           </div>
         </div>
       )}

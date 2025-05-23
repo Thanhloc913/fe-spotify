@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { login } from '../api/authApi';
-import { FaSpotify, FaGoogle, FaFacebook, FaApple } from 'react-icons/fa';
-import { useUser } from '../contexts/UserContext';
+import React, { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { login } from "../api/authApi";
+import { FaSpotify, FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
+import { useUser } from "../contexts/UserContext";
 
 const LoginPage: React.FC = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { fetchProfile } = useUser();
@@ -16,9 +16,9 @@ const LoginPage: React.FC = () => {
     try {
       await login(email, password);
       await fetchProfile();
-      navigate('/');
+      navigate("/");
     } catch (err: any) {
-      setError(err.message || 'Đăng nhập thất bại');
+      setError(err.message || "Đăng nhập thất bại");
     }
   };
 
@@ -27,18 +27,23 @@ const LoginPage: React.FC = () => {
       <div className="bg-[#121212] p-6 rounded-lg w-full max-w-sm shadow-lg">
         <div className="text-center mb-8">
           <FaSpotify className="text-spotify-green text-5xl mx-auto mb-4" />
-          <h1 className="text-3xl font-bold text-white">Đăng nhập vào Spotify</h1>
+          <h1 className="text-3xl font-bold text-white">
+            Đăng nhập vào Spotify
+          </h1>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">
           {error && (
             <div className="bg-red-500 text-white p-3 rounded text-center">
               {error}
-        </div>
+            </div>
           )}
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
               Email hoặc tên người dùng
             </label>
             <input
@@ -52,7 +57,10 @@ const LoginPage: React.FC = () => {
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-300 mb-1"
+            >
               Mật khẩu
             </label>
             <input
@@ -105,9 +113,9 @@ const LoginPage: React.FC = () => {
 
         <div className="mt-8 text-center">
           <p className="text-gray-400">
-          Bạn chưa có tài khoản?{' '}
+            Bạn chưa có tài khoản?{" "}
             <Link to="/register" className="text-spotify-green hover:underline">
-            Đăng ký Spotify
+              Đăng ký Spotify
             </Link>
           </p>
         </div>

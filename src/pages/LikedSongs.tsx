@@ -21,13 +21,14 @@ const formatDuration = (seconds: number) => {
 
 const LikedSongs = () => {
   const [favs, setFavs] = useState<LikedSongsInfo[]>([]);
-  const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } = usePlayerStore();
+  const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } =
+    usePlayerStore();
 
   const fetchLikedSongs = async () => {
     try {
       const songs: ApiSongType[] = await musicApi.getLikedSongs();
       console.log("Đã tải xong:", songs.length, "bài hát");
-      
+
       const artistIds = Array.from(new Set(songs.map((s) => s.artistId)));
       const artists: ApiProfileType[] = await getProfilesByIds(artistIds);
       const artistMap = Object.fromEntries(artists.map((a) => [a.id, a]));
@@ -46,30 +47,33 @@ const LikedSongs = () => {
 
   useEffect(() => {
     fetchLikedSongs();
-    
+
     // Lắng nghe sự kiện từ Player.tsx
     const handleLikedChanged = (event: Event) => {
       console.log("Đã nhận sự kiện liked-changed");
-      
+
       // Kiểm tra xem có custom data từ event không
       if (event instanceof CustomEvent && event.detail) {
         const { songId, action } = event.detail;
         console.log("Chi tiết sự kiện:", songId, action);
-        
+
         // Cập nhật trực tiếp trạng thái
-        if (action === 'unlike' && songId) {
+        if (action === "unlike" && songId) {
           console.log("Xóa bài hát khỏi danh sách:", songId);
-          setFavs(currentFavs => currentFavs.filter(song => song.id !== songId));
+          setFavs((currentFavs) =>
+            currentFavs.filter((song) => song.id !== songId)
+          );
           return;
         }
       }
-      
+
       // Nếu không có data chi tiết thì tải lại toàn bộ
       fetchLikedSongs();
     };
-    
-    window.addEventListener('liked-changed', handleLikedChanged);
-    return () => window.removeEventListener('liked-changed', handleLikedChanged);
+
+    window.addEventListener("liked-changed", handleLikedChanged);
+    return () =>
+      window.removeEventListener("liked-changed", handleLikedChanged);
   }, []);
 
   const handleUnFav = async (track: LikedSongsInfo) => {
@@ -78,11 +82,13 @@ const LikedSongs = () => {
     await musicApi.deleteFavorite(currentProfileId, track.id);
     // Xóa bài hát khỏi danh sách hoàn toàn thay vì chỉ đánh dấu
     setFavs((tracks) => tracks.filter((t) => t.id !== track.id));
-    
+
     // Dispatch với thông tin chi tiết
-    window.dispatchEvent(new CustomEvent('liked-changed', {
-      detail: { songId: track.id, action: 'unlike' }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("liked-changed", {
+        detail: { songId: track.id, action: "unlike" },
+      })
+    );
   };
 
   const handleReFav = async (track: LikedSongsInfo) => {
@@ -92,13 +98,15 @@ const LikedSongs = () => {
     setFavs((tracks) =>
       tracks.map((t) => (t.id === track.id ? { ...t, isFav: true } : t))
     );
-    
+
     // Dispatch với thông tin chi tiết
-    window.dispatchEvent(new CustomEvent('liked-changed', {
-      detail: { songId: track.id, action: 'like' }
-    }));
+    window.dispatchEvent(
+      new CustomEvent("liked-changed", {
+        detail: { songId: track.id, action: "like" },
+      })
+    );
   };
-  
+
   const handlePlayTrack = (track: LikedSongsInfo) => {
     if (currentTrack?.id === track.id) {
       togglePlay();
@@ -114,13 +122,13 @@ const LikedSongs = () => {
         coverUrl: track.backgroundUrl,
         previewUrl: track.songUrl,
         durationMs: track.duration * 1000,
-        explicit: false, // Mặc định 
+        explicit: false, // Mặc định
         popularity: 0, // Mặc định
         songUrl: track.songUrl,
         backgroundUrl: track.backgroundUrl,
-        songType: track.songType
+        songType: track.songType,
       };
-      
+
       setCurrentTrack(enhancedTrack as any);
       playTrack();
     }
@@ -163,7 +171,11 @@ const LikedSongs = () => {
                     onClick={() => handlePlayTrack(track)}
                     className="text-white/70 hover:text-white"
                   >
-                    {currentTrack?.id === track.id && isPlaying ? <FaPause /> : <FaPlay />}
+                    {currentTrack?.id === track.id && isPlaying ? (
+                      <FaPause />
+                    ) : (
+                      <FaPlay />
+                    )}
                   </button>
                 </td>
                 <td

@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import type React from "react"
-import type { Artist } from "../../types/index"
+import type React from "react";
+import type { Artist } from "../../types/index";
 
 interface ArtistCardProps {
-  artist: Artist
-  onClick: (id: string) => void
+  artist: Artist;
+  onClick: (id: string) => void;
 }
 
 const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
@@ -23,10 +23,10 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
         margin: "10px",
       }}
       onMouseOver={(e) => {
-        e.currentTarget.style.transform = "translateY(-5px)"
+        e.currentTarget.style.transform = "translateY(-5px)";
       }}
       onMouseOut={(e) => {
-        e.currentTarget.style.transform = "translateY(0)"
+        e.currentTarget.style.transform = "translateY(0)";
       }}
     >
       <div style={{ position: "relative", paddingBottom: "100%" }}>
@@ -44,13 +44,17 @@ const ArtistCard: React.FC<ArtistCardProps> = ({ artist, onClick }) => {
         />
       </div>
       <div style={{ padding: "12px" }}>
-        <h3 style={{ margin: "0 0 5px 0", fontSize: "16px", fontWeight: "bold" }}>{artist.name}</h3>
+        <h3
+          style={{ margin: "0 0 5px 0", fontSize: "16px", fontWeight: "bold" }}
+        >
+          {artist.name}
+        </h3>
         <p style={{ margin: "0", fontSize: "14px", color: "#666" }}>
           {artist.monthlyListeners.toLocaleString()} người nghe hàng tháng
         </p>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ArtistCard
+export default ArtistCard;

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { Track } from '../types';
-import musicApi from '../api/musicApi';
+import { create } from "zustand";
+import { Track } from "../types";
+import musicApi from "../api/musicApi";
 
 interface PlayerState {
   currentTrack: Track | null;
@@ -9,7 +9,7 @@ interface PlayerState {
   volume: number;
   progress: number;
   duration: number;
-  repeat: 'off' | 'track' | 'context';
+  repeat: "off" | "track" | "context";
   shuffle: boolean;
   showVideo: boolean;
   isVideoModalOpen: boolean;
@@ -20,7 +20,7 @@ interface PlayerState {
   setVolume: (volume: number) => void;
   setProgress: (progress: number) => void;
   setDuration: (duration: number) => void;
-  setRepeat: (repeat: 'off' | 'track' | 'context') => void;
+  setRepeat: (repeat: "off" | "track" | "context") => void;
   toggleShuffle: () => void;
   skipToNext: () => void;
   skipToPrevious: () => void;
@@ -36,25 +36,25 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   volume: 50,
   progress: 0,
   duration: 0,
-  repeat: 'off',
+  repeat: "off",
   shuffle: false,
   showVideo: false,
   isVideoModalOpen: false,
   setCurrentTrack: (track) => {
     const { currentTrack } = get();
     const isSameTrack = currentTrack?.id === track.id;
-    
-    set({ 
-      currentTrack: track, 
+
+    set({
+      currentTrack: track,
       duration: track.durationMs / 1000,
       progress: isSameTrack ? get().progress : 0,
       showVideo: false,
-      isVideoModalOpen: false
+      isVideoModalOpen: false,
     });
-    
+
     if (!isSameTrack) {
-      musicApi.setTrack(track.id).catch(error => {
-        console.error('Error setting track:', error);
+      musicApi.setTrack(track.id).catch((error) => {
+        console.error("Error setting track:", error);
       });
     }
   },
@@ -62,23 +62,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const { currentTrack } = get();
     if (currentTrack) {
       set({ isPlaying: true });
-      
+
       // Call the API to play the track
       try {
         await musicApi.play(currentTrack.id);
       } catch (error) {
-        console.error('Error playing track:', error);
+        console.error("Error playing track:", error);
       }
     }
   },
   pauseTrack: async () => {
     set({ isPlaying: false });
-    
+
     // Call the API to pause playback
     try {
       await musicApi.pause();
     } catch (error) {
-      console.error('Error pausing track:', error);
+      console.error("Error pausing track:", error);
     }
   },
   togglePlay: () => {
@@ -101,7 +101,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
       setCurrentTrack(nextTrack);
       set({ queue: queue.slice(1) });
       playTrack();
-    } else if (repeat === 'context') {
+    } else if (repeat === "context") {
       // If repeat context is on and queue is empty, start over
       set({ progress: 0 });
       playTrack();
@@ -122,11 +122,12 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   openMusicVideo: () => {
     const { currentTrack } = get();
     if (currentTrack?.songUrl) {
-      console.log('Opening music video URL:', currentTrack.songUrl);
-      
+      console.log("Opening music video URL:", currentTrack.songUrl);
+
       // Mở modal video thay vì set showVideo
       set({ isVideoModalOpen: true });
     }
   },
-  toggleVideoModal: () => set((state) => ({ isVideoModalOpen: !state.isVideoModalOpen })),
+  toggleVideoModal: () =>
+    set((state) => ({ isVideoModalOpen: !state.isVideoModalOpen })),
 }));

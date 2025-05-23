@@ -1,18 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Artist, Track, Album } from '../types';
-import { artistsApi } from '../api';
-import { Link } from 'react-router-dom';
-import { usePlayerStore } from '../store/playerStore';
+import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { Artist, Track, Album } from "../types";
+import { artistsApi } from "../api";
+import { Link } from "react-router-dom";
+import { usePlayerStore } from "../store/playerStore";
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 // Define the extended artist interface that includes API response data
-interface ExtendedArtist extends Omit<Artist, 'albums' | 'singles' | 'topTracks' | 'related'> {
+interface ExtendedArtist
+  extends Omit<Artist, "albums" | "singles" | "topTracks" | "related"> {
   albums: Album[];
   singles: Album[];
   topTracks: Track[];
@@ -34,19 +35,20 @@ const ArtistDetail = () => {
         // Fetch artist details with all related data
         const artistResponse = await artistsApi.getArtistById(id);
         if (artistResponse.status === 200 && artistResponse.data) {
-          const { artist, albums, singles, topTracks, relatedArtists } = artistResponse.data;
+          const { artist, albums, singles, topTracks, relatedArtists } =
+            artistResponse.data;
           setArtist({
             ...artist,
             albums,
             singles,
             topTracks,
-            relatedArtists
+            relatedArtists,
           });
         } else {
-          setError('Artist not found');
+          setError("Artist not found");
         }
       } catch (err) {
-        setError('Failed to fetch artist data');
+        setError("Failed to fetch artist data");
         console.error(err);
       } finally {
         setLoading(false);
@@ -77,7 +79,9 @@ const ArtistDetail = () => {
         <div>
           <h1 className="text-5xl font-bold mb-4">{artist?.name}</h1>
           <p className="text-gray-400 mb-2">
-            {artist?.genres?.length ? artist.genres.join(', ') : 'No genres available'}
+            {artist?.genres?.length
+              ? artist.genres.join(", ")
+              : "No genres available"}
           </p>
           <p className="text-gray-500">
             {artist?.monthlyListeners?.toLocaleString() || 0} monthly listeners
@@ -151,7 +155,7 @@ const ArtistDetail = () => {
         <div className="mt-8">
           <h2 className="text-2xl font-bold mb-4">Albums</h2>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-            {artist.albums.map(album => (
+            {artist.albums.map((album) => (
               <Link
                 key={album.id}
                 to={`/album/${album.id}`}
@@ -163,7 +167,9 @@ const ArtistDetail = () => {
                   className="w-full aspect-square object-cover rounded-lg mb-2"
                 />
                 <h3 className="font-medium">{album.title}</h3>
-                <p className="text-sm text-gray-400">{album.releaseDate.split('-')[0]}</p>
+                <p className="text-sm text-gray-400">
+                  {album.releaseDate.split("-")[0]}
+                </p>
               </Link>
             ))}
           </div>
@@ -175,4 +181,4 @@ const ArtistDetail = () => {
   );
 };
 
-export default ArtistDetail; 
+export default ArtistDetail;

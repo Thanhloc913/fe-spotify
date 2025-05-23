@@ -1,7 +1,7 @@
-import type React from 'react';
-import { FaPlay } from 'react-icons/fa';
-import type { Album } from '../../types';
-import { Link } from 'react-router-dom';
+import type React from "react";
+import { FaPlay } from "react-icons/fa";
+import type { Album } from "../../types";
+import { Link } from "react-router-dom";
 
 interface AlbumCardProps {
   album: Album;
@@ -9,7 +9,10 @@ interface AlbumCardProps {
 
 const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
   return (
-    <Link to={`/album/${album.id}`} className="card p-4 transition duration-300 group">
+    <Link
+      to={`/album/${album.id}`}
+      className="card p-4 transition duration-300 group"
+    >
       <div className="relative mb-4">
         <img
           src={album.coverUrl}
@@ -20,10 +23,15 @@ const AlbumCard: React.FC<AlbumCardProps> = ({ album }) => {
           <FaPlay />
         </button>
       </div>
-      <h3 className="text-spotify-text-primary font-medium text-base truncate">{album.title}</h3>
-      <p className="text-spotify-text-secondary text-sm truncate">{album.artistName}</p>
+      <h3 className="text-spotify-text-primary font-medium text-base truncate">
+        {album.title}
+      </h3>
+      <p className="text-spotify-text-secondary text-sm truncate">
+        {album.artistName}
+      </p>
       <p className="text-spotify-text-secondary text-xs mt-1">
-        {album.type.charAt(0).toUpperCase() + album.type.slice(1)} • {new Date(album.releaseDate).getFullYear()}
+        {album.type.charAt(0).toUpperCase() + album.type.slice(1)} •{" "}
+        {new Date(album.releaseDate).getFullYear()}
       </p>
     </Link>
   );

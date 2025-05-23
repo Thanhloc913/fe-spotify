@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react';
-import { Track } from '../types';
-import { tracksApi } from '../api';
-import { Link } from 'react-router-dom';
-import { usePlayerStore } from '../store/playerStore';
+import { useEffect, useState } from "react";
+import { Track } from "../types";
+import { tracksApi } from "../api";
+import { Link } from "react-router-dom";
+import { usePlayerStore } from "../store/playerStore";
 
 const formatDuration = (ms: number) => {
   const minutes = Math.floor(ms / 60000);
   const seconds = Math.floor((ms % 60000) / 1000);
-  return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  return `${minutes}:${seconds.toString().padStart(2, "0")}`;
 };
 
 const Tracks = () => {
@@ -22,7 +22,7 @@ const Tracks = () => {
         const response = await tracksApi.getTracks();
         setTracks(response.data);
       } catch (err) {
-        setError('Failed to fetch tracks');
+        setError("Failed to fetch tracks");
         console.error(err);
       } finally {
         setLoading(false);
@@ -33,20 +33,20 @@ const Tracks = () => {
   }, []);
 
   const handlePlayTrack = (track: Track) => {
-    console.log('Playing track in Tracks.tsx:', track);
-    console.log('Track song type:', track.songType);
-    
+    console.log("Playing track in Tracks.tsx:", track);
+    console.log("Track song type:", track.songType);
+
     // Ensure songType is set before passing to player
     if (!track.songType) {
-      if (track.songUrl && track.songUrl.includes('videos')) {
-        track.songType = 'MUSIC_VIDEO';
-        console.log('Set track type to MUSIC_VIDEO based on URL');
+      if (track.songUrl && track.songUrl.includes("videos")) {
+        track.songType = "MUSIC_VIDEO";
+        console.log("Set track type to MUSIC_VIDEO based on URL");
       } else {
-        track.songType = 'SONG';
-        console.log('Set default track type to SONG');
+        track.songType = "SONG";
+        console.log("Set default track type to SONG");
       }
     }
-    
+
     setCurrentTrack(track);
     playTrack();
   };
@@ -121,4 +121,4 @@ const Tracks = () => {
   );
 };
 
-export default Tracks; 
+export default Tracks;

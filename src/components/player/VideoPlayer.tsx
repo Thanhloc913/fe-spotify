@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 
 interface VideoPlayerProps {
   videoUrl: string;
@@ -10,13 +10,23 @@ interface VideoPlayerProps {
   onEnded?: () => void;
 }
 
-const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isPlaying, progress, volume, onClose, onVideoRefChange, onEnded }) => {
+const VideoPlayer: React.FC<VideoPlayerProps> = ({
+  videoUrl,
+  isPlaying,
+  progress,
+  volume,
+  onClose,
+  onVideoRefChange,
+  onEnded,
+}) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Gửi ref về cho Player
   useEffect(() => {
     if (onVideoRefChange) onVideoRefChange(videoRef.current);
-    return () => { if (onVideoRefChange) onVideoRefChange(null); };
+    return () => {
+      if (onVideoRefChange) onVideoRefChange(null);
+    };
   }, [onVideoRefChange]);
 
   // Play/pause
@@ -43,11 +53,21 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isPlaying, progress
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] w-full">
       <div className="relative w-full flex justify-center">
-        <button className="absolute top-2 right-2 z-10 bg-black bg-opacity-60 text-white text-2xl rounded-full px-3 py-1" onClick={onClose}>&times;</button>
+        <button
+          className="absolute top-2 right-2 z-10 bg-black bg-opacity-60 text-white text-2xl rounded-full px-3 py-1"
+          onClick={onClose}
+        >
+          &times;
+        </button>
         <video
           ref={videoRef}
           src={videoUrl}
-          style={{ width: '100%', maxWidth: 1200, maxHeight: '70vh', background: '#000' }}
+          style={{
+            width: "100%",
+            maxWidth: 1200,
+            maxHeight: "70vh",
+            background: "#000",
+          }}
           autoPlay
           playsInline
           controls={false}
@@ -58,4 +78,4 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({ videoUrl, isPlaying, progress
   );
 };
 
-export default VideoPlayer; 
+export default VideoPlayer;

@@ -142,4 +142,4 @@ export const EditAlbum2ModalCopy: React.FC<EditAlbum2ModalCopyProps> = ({
       </Box>
     </Dialog>
   );
-}; 
+};

@@ -1,7 +1,7 @@
 // 📁 src/api/albumApi.ts
-import { faker } from '@faker-js/faker';
-import type { Album, Artist } from '../types';
-import { generateDurationMs, randomNumber } from '../lib/mocks/utils';
+import { faker } from "@faker-js/faker";
+import type { Album, Artist } from "../types";
+import { generateDurationMs, randomNumber } from "../lib/mocks/utils";
 
 export const generateAlbums = (artists: Artist[], count = 30): Album[] => {
   if (!artists.length) return [];
@@ -16,13 +16,21 @@ export const generateAlbums = (artists: Artist[], count = 30): Album[] => {
       title: faker.music.songName(),
       artistId: artist.id,
       artistName: artist.name,
-      coverUrl: faker.image.urlLoremFlickr({ category: 'album', width: 300, height: 300 }),
-      backgroundUrl: faker.image.urlLoremFlickr({ category: 'album', width: 300, height: 300 }),
+      coverUrl: faker.image.urlLoremFlickr({
+        category: "album",
+        width: 300,
+        height: 300,
+      }),
+      backgroundUrl: faker.image.urlLoremFlickr({
+        category: "album",
+        width: 300,
+        height: 300,
+      }),
       releaseDate: faker.date.past({ years: 15 }).toISOString(),
       tracks: [],
-      type: faker.helpers.arrayElement(['album', 'single', 'EP'] as const),
+      type: faker.helpers.arrayElement(["album", "single", "EP"] as const),
       totalTracks,
-      durationMs: albumDuration
+      durationMs: albumDuration,
     };
   });
 };

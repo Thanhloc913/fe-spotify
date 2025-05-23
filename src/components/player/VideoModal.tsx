@@ -1,5 +1,5 @@
-import React, { useRef } from 'react';
-import { usePlayerStore } from '../../store/playerStore';
+import React, { useRef } from "react";
+import { usePlayerStore } from "../../store/playerStore";
 
 interface VideoModalProps {
   videoUrl: string;
@@ -12,13 +12,13 @@ const VideoModal: React.FC<VideoModalProps> = ({ videoUrl }) => {
   // Handle escape key to close modal
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         toggleVideoModal();
       }
     };
 
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
   }, [toggleVideoModal]);
 
   // Apply volume to video
@@ -40,7 +40,7 @@ const VideoModal: React.FC<VideoModalProps> = ({ videoUrl }) => {
             ✕
           </button>
         </div>
-        
+
         <div className="relative overflow-hidden rounded-lg shadow-lg bg-black w-full aspect-video">
           <video
             ref={videoRef}
@@ -56,4 +56,4 @@ const VideoModal: React.FC<VideoModalProps> = ({ videoUrl }) => {
   );
 };
 
-export default VideoModal; 
+export default VideoModal;

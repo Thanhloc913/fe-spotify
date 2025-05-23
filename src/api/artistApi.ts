@@ -15,4 +15,4 @@ export const getArtist = async (id: string): Promise<Artist | null> => {
     console.error("Error fetching artist:", error);
     return null;
   }
-}; 
+};

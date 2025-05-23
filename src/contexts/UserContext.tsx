@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { Artist } from '../types';
-import { getProfile } from '../api/profileApi';
+import { createContext, useContext, useState, useEffect } from "react";
+import { Artist } from "../types";
+import { getProfile } from "../api/profileApi";
 
 interface UserContextType {
   artist: Artist | null;
@@ -36,6 +36,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
 export const useUser = () => {
   const ctx = useContext(UserContext);
-  if (!ctx) throw new Error('useUser must be used within UserProvider');
+  if (!ctx) throw new Error("useUser must be used within UserProvider");
   return ctx;
-}; 
+};

@@ -1,16 +1,21 @@
-"use client"
+"use client";
 
-import type React from "react"
-import type { Artist } from "../../types/index"
+import type React from "react";
+import type { Artist } from "../../types/index";
 
 interface ArtistDetailProps {
-  artist: Artist
-  relatedArtists: Artist[]
-  onRelatedArtistClick: (id: string) => void
-  onBackClick: () => void
+  artist: Artist;
+  relatedArtists: Artist[];
+  onRelatedArtistClick: (id: string) => void;
+  onBackClick: () => void;
 }
 
-const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onRelatedArtistClick, onBackClick }) => {
+const ArtistDetail: React.FC<ArtistDetailProps> = ({
+  artist,
+  relatedArtists,
+  onRelatedArtistClick,
+  onBackClick,
+}) => {
   return (
     <div className="artist-detail p-6 text-white">
       <button
@@ -28,10 +33,15 @@ const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onR
         />
         <div>
           <h1 className="text-3xl font-bold mb-2">{artist.name}</h1>
-          <p className="mb-3 text-gray-400">{artist.monthlyListeners.toLocaleString()} người nghe hàng tháng</p>
+          <p className="mb-3 text-gray-400">
+            {artist.monthlyListeners.toLocaleString()} người nghe hàng tháng
+          </p>
           <div className="flex flex-wrap gap-2 mb-4">
             {artist.genres.map((genre, index) => (
-              <span key={index} className="px-3 py-1 bg-gray-800 rounded-full text-sm">
+              <span
+                key={index}
+                className="px-3 py-1 bg-gray-800 rounded-full text-sm"
+              >
                 {genre}
               </span>
             ))}
@@ -44,10 +54,17 @@ const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onR
         <h2 className="text-2xl font-bold mb-4">Bài hát nổi bật</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           {artist.topTracks.map((track, index) => (
-            <div key={index} className="flex items-center p-3 bg-gray-800 rounded hover:bg-gray-700 transition-colors">
-              <div className="w-8 text-center text-gray-400 mr-3">{index + 1}</div>
+            <div
+              key={index}
+              className="flex items-center p-3 bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+            >
+              <div className="w-8 text-center text-gray-400 mr-3">
+                {index + 1}
+              </div>
               <div>
-                <div className="font-medium">Track {track.split("-").pop()}</div>
+                <div className="font-medium">
+                  Track {track.split("-").pop()}
+                </div>
                 <div className="text-sm text-gray-400">{artist.name}</div>
               </div>
             </div>
@@ -82,7 +99,7 @@ const ArtistDetail: React.FC<ArtistDetailProps> = ({ artist, relatedArtists, onR
         </div>
       )}
     </div>
-  )
-}
+  );
+};
 
-export default ArtistDetail
+export default ArtistDetail;

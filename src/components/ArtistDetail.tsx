@@ -79,7 +79,10 @@ export const ArtistDetail = () => {
     setEditingSong(null);
   };
 
-  const handleEditSubmit = async (data: EditSongFormProps, song: ApiSongType) => {
+  const handleEditSubmit = async (
+    data: EditSongFormProps,
+    song: ApiSongType
+  ) => {
     try {
       const actorId = localStorage.getItem("profile_id");
       if (!actorId) {
@@ -185,4 +188,4 @@ export const ArtistDetail = () => {
       )}
     </div>
   );
-}; 
+};

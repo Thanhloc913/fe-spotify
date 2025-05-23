@@ -25,8 +25,7 @@ export const AddGenreModal: React.FC<AddGenreModalProps> = ({
   });
 
   const handleFormSubmit = (data: AddGenreFormProps) => {
-    onSubmit(data);
-    ; // Reset form after submission
+    onSubmit(data); // Reset form after submission
   };
 
   return (

@@ -1,36 +1,36 @@
 // 📁 src/api/mockApi.ts
-import { faker } from '@faker-js/faker';
-import { mockData } from '../mock/data';
-import { Category } from '../types';
-import { 
-  getArtists, 
-  getArtistById, 
-  searchArtists, 
-  getArtistAlbums 
-} from './artists';
-import { 
-  getAlbums, 
-  getAlbumById, 
-  searchAlbums, 
-  getNewReleases, 
-  getAlbumsByArtist 
-} from './albums';
-import { 
-  getTracks, 
-  getTrackById, 
-  searchTracks, 
-  getTracksByAlbum, 
+import { faker } from "@faker-js/faker";
+import { mockData } from "../mock/data";
+import { Category } from "../types";
+import {
+  getArtists,
+  getArtistById,
+  searchArtists,
+  getArtistAlbums,
+} from "./artists";
+import {
+  getAlbums,
+  getAlbumById,
+  searchAlbums,
+  getNewReleases,
+  getAlbumsByArtist,
+} from "./albums";
+import {
+  getTracks,
+  getTrackById,
+  searchTracks,
+  getTracksByAlbum,
   getTopTracks,
-  getRecommendations 
-} from './tracks';
-import { getToken } from '../utils/auth';
+  getRecommendations,
+} from "./tracks";
+import { getToken } from "../utils/auth";
 
 // Add delay to simulate network latency (ms)
 const API_DELAY = 300;
 
 // Helper function to delay responses to simulate network latency
 const delayResponse = <T>(data: T): Promise<T> => {
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     setTimeout(() => {
       resolve(data);
     }, API_DELAY);
@@ -42,37 +42,38 @@ export const mockApi = {
   // Artist endpoints
   artists: {
     getAll: async () => {
-      if (!getToken()) throw new Error('No token');
+      if (!getToken()) throw new Error("No token");
       return getArtists();
     },
     getById: (id: string) => getArtistById(id),
     search: (query: string) => searchArtists(query),
-    getAlbums: (artistId: string) => getArtistAlbums(artistId)
+    getAlbums: (artistId: string) => getArtistAlbums(artistId),
   },
 
   // Album endpoints
   albums: {
     getAll: async () => {
-      if (!getToken()) throw new Error('No token');
+      if (!getToken()) throw new Error("No token");
       return getAlbums();
     },
     getById: (id: string) => getAlbumById(id),
     search: (query: string) => searchAlbums(query),
     getNewReleases: () => getNewReleases(),
-    getByArtist: (artistId: string) => getAlbumsByArtist(artistId)
+    getByArtist: (artistId: string) => getAlbumsByArtist(artistId),
   },
 
   // Track endpoints
   tracks: {
     getAll: async () => {
-      if (!getToken()) throw new Error('No token');
+      if (!getToken()) throw new Error("No token");
       return getTracks();
     },
     getById: (id: string) => getTrackById(id),
     search: (query: string) => searchTracks(query),
     getByAlbum: (albumId: string) => getTracksByAlbum(albumId),
     getTopTracks: (artistId: string) => getTopTracks(artistId),
-    getRecommendations: (seedTrackIds: string[]) => getRecommendations(seedTrackIds)
+    getRecommendations: (seedTrackIds: string[]) =>
+      getRecommendations(seedTrackIds),
   },
 
   // Generic search across all entities
@@ -80,17 +81,17 @@ export const mockApi = {
     const [artists, albums, tracks] = await Promise.all([
       searchArtists(query),
       searchAlbums(query),
-      searchTracks(query)
+      searchTracks(query),
     ]);
-    
+
     return delayResponse({
       data: {
         artists: artists.data,
         albums: albums.data,
         tracks: tracks.data,
-        playlists: []
+        playlists: [],
       },
-      status: 200
+      status: 200,
     });
   },
 
@@ -116,19 +117,19 @@ export const mockApi = {
           popularArtists,
           popularAlbums,
           trendingSongs,
-          popularPlaylists: []
+          popularPlaylists: [],
         },
-        status: 200
+        status: 200,
       });
     } catch (error) {
-      console.error('Error fetching home data:', error);
+      console.error("Error fetching home data:", error);
       return delayResponse({
         data: null,
         status: 500,
-        message: 'Failed to fetch home data'
+        message: "Failed to fetch home data",
       });
     }
-  }
+  },
 };
 
 // Export the complete mock data

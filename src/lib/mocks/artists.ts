@@ -1,4 +1,4 @@
-import type { Artist } from "../../types/index"
+import type { Artist } from "../../types/index";
 
 // Dữ liệu nghệ sĩ Việt Nam
 export const vietnameseArtists: Artist[] = [
@@ -19,7 +19,12 @@ export const vietnameseArtists: Artist[] = [
       "Kén Cá Chọn Canh",
       "Rời Bỏ",
     ],
-    related: ["artist-sontungmtp-01", "artist-hieuth2-01", "artist-mytan-01", "artist-ducphuc-01"],
+    related: [
+      "artist-sontungmtp-01",
+      "artist-hieuth2-01",
+      "artist-mytan-01",
+      "artist-ducphuc-01",
+    ],
   },
   {
     id: "HieuThu2",
@@ -30,9 +35,25 @@ export const vietnameseArtists: Artist[] = [
     genres: ["Hip-hop", "R&B", "Rap Việt"],
     monthlyListeners: 1800000,
     albums: ["album-hieuth2-01"],
-    singles: ["single-hieuth2-01", "single-hieuth2-02", "single-hieuth2-03", "single-hieuth2-04"],
-    topTracks: ["track-hieuth2-01", "track-hieuth2-02", "track-hieuth2-03", "track-hieuth2-04", "track-hieuth2-05"],
-    related: ["artist-hoaminzy-01", "artist-sontungmtp-01", "artist-denluong-01", "artist-binz-01"],
+    singles: [
+      "single-hieuth2-01",
+      "single-hieuth2-02",
+      "single-hieuth2-03",
+      "single-hieuth2-04",
+    ],
+    topTracks: [
+      "track-hieuth2-01",
+      "track-hieuth2-02",
+      "track-hieuth2-03",
+      "track-hieuth2-04",
+      "track-hieuth2-05",
+    ],
+    related: [
+      "artist-hoaminzy-01",
+      "artist-sontungmtp-01",
+      "artist-denluong-01",
+      "artist-binz-01",
+    ],
   },
   {
     id: "SonTungMTP",
@@ -42,7 +63,11 @@ export const vietnameseArtists: Artist[] = [
     bio: "Sơn Tùng M-TP (tên thật: Nguyễn Thanh Tùng) là một ca sĩ, nhạc sĩ, nhà sản xuất âm nhạc người Việt Nam. Anh được mệnh danh là 'Hoàng tử V-Pop' với nhiều bản hit đình đám và phong cách âm nhạc hiện đại, kết hợp nhiều yếu tố quốc tế. Sơn Tùng cũng là người sáng lập công ty giải trí M-TP Entertainment.",
     genres: ["V-Pop", "Electronic", "R&B", "Hip-hop"],
     monthlyListeners: 5000000,
-    albums: ["album-sontungmtp-01", "album-sontungmtp-02", "album-sontungmtp-03"],
+    albums: [
+      "album-sontungmtp-01",
+      "album-sontungmtp-02",
+      "album-sontungmtp-03",
+    ],
     singles: [
       "single-sontungmtp-01",
       "single-sontungmtp-02",
@@ -57,35 +82,42 @@ export const vietnameseArtists: Artist[] = [
       "track-sontungmtp-04",
       "track-sontungmtp-05",
     ],
-    related: ["artist-hoaminzy-01", "artist-hieuth2-01", "artist-jack-01", "artist-binz-01"],
+    related: [
+      "artist-hoaminzy-01",
+      "artist-hieuth2-01",
+      "artist-jack-01",
+      "artist-binz-01",
+    ],
   },
-]
+];
 
 // Hàm lấy tất cả nghệ sĩ
 export const getAllArtists = (): Artist[] => {
-  return vietnameseArtists
-}
+  return vietnameseArtists;
+};
 
 // Hàm lấy nghệ sĩ theo ID
 export const getArtistById = (id: string): Artist | undefined => {
-  return vietnameseArtists.find((artist) => artist.id === id)
-}
+  return vietnameseArtists.find((artist) => artist.id === id);
+};
 
 // Hàm tìm kiếm nghệ sĩ theo tên
 export const searchArtistsByName = (query: string): Artist[] => {
-  const lowercaseQuery = query.toLowerCase()
-  return vietnameseArtists.filter((artist) => artist.name.toLowerCase().includes(lowercaseQuery))
-}
+  const lowercaseQuery = query.toLowerCase();
+  return vietnameseArtists.filter((artist) =>
+    artist.name.toLowerCase().includes(lowercaseQuery)
+  );
+};
 
 // Hàm lấy nghệ sĩ liên quan
 export const getRelatedArtists = (artistId: string): Artist[] => {
-  const artist = getArtistById(artistId)
-  if (!artist) return []
+  const artist = getArtistById(artistId);
+  if (!artist) return [];
 
   return artist.related
     .map((relatedId) => getArtistById(relatedId))
-    .filter((artist): artist is Artist => artist !== undefined)
-}
+    .filter((artist): artist is Artist => artist !== undefined);
+};
 
 // Export mặc định
-export default vietnameseArtists
+export default vietnameseArtists;

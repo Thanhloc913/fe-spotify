@@ -1,7 +1,11 @@
-import React, { useState, ChangeEvent, FormEvent, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { checkEmailExists, requestPasswordReset, verifyAndResetPassword } from '../api/authApi';
-import styled from 'styled-components';
+import React, { useState, ChangeEvent, FormEvent, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import {
+  checkEmailExists,
+  requestPasswordReset,
+  verifyAndResetPassword,
+} from "../api/authApi";
+import styled from "styled-components";
 
 const Container = styled.div`
   min-height: 100vh;
@@ -17,7 +21,7 @@ const Box = styled.div`
   padding: 40px 32px;
   max-width: 400px;
   width: 100%;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -127,42 +131,46 @@ const OtpInput = styled.input`
 `;
 
 function maskEmail(email: string) {
-  const [name, domain] = email.split('@');
-  const maskedName = name[0] + '*'.repeat(Math.max(0, name.length - 2)) + name.slice(-1);
-  const [domainName, domainExt] = domain.split('.');
-  const maskedDomain = domainName[0] + '*'.repeat(Math.max(0, domainName.length - 2)) + domainName.slice(-1);
+  const [name, domain] = email.split("@");
+  const maskedName =
+    name[0] + "*".repeat(Math.max(0, name.length - 2)) + name.slice(-1);
+  const [domainName, domainExt] = domain.split(".");
+  const maskedDomain =
+    domainName[0] +
+    "*".repeat(Math.max(0, domainName.length - 2)) +
+    domainName.slice(-1);
   return `${maskedName}@${maskedDomain}.${domainExt}`;
 }
 
 const ForgotPassword: React.FC = () => {
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
-  const [email, setEmail] = useState('');
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [token, setToken] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+  const [email, setEmail] = useState("");
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+  const [token, setToken] = useState("");
+  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const [isVerifying, setIsVerifying] = useState(false);
-  const [newPassword, setNewPassword] = useState('');
+  const [newPassword, setNewPassword] = useState("");
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
   const [resendLoading, setResendLoading] = useState(false);
 
   // Bước 1: Nhập email
   const handleRequestReset = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     try {
       const exists = await checkEmailExists(email);
       if (!exists) {
-        setError('Email không tồn tại trong hệ thống');
+        setError("Email không tồn tại trong hệ thống");
         return;
       }
       const response = await requestPasswordReset(email);
       if (response.success) {
         setToken(response.data.token);
         setStep(2);
-        setSuccess('Mã xác thực đã được gửi đến email của bạn');
+        setSuccess("Mã xác thực đã được gửi đến email của bạn");
       }
     } catch (err: any) {
       setError(err.message);
@@ -183,34 +191,41 @@ const ForgotPassword: React.FC = () => {
     }
   };
 
-  const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, idx: number) => {
-    if (e.key === 'Backspace' && !otp[idx] && idx > 0) {
+  const handleOtpKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    idx: number
+  ) => {
+    if (e.key === "Backspace" && !otp[idx] && idx > 0) {
       otpRefs.current[idx - 1]?.focus();
     }
   };
 
   const handleVerifyOtp = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     setIsVerifying(true);
     try {
-      const code = otp.join('');
+      const code = otp.join("");
       if (code.length !== 6) {
-        setError('Vui lòng nhập đủ 6 số mã xác thực');
+        setError("Vui lòng nhập đủ 6 số mã xác thực");
         setIsVerifying(false);
         return;
       }
       // Gọi verify với mật khẩu tạm (để xác thực mã, chưa đổi mật khẩu)
-      const response = await verifyAndResetPassword(token, code, 'dummy-password');
+      const response = await verifyAndResetPassword(
+        token,
+        code,
+        "dummy-password"
+      );
       if (response.success) {
-        setSuccess('Mã xác thực hợp lệ!');
+        setSuccess("Mã xác thực hợp lệ!");
         setStep(3);
       } else {
-        setError(response.message || 'Mã xác thực không đúng');
+        setError(response.message || "Mã xác thực không đúng");
       }
     } catch (err: any) {
-      setError(err.message || 'Mã xác thực không đúng');
+      setError(err.message || "Mã xác thực không đúng");
     } finally {
       setIsVerifying(false);
     }
@@ -219,18 +234,18 @@ const ForgotPassword: React.FC = () => {
   // Gửi lại mã
   const handleResend = async () => {
     setResendLoading(true);
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     try {
       const response = await requestPasswordReset(email);
       if (response.success) {
         setToken(response.data.token);
-        setSuccess('Đã gửi lại mã xác thực!');
-        setOtp(['', '', '', '', '', '']);
+        setSuccess("Đã gửi lại mã xác thực!");
+        setOtp(["", "", "", "", "", ""]);
         otpRefs.current[0]?.focus();
       }
     } catch (err: any) {
-      setError('Không gửi lại được mã xác thực');
+      setError("Không gửi lại được mã xác thực");
     } finally {
       setResendLoading(false);
     }
@@ -239,19 +254,19 @@ const ForgotPassword: React.FC = () => {
   // Bước 3: Đặt lại mật khẩu
   const handleResetPassword = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
+    setError("");
+    setSuccess("");
     try {
-      const code = otp.join('');
+      const code = otp.join("");
       const response = await verifyAndResetPassword(token, code, newPassword);
       if (response.success) {
-        setSuccess('Đặt lại mật khẩu thành công!');
-        setTimeout(() => navigate('/login'), 2000);
+        setSuccess("Đặt lại mật khẩu thành công!");
+        setTimeout(() => navigate("/login"), 2000);
       } else {
-        setError(response.message || 'Có lỗi xảy ra');
+        setError(response.message || "Có lỗi xảy ra");
       }
     } catch (err: any) {
-      setError(err.message || 'Có lỗi xảy ra');
+      setError(err.message || "Có lỗi xảy ra");
     }
   };
 
@@ -262,23 +277,27 @@ const ForgotPassword: React.FC = () => {
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {success && <SuccessMessage>{success}</SuccessMessage>}
         {step === 1 && (
-          <form onSubmit={handleRequestReset} style={{ width: '100%' }}>
+          <form onSubmit={handleRequestReset} style={{ width: "100%" }}>
             <Guide>Nhập email bạn đã đăng ký để nhận mã xác thực.</Guide>
             <Input
               type="email"
               placeholder="Nhập email của bạn"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
             <Button type="submit">Gửi mã xác thực</Button>
           </form>
         )}
         {step === 2 && (
-          <form onSubmit={handleVerifyOtp} style={{ width: '100%' }}>
+          <form onSubmit={handleVerifyOtp} style={{ width: "100%" }}>
             <Guide>
-              Nhập mã gồm 6 chữ số mà bạn nhận được qua địa chỉ<br />
-              <span style={{ color: '#1db954', wordBreak: 'break-all' }}>{maskEmail(email)}</span>.
+              Nhập mã gồm 6 chữ số mà bạn nhận được qua địa chỉ
+              <br />
+              <span style={{ color: "#1db954", wordBreak: "break-all" }}>
+                {maskEmail(email)}
+              </span>
+              .
             </Guide>
             <OtpInputWrapper>
               {otp.map((digit, idx) => (
@@ -287,30 +306,34 @@ const ForgotPassword: React.FC = () => {
                   type="text"
                   maxLength={1}
                   value={digit}
-                  ref={el => (otpRefs.current[idx] = el)}
-                  onChange={e => handleOtpChange(e.target.value, idx)}
-                  onKeyDown={e => handleOtpKeyDown(e, idx)}
+                  ref={(el) => (otpRefs.current[idx] = el)}
+                  onChange={(e) => handleOtpChange(e.target.value, idx)}
+                  onKeyDown={(e) => handleOtpKeyDown(e, idx)}
                   inputMode="numeric"
                   autoFocus={idx === 0}
                 />
               ))}
             </OtpInputWrapper>
-            <ResendButton type="button" onClick={handleResend} disabled={resendLoading}>
-              {resendLoading ? 'Đang gửi lại...' : 'Gửi lại mã'}
+            <ResendButton
+              type="button"
+              onClick={handleResend}
+              disabled={resendLoading}
+            >
+              {resendLoading ? "Đang gửi lại..." : "Gửi lại mã"}
             </ResendButton>
             <Button type="submit" disabled={isVerifying}>
-              {isVerifying ? 'Đang xác thực...' : 'Xác nhận mã'}
+              {isVerifying ? "Đang xác thực..." : "Xác nhận mã"}
             </Button>
           </form>
         )}
         {step === 3 && (
-          <form onSubmit={handleResetPassword} style={{ width: '100%' }}>
+          <form onSubmit={handleResetPassword} style={{ width: "100%" }}>
             <Guide>Nhập mật khẩu mới cho tài khoản của bạn.</Guide>
             <Input
               type="password"
               placeholder="Mật khẩu mới"
               value={newPassword}
-              onChange={e => setNewPassword(e.target.value)}
+              onChange={(e) => setNewPassword(e.target.value)}
               required
             />
             <Button type="submit">Đặt lại mật khẩu</Button>
@@ -321,4 +344,4 @@ const ForgotPassword: React.FC = () => {
   );
 };
 
-export default ForgotPassword; 
+export default ForgotPassword;

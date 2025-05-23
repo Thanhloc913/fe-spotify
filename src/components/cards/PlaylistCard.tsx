@@ -1,7 +1,7 @@
-import type React from 'react';
-import { FaPlay } from 'react-icons/fa';
-import type { Playlist } from '../../types';
-import { Link } from 'react-router-dom';
+import type React from "react";
+import { FaPlay } from "react-icons/fa";
+import type { Playlist } from "../../types";
+import { Link } from "react-router-dom";
 
 interface PlaylistCardProps {
   playlist: Playlist;
@@ -9,7 +9,10 @@ interface PlaylistCardProps {
 
 const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist }) => {
   return (
-    <Link to={`/playlist/${playlist.id}`} className="card p-4 transition duration-300 group">
+    <Link
+      to={`/playlist/${playlist.id}`}
+      className="card p-4 transition duration-300 group"
+    >
       <div className="relative mb-4">
         <img
           src={playlist.coverUrl}
@@ -20,10 +23,15 @@ const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist }) => {
           <FaPlay />
         </button>
       </div>
-      <h3 className="text-spotify-text-primary font-medium text-base truncate">{playlist.name}</h3>
-      <p className="text-spotify-text-secondary text-sm truncate">{playlist.description}</p>
+      <h3 className="text-spotify-text-primary font-medium text-base truncate">
+        {playlist.name}
+      </h3>
+      <p className="text-spotify-text-secondary text-sm truncate">
+        {playlist.description}
+      </p>
       <p className="text-spotify-text-secondary text-xs mt-1">
-        By {playlist.ownerName} • {playlist.totalTracks} {playlist.totalTracks === 1 ? 'song' : 'songs'}
+        By {playlist.ownerName} • {playlist.totalTracks}{" "}
+        {playlist.totalTracks === 1 ? "song" : "songs"}
       </p>
     </Link>
   );

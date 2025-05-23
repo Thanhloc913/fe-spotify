@@ -1,17 +1,22 @@
-import React from 'react';
-import { useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { FaChevronLeft, FaChevronRight, FaSearch, FaUser } from 'react-icons/fa';
+import React from "react";
+import { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  FaChevronLeft,
+  FaChevronRight,
+  FaSearch,
+  FaUser,
+} from "react-icons/fa";
 
 interface TopBarProps {
   onLogout: () => void;
 }
 
 const TopBar: React.FC<TopBarProps> = ({ onLogout }) => {
-  const [searchValue, setSearchValue] = useState('');
+  const [searchValue, setSearchValue] = useState("");
   const location = useLocation();
   const navigate = useNavigate();
-  const isSearchPage = location.pathname.startsWith('/search');
+  const isSearchPage = location.pathname.startsWith("/search");
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
