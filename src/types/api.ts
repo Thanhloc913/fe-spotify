@@ -71,6 +71,7 @@ export type ApiProfileType = {
   bio: string;
   dateOfBirth: string;
   phoneNumber: string;
+  isPremium?: boolean | null;
 };
 
 export type ApiPaginatedResult<T> = {

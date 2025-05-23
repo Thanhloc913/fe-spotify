@@ -16,6 +16,7 @@ import { Link } from 'react-router-dom';
 import { getUserPlaylists, addTrackToPlaylist, removeTrackFromPlaylist } from '../../api/user';
 import { musicApi } from '../../api/musicApi';
 import ChatBox from './ChatBox';
+import { getProfile, getProfilesByIds } from '../../api/profileApi';
 
 // Thêm định nghĩa kiểu dữ liệu
 interface Playlist {
@@ -306,6 +307,18 @@ const Player: React.FC = () => {
     }
   }, [isPlaying]);
 
+  // xu ly khi nhan nut download
+  const handleDownloadRequest = async () => {
+    const pId = localStorage.getItem("profile_id")
+    if (!pId) return;
+    const profile = (await getProfilesByIds([pId]))[0]
+    if (audioUrl && profile.isPremium) {
+      window.open(audioUrl);
+    } else {
+      alert('Bạn không có quyền tải xuống bài hát này.');
+    }
+  }
+
   if (!currentTrack) return null;
 
   return (
@@ -449,6 +462,15 @@ const Player: React.FC = () => {
             className="w-24 h-1 bg-gray-600 rounded-lg appearance-none cursor-pointer"
             style={{ background: volumeBg }}
           />
+          <button
+            onClick={handleDownloadRequest}
+            className="ml-2 focus:outline-none"
+            title="Tải xuống"
+          >
+            <svg className="w-6 h-6 text-gray-400 hover:text-green-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v12m0 0l-4-4m4 4l4-4M4 20h16" />
+            </svg>
+          </button>
           {/* Nút mở chat */}
           <button onClick={() => setOpenChat(true)} className="ml-2 focus:outline-none">
             <FaComments className="w-6 h-6 text-gray-400 hover:text-green-400" />
