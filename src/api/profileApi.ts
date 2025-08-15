@@ -1,5 +1,5 @@
 import axios from "axios";
-import { ApiProfileType } from "../types/api";
+import type { ApiProfileType } from "../types/api/profile";
 
 const profileApi = axios.create({
   baseURL: "http://localhost:8081",

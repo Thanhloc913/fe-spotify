@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { ApiSongType } from "../../types/api";
+import type { ApiSongType } from "../../types/api/song";
 import { ControlledFileInput } from "../admin/ControlledFileInput";
 import { useMemo } from "react";
 

@@ -1,18 +1,19 @@
 import axios from "axios";
-import {
+import { ApiPaginatedResult, ApiResponse } from "../types/api";
+import type {
   ApiAccountType,
   ApiCreateAccountRequest,
-  ApiCreateRoleRequest,
   ApiDeleteAccountRequest,
-  ApiDeleteRolesRequest,
-  ApiEditRoleRequest,
   ApiGetAccountRequest,
-  ApiGetRoleRequest,
-  ApiPaginatedResult,
-  ApiResponse,
-  ApiRoleType,
   ApiUpdateAccountRequest,
-} from "../types/api";
+} from "../types/api/account";
+import type {
+  ApiRoleType,
+  ApiCreateRoleRequest,
+  ApiEditRoleRequest,
+  ApiGetRoleRequest,
+  ApiDeleteRolesRequest,
+} from "../types/api/role";
 
 const axiosClient = axios.create({
   baseURL: "http://localhost:8080",
@@ -21,6 +22,11 @@ const axiosClient = axios.create({
   },
   withCredentials: true,
 });
+
+type Deferred<T> = {
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+};
 
 axiosClient.interceptors.request.use(
   (config) => {
@@ -34,17 +40,29 @@ axiosClient.interceptors.request.use(
 );
 
 let isRefreshing = false;
-let failedQueue: any[] = [];
+let failedQueue: Deferred<string>[] = [];
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
+const processQueue = (error?: unknown, token?: string) => {
+  failedQueue.forEach((deferred) => {
     if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
+      deferred.reject(error);
+    } else if (typeof token === "string") {
+      deferred.resolve(token);
     }
   });
   failedQueue = [];
+};
+
+const getAxiosErrorMessage = (err: unknown, fallback: string): string => {
+  if (axios.isAxiosError(err)) {
+    const message = (err.response?.data as { message?: string } | undefined)
+      ?.message;
+    return message ?? fallback;
+  }
+  if (err instanceof Error) {
+    return err.message || fallback;
+  }
+  return fallback;
 };
 
 axiosClient.interceptors.response.use(
@@ -90,7 +108,7 @@ axiosClient.interceptors.response.use(
         originalRequest.headers["Authorization"] = "Bearer " + access_token;
         return axiosClient(originalRequest);
       } catch (err) {
-        processQueue(err, null);
+        processQueue(err);
         isRefreshing = false;
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
@@ -149,10 +167,10 @@ export const login = async (
     } else {
       throw new Error("Không nhận được access token");
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi login:", error);
     throw new Error(
-      error.response?.data?.message || "Sai tài khoản hoặc mật khẩu!"
+      getAxiosErrorMessage(error, "Sai tài khoản hoặc mật khẩu!")
     );
   }
 };
@@ -186,9 +204,9 @@ export const register = async (registerData: {
       },
     });
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi register:", error);
-    throw new Error(error.response?.data?.message || "Đăng ký thất bại!");
+    throw new Error(getAxiosErrorMessage(error, "Đăng ký thất bại!"));
   }
 };
 
@@ -206,10 +224,13 @@ export const getAccountById = async (accountId: string) => {
       }
     );
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi lấy thông tin tài khoản:", error);
     throw new Error(
-      error.response?.data?.message || "Không thể lấy thông tin tài khoản"
+      getAxiosErrorMessage(
+        error,
+        "Không thể lấy thông tin tài khoản"
+      )
     );
   }
 };
@@ -231,10 +252,10 @@ export const verifyCurrentPassword = async (
       }
     );
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi kiểm tra mật khẩu:", error);
     throw new Error(
-      error.response?.data?.message || "Mật khẩu không chính xác"
+      getAxiosErrorMessage(error, "Mật khẩu không chính xác")
     );
   }
 };
@@ -271,10 +292,10 @@ export const updatePassword = async (newPassword: string) => {
       }
     );
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi cập nhật mật khẩu:", error);
     throw new Error(
-      error.response?.data?.message || "Cập nhật mật khẩu thất bại"
+      getAxiosErrorMessage(error, "Cập nhật mật khẩu thất bại")
     );
   }
 };
@@ -293,11 +314,9 @@ export const checkEmailExists = async (email: string) => {
       }
     );
     return response.data.success;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi kiểm tra email:", error);
-    throw new Error(
-      error.response?.data?.message || "Không thể kiểm tra email"
-    );
+    throw new Error(getAxiosErrorMessage(error, "Không thể kiểm tra email"));
   }
 };
 
@@ -315,10 +334,13 @@ export const requestPasswordReset = async (email: string) => {
       }
     );
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi yêu cầu đặt lại mật khẩu:", error);
     throw new Error(
-      error.response?.data?.message || "Không thể gửi yêu cầu đặt lại mật khẩu"
+      getAxiosErrorMessage(
+        error,
+        "Không thể gửi yêu cầu đặt lại mật khẩu"
+      )
     );
   }
 };
@@ -345,10 +367,10 @@ export const verifyAndResetPassword = async (
       }
     );
     return response.data;
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi xác thực và đặt lại mật khẩu:", error);
     throw new Error(
-      error.response?.data?.message || "Không thể đặt lại mật khẩu"
+      getAxiosErrorMessage(error, "Không thể đặt lại mật khẩu")
     );
   }
 };

@@ -6,5 +6,5 @@ RUN corepack enable
 
 WORKDIR /react
 
-# CMD yarn install && yarn cache clean && yarn dev
-CMD yarn dev
+# Install deps on container start (volume-mounted workspace) and run dev
+CMD corepack prepare pnpm@9.0.0 --activate && pnpm install && pnpm dev

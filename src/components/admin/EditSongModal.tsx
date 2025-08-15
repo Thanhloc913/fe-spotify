@@ -20,7 +20,7 @@ import {
 import { DateTimePicker } from "@mui/x-date-pickers";
 import dayjs from "dayjs";
 import { useForm } from "react-hook-form";
-import { ApiSongType } from "../../types/api";
+import type { ApiSongType } from "../../types/api/song";
 import { ControlledFileInput } from "./ControlledFileInput";
 import ModalSection from "./ModalSection";
 import { useMemo } from "react";

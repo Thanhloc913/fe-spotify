@@ -12,7 +12,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { EditSongModal, EditSongFormProps } from "./admin/EditSongModal";
-import { ApiSongType, ApiSongUpdateRequest } from "../types/api";
+import type { ApiSongType, ApiSongUpdateRequest } from "../types/api/song";
 import { createStorageData, uploadFile } from "../api/storageApi";
 import { updateSong } from "../api/musicApi";
 import { getArtist } from "../api/artistApi";

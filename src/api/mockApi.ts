@@ -1,5 +1,3 @@
-// 📁 src/api/mockApi.ts
-import { faker } from "@faker-js/faker";
 import { mockData } from "../mock/data";
 import { Category } from "../types";
 import {

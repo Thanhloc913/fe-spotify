@@ -9,7 +9,7 @@ import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPassword from "./pages/ForgotPassword";
-import PrivateRoute from "./components/PrivateRoute";
+// import PrivateRoute from "./components/PrivateRoute";
 import Artists from "./pages/Artists";
 import Albums from "./pages/Albums";
 import Tracks from "./pages/Tracks";
@@ -46,9 +46,9 @@ function App() {
             <Route
               path="/"
               element={
-                <PrivateRoute>
+                // <PrivateRoute>
                   <Layout />
-                </PrivateRoute>
+                // </PrivateRoute>
               }
             >
               <Route index element={<HomePage />} />

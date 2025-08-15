@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { login } from "../api/authApi";
 import { FaSpotify, FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
 import { useUser } from "../contexts/UserContext";
+import { LoginSchema } from "../schemas/auth";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -14,11 +15,17 @@ const LoginPage: React.FC = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await login(email, password);
+      const parsed = LoginSchema.safeParse({ accountInput: email, password });
+      if (!parsed.success) {
+        const msg = parsed.error.issues[0]?.message || "Dữ liệu không hợp lệ";
+        setError(msg);
+        return;
+      }
+      await login(parsed.data.accountInput, parsed.data.password);
       await fetchProfile();
       navigate("/");
-    } catch (err: any) {
-      setError(err.message || "Đăng nhập thất bại");
+    } catch (err: unknown) {
+      setError((err as Error)?.message || "Đăng nhập thất bại");
     }
   };
 

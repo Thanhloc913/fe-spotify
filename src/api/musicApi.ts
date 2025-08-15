@@ -3,30 +3,34 @@ import axios from "axios";
 import { MockApi } from "../lib/mocks/playerApi";
 import { mockData } from "../mock/data";
 import { ApiResponse, Track } from "../types";
-import {
+import { ApiResponse as ApiResponseV2 } from "../types/api";
+import type { ApiPaginatedResult } from "../types/api";
+import type {
   ApiAlbumSongType,
   ApiAlbumType,
   ApiCreateAlbumRequest,
   ApiCreateAlbumSongRequest,
   ApiCreateAlbumSongsRequest,
-  ApiCreateGenreRequest,
   ApiDeleteAlbumSongRequest,
   ApiDeleteAlbumsRequest,
-  ApiDeleteGenresRequest,
-  ApiDeleteSongsRequest,
   ApiEditAlbumRequest,
-  ApiEditGenreRequest,
-  ApiFavoriteSongType,
-  ApiGenreType,
   ApiGetAlbumRequest,
+} from "../types/api/album";
+import type {
+  ApiCreateGenreRequest,
+  ApiDeleteGenresRequest,
+  ApiEditGenreRequest,
+  ApiGenreType,
   ApiGetGenreRequest,
+} from "../types/api/genre";
+import type {
+  ApiDeleteSongsRequest,
+  ApiFavoriteSongType,
   ApiGetSongsByAlbumIdRequest,
-  ApiPaginatedResult,
-  ApiResponse as ApiResponseV2,
   ApiSongCreateRequest,
   ApiSongType,
   ApiSongUpdateRequest,
-} from "../types/api";
+} from "../types/api/song";
 import { PlayerState } from "../types/index";
 import { getToken } from "../utils/auth";
 import { apiRequest } from "./authApi";

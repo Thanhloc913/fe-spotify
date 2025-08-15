@@ -1,4 +1,5 @@
-import { ApiResponse, ApiSongType } from "../types/api";
+import { ApiResponse } from "../types/api";
+import type { ApiSongType } from "../types/api/song";
 
 interface Artist {
   id: string;

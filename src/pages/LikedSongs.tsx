@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { FaHeart, FaPlay, FaPause } from "react-icons/fa";
 import { musicApi } from "../api";
-import { ApiSongType } from "../types/api";
-import { ApiProfileType } from "../types/api";
+import type { ApiSongType } from "../types/api/song";
+import type { ApiProfileType } from "../types/api/profile";
 import { getProfilesByIds } from "../api/profileApi";
 import { usePlayerStore } from "../store/playerStore";
 

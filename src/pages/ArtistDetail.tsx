@@ -12,12 +12,8 @@ import {
   EditSongModalCopy,
   EditSongFormProps,
 } from "../components/modal/EditSongModalCopy";
-import {
-  ApiSongType,
-  ApiSongUpdateRequest,
-  ApiAlbumType,
-  ApiEditAlbumRequest,
-} from "../types/api";
+import type { ApiSongType, ApiSongUpdateRequest } from "../types/api/song";
+import type { ApiAlbumType, ApiEditAlbumRequest } from "../types/api/album";
 import {
   EditAlbum2ModalCopy,
   EditAlbum2FormProps,

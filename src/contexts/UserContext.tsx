@@ -24,7 +24,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     fetchProfile();
-    // eslint-disable-next-line
   }, []);
 
   return (

@@ -10,7 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useForm } from "react-hook-form";
-import { ApiAlbumType } from "../../types/api";
+import type { ApiAlbumType } from "../../types/api/album";
 import { ControlledFileInput } from "../admin/ControlledFileInput";
 
 export interface EditAlbum2FormProps {
