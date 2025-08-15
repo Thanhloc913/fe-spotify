@@ -69,7 +69,7 @@ export const getArtistById = async (
 
       if (!artist) {
         console.log(`Không tìm thấy nghệ sĩ với ID: ${id}`);
-        return createResponse(null as any, 404, "Artist not found");
+        return createResponse(null, 404, "Artist not found");
       }
 
       // Get artist albums
@@ -177,7 +177,20 @@ export const getArtistById = async (
           songsResponse.data.data &&
           songsResponse.data.data.result
         ) {
-          topTracks = songsResponse.data.data.result.map((song: any) => ({
+          type RawSong = {
+            id: string;
+            title?: string;
+            artistId?: string;
+            albumId?: string;
+            albumName?: string;
+            duration?: number;
+            coverUrl?: string;
+            backgroundUrl?: string;
+            storageId?: string;
+            storageImageId?: string;
+            songUrl?: string;
+          };
+          topTracks = songsResponse.data.data.result.map((song: RawSong) => ({
             id: song.id,
             title: song.title || "",
             artistId: song.artistId || id,
@@ -198,15 +211,12 @@ export const getArtistById = async (
           console.log("Converted tracks:", topTracks);
 
           const tracksPromises = topTracks.map(async (track) => {
-            let updatedTrack = { ...track };
+            const updatedTrack = { ...track };
 
             // Lấy ảnh nếu cần
             if (!track.coverUrl && (track.storageImageId || track.storageId)) {
               try {
-                const imageId =
-                  track.storageImageId ||
-                  (track as any).storageImageId ||
-                  (track as any).storageImageID;
+                const imageId = track.storageImageId;
 
                 let imageUrl = null;
                 if (imageId) {
@@ -301,7 +311,14 @@ export const getArtistById = async (
         console.log("Albums extracted data:", albumsData);
 
         if (albumsData && albumsData.length > 0) {
-          albums = albumsData.map((album: any) => ({
+          type RawAlbum = {
+            id: string;
+            name?: string;
+            title?: string;
+            createdAt?: string;
+            backgroundUrl?: string;
+          };
+          albums = albumsData.map((album: RawAlbum) => ({
             id: album.id,
             title: album.name || album.title || "",
             artistId: profileId,
@@ -337,11 +354,11 @@ export const getArtistById = async (
         "Profile API không trả về dữ liệu thành công:",
         profileResponse.data
       );
-      return createResponse(null as any, 404, "Artist not found");
+      return createResponse(null, 404, "Artist not found");
     }
   } catch (error) {
     console.error("Error fetching artist details:", error);
-    return createResponse(null as any, 500, "Failed to fetch artist details");
+    return createResponse(null, 500, "Failed to fetch artist details");
   }
 };
 

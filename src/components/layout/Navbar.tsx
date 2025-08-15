@@ -4,14 +4,9 @@ import { FaSearch, FaSpotify } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useUser } from "../../contexts/UserContext";
 import { removeToken } from "../../utils/auth";
-import { getIsPremium, getProfilesByIds } from "../../api/profileApi";
+import { getIsPremium } from "../../api/profileApi";
 
-interface User {
-  id: string;
-  name: string;
-  email: string;
-  profileImageUrl: string;
-}
+// type alias removed as unused
 
 export default function Navbar() {
   const navigate = useNavigate();

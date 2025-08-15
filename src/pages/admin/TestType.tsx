@@ -1,6 +1,9 @@
 // Component that accepts a {[key: string]: any} type
 // Unexpected any. Specify a different type.eslint@typescript-eslint/no-explicit-any
-type GenericProps = { [key: string]: any };
+type JsonPrimitive = string | number | boolean | null;
+type JsonValue = JsonPrimitive | JsonObject | JsonValue[];
+type JsonObject = { [key: string]: JsonValue };
+type GenericProps = JsonObject;
 
 const GenericComponent: React.FC<GenericProps> = (props) => {
   return (

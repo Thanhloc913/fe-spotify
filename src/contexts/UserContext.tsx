@@ -17,7 +17,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       const data = await getProfile();
       if (data.success) setArtist(data.data);
-    } catch (err) {
+    } catch {
       setArtist(null);
     }
   };

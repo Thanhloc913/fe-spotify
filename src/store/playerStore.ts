@@ -41,8 +41,8 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   showVideo: false,
   isVideoModalOpen: false,
   setCurrentTrack: (track) => {
-    const { currentTrack } = get();
-    const isSameTrack = currentTrack?.id === track.id;
+    const existingTrack = get().currentTrack;
+    const isSameTrack = existingTrack?.id === track.id;
 
     set({
       currentTrack: track,
@@ -53,19 +53,19 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     });
 
     if (!isSameTrack) {
-      musicApi.setTrack(track.id).catch((error) => {
+      musicApi.setTrack(track.id).catch((error: unknown) => {
         console.error("Error setting track:", error);
       });
     }
   },
   playTrack: async () => {
-    const { currentTrack } = get();
-    if (currentTrack) {
+    const trackToPlay = get().currentTrack;
+    if (trackToPlay) {
       set({ isPlaying: true });
 
       // Call the API to play the track
       try {
-        await musicApi.play(currentTrack.id);
+        await musicApi.play(trackToPlay.id);
       } catch (error) {
         console.error("Error playing track:", error);
       }
@@ -95,7 +95,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   setRepeat: (repeat) => set({ repeat }),
   toggleShuffle: () => set((state) => ({ shuffle: !state.shuffle })),
   skipToNext: () => {
-    const { queue, currentTrack, repeat, setCurrentTrack, playTrack } = get();
+    const { queue, repeat, setCurrentTrack, playTrack } = get();
     if (queue.length > 0) {
       const nextTrack = queue[0];
       setCurrentTrack(nextTrack);
@@ -120,9 +120,9 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   },
   setShowVideo: (show) => set({ showVideo: show }),
   openMusicVideo: () => {
-    const { currentTrack } = get();
-    if (currentTrack?.songUrl) {
-      console.log("Opening music video URL:", currentTrack.songUrl);
+    const trackForVideo = get().currentTrack;
+    if (trackForVideo?.songUrl) {
+      console.log("Opening music video URL:", trackForVideo.songUrl);
 
       // Mở modal video thay vì set showVideo
       set({ isVideoModalOpen: true });

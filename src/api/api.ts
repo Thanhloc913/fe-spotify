@@ -56,7 +56,7 @@ const createResponse = <T>(
 };
 
 // Main API configuration
-const USE_MOCK_DATA = true; // Set to false to use real API when it's ready
+// const USE_MOCK_DATA = true; // Set to false to use real API when it's ready
 
 // Mock API service
 const api = {

@@ -1,7 +1,7 @@
 // playerApi.ts
 import { Track, PlayerState, ApiResponse } from "../../types/index";
 
-let mockQueue: Track[] = [
+const mockQueue: Track[] = [
   {
     id: "track-1",
     title: "Mock Song",
@@ -34,7 +34,7 @@ let mockQueue: Track[] = [
   },
 ];
 
-let playerState: PlayerState = {
+const playerState: PlayerState = {
   currentTrack: mockQueue[0],
   queue: mockQueue,
   isPlaying: false,

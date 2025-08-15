@@ -129,7 +129,7 @@ const LikedSongs = () => {
         songType: track.songType,
       };
 
-      setCurrentTrack(enhancedTrack as any);
+      setCurrentTrack(enhancedTrack as unknown as Parameters<typeof setCurrentTrack>[0]);
       playTrack();
     }
   };

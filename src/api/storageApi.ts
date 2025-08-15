@@ -241,8 +241,8 @@ export const createAlbum = async (albumData: {
     });
     const data = await response.json();
     return { status: response.status, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Lỗi:", error);
-    return { status: 500, data: { error: error.message } };
+    return { status: 500, data: { error: (error as Error).message } };
   }
 };

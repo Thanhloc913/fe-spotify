@@ -56,7 +56,7 @@ const RegisterPage: React.FC = () => {
   const validateStep2 = () => {
     const pw = formData.password;
     const hasLetter = /[a-zA-Z]/.test(pw);
-    const hasNumberOrSpecial = /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(
+    const hasNumberOrSpecial = /[0-9\W]+/.test(
       pw
     );
     const longEnough = pw.length >= 10;
@@ -114,8 +114,8 @@ const RegisterPage: React.FC = () => {
         avatarUrl: "",
       });
       navigate("/login");
-    } catch (err: any) {
-      setError(err.message || "Đăng ký thất bại");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Đăng ký thất bại");
     }
   };
 
@@ -260,7 +260,7 @@ const RegisterPage: React.FC = () => {
                   </li>
                   <li
                     className={
-                      /[0-9!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]+/.test(
+                      /[0-9\W]+/.test(
                         formData.password
                       )
                         ? "text-green-400"

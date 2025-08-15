@@ -17,7 +17,7 @@ const PasswordSchema = z
   .refine((pw) => /[a-zA-Z]/.test(pw), {
     message: "Mật khẩu phải chứa ít nhất 1 chữ cái",
   })
-  .refine((pw) => /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>\/?]/.test(pw), {
+  .refine((pw) => /[0-9\W]/.test(pw), {
     message: "Mật khẩu phải chứa ít nhất 1 số hoặc ký tự đặc biệt",
   });
 

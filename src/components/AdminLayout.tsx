@@ -8,16 +8,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useEffect, useState } from "react";
-import {
-  MdAlbum,
-  MdCategory,
-  MdLibraryMusic,
-  MdMusicNote,
-  MdPerson,
-  MdPlaylistPlay,
-  MdQueueMusic,
-  MdSecurity,
-} from "react-icons/md";
+import { MdMusicNote, MdPlaylistPlay, MdQueueMusic, MdSecurity } from "react-icons/md";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAdminLoadingState } from "../store/paginationStore";
 

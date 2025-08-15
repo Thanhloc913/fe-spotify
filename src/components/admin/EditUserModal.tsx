@@ -65,7 +65,9 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   };
 
   const handleProfileSubmit = (data: EditProfileFormProps) => {
-    profile && onSubmitProfile(data, profile);
+    if (profile) {
+      onSubmitProfile(data, profile);
+    }
   };
 
   return (

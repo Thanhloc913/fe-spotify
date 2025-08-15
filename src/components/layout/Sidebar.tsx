@@ -1,28 +1,20 @@
 import type React from "react";
 import { useState, useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import {
-  FaHome,
-  FaSearch,
-  FaBook,
-  FaPlus,
-  FaHeart,
-  FaSpotify,
-  FaEllipsisH,
-} from "react-icons/fa";
+import { FaPlus, FaHeart } from "react-icons/fa";
 import { createPlaylist, getUserPlaylists, UserPlaylist } from "../../api/user";
-import { mockTracks } from "../../mock/data";
-import { useUser } from "../../contexts/UserContext";
+// import { mockTracks } from "../../mock/data";
+// import { useUser } from "../../contexts/UserContext";
 
 const Sidebar: React.FC = () => {
   const [showForm, setShowForm] = useState(false);
   const [playlistName, setPlaylistName] = useState("");
-  const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
+  // const [selectedTracks, setSelectedTracks] = useState<string[]>([]);
   const [playlists, setPlaylists] = useState<UserPlaylist[]>([]);
-  const [showMenuId, setShowMenuId] = useState<string | null>(null);
-  const [showRenameId, setShowRenameId] = useState<string | null>(null);
-  const [renameValue, setRenameValue] = useState("");
-  const { artist } = useUser();
+  // const [showMenuId, setShowMenuId] = useState<string | null>(null);
+  // const [showRenameId, setShowRenameId] = useState<string | null>(null);
+  // const [renameValue, setRenameValue] = useState("");
+  // const { artist } = useUser();
 
   useEffect(() => {
     getUserPlaylists().then(setPlaylists);
@@ -43,25 +35,10 @@ const Sidebar: React.FC = () => {
     setPlaylists([newPlaylist, ...playlists]);
     setShowForm(false);
     setPlaylistName("");
-    setSelectedTracks([]);
+    // setSelectedTracks([]);
   };
 
-  const handleDeletePlaylist = (id: string) => {
-    const playlistsNew = playlists.filter((p) => p.id !== id);
-    localStorage.setItem("user_playlists", JSON.stringify(playlistsNew));
-    setPlaylists(playlistsNew);
-    setShowMenuId(null);
-  };
-
-  const handleRenamePlaylist = (id: string) => {
-    const playlistsNew = playlists.map((p) =>
-      p.id === id ? { ...p, name: renameValue } : p
-    );
-    localStorage.setItem("user_playlists", JSON.stringify(playlistsNew));
-    setPlaylists(playlistsNew);
-    setShowRenameId(null);
-    setShowMenuId(null);
-  };
+  // Note: delete/rename helpers removed (unused)
 
   return (
     <aside className="w-64 bg-black flex flex-col overflow-hidden">

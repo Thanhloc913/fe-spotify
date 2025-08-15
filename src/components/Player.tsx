@@ -19,15 +19,12 @@ const Player = () => {
     progress,
     repeat,
     shuffle,
-    playTrack,
     togglePlay,
     setVolume,
-    setProgress,
     setRepeat,
     toggleShuffle,
     skipToNext,
     skipToPrevious,
-    openMusicVideo,
     showVideo,
     setShowVideo,
   } = usePlayerStore();
@@ -132,8 +129,7 @@ const Player = () => {
                   onError={handleVideoError}
                   ref={(el) => {
                     if (el) {
-                      // Store reference to video element globally to control it
-                      (window as any).__globalVideoRef = el;
+                      (window as unknown as { __globalVideoRef: HTMLVideoElement }).__globalVideoRef = el;
                     }
                   }}
                 />

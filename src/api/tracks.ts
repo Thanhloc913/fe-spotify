@@ -62,7 +62,7 @@ export const getTrackById = async (
       const track = mockData.tracks.find((t) => t.id === id);
 
       if (!track) {
-        return createResponse(null as any, 404, "Track not found");
+        return createResponse(null, 404, "Track not found");
       }
 
       // Get track album
@@ -94,7 +94,7 @@ export const getTrackById = async (
     });
   } catch (error) {
     console.error("Error fetching track details:", error);
-    return createResponse(null as any, 500, "Failed to fetch track details");
+    return createResponse(null, 500, "Failed to fetch track details");
   }
 };
 

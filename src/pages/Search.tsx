@@ -1,22 +1,9 @@
 import { useState, useEffect } from "react";
-import {
-  FaCheckCircle,
-  FaPlay,
-  FaPause,
-  FaHeart,
-  FaEllipsisH,
-  FaList,
-} from "react-icons/fa";
+import { FaPlay, FaPause, FaHeart, FaList } from "react-icons/fa";
 import { useParams, useNavigate } from "react-router-dom";
-import { mockArtists, mockTracks, mockAlbums } from "../mock/data";
+// import { mockTracks, mockAlbums } from "../mock/data";
 import { usePlayerStore } from "../store/playerStore";
-import {
-  addFavoriteTrack,
-  removeFavoriteTrack,
-  getUserPlaylists,
-  addTrackToPlaylist,
-  getFavoriteTracks,
-} from "../api/user";
+import { getUserPlaylists, addTrackToPlaylist } from "../api/user";
 import { Track } from "../types";
 import { musicApi } from "../api/musicApi";
 import { getProfileByAccountID } from "../api/profileApi";
@@ -33,13 +20,13 @@ const tabs = [
 ];
 
 // Hàm loại bỏ dấu tiếng Việt để tìm kiếm dễ hơn
-function removeVietnameseTones(str: string) {
-  return str
-    .normalize("NFD")
-    .replace(/\p{Diacritic}/gu, "")
-    .replace(/đ/g, "d")
-    .replace(/Đ/g, "D");
-}
+// function removeVietnameseTones(str: string) {
+//   return str
+//     .normalize("NFD")
+//     .replace(/\p{Diacritic}/gu, "")
+//     .replace(/đ/g, "d")
+//     .replace(/Đ/g, "D");
+// }
 
 function formatDuration(ms: number) {
   const min = Math.floor(ms / 60000);
@@ -54,12 +41,12 @@ export default function Search() {
   const { setCurrentTrack, playTrack, currentTrack, isPlaying, togglePlay } =
     usePlayerStore();
   const [showPlaylistPopup, setShowPlaylistPopup] = useState(false);
-  const [playlists, setPlaylists] = useState<any[]>([]);
+  const [playlists, setPlaylists] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
   const [likedTracks, setLikedTracks] = useState<string[]>([]);
 
   // State cho search API
-  const [searchResult, setSearchResult] = useState<any>(null);
+  const [searchResult, setSearchResult] = useState<{ result?: Array<{ id: string; artistId?: string | number; title?: string; duration?: number; durationMs?: number; coverUrl?: string; backgroundUrl?: string; songUrl?: string; previewUrl?: string; storageId?: string; storageImageId?: string }> } | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState<string | null>(null);
 
@@ -72,7 +59,7 @@ export default function Search() {
     try {
       const tracks = await musicApi.getLikedSongs();
       console.log("Đã tải xong danh sách yêu thích:", tracks.length, "bài hát");
-      setLikedTracks(tracks.map((t: any) => t.id));
+      setLikedTracks(tracks.map((t) => t.id));
     } catch (error) {
       console.error("Lỗi khi tải bài hát yêu thích:", error);
     }
@@ -88,7 +75,7 @@ export default function Search() {
 
       // Kiểm tra xem có custom data từ event không
       if (event instanceof CustomEvent && event.detail) {
-        const { songId, action } = event.detail;
+        const { songId, action } = event.detail as { songId?: string; action?: string };
         console.log("Chi tiết sự kiện:", songId, action);
 
         // Cập nhật trực tiếp trạng thái mà không cần gọi API lại
@@ -128,7 +115,7 @@ export default function Search() {
       .then((res) => {
         setSearchResult(res.data || res); // tuỳ API trả về
       })
-      .catch((err) => {
+      .catch(() => {
         setSearchError("Có lỗi xảy ra khi tìm kiếm");
         setSearchResult(null);
       })
@@ -147,7 +134,7 @@ export default function Search() {
     const artistIds = Array.from(
       new Set(
         searchResult.result
-          .map((song: any) => String(song.artistId))
+          .map((song) => String(song.artistId))
           .filter(Boolean)
       )
     ) as string[];
@@ -178,22 +165,19 @@ export default function Search() {
 
     // Lấy danh sách các bài hát cần lấy ảnh (song không có coverUrl và có storageImageId)
     const songsNeedImage = searchResult.result.filter(
-      (song: any) => !song.coverUrl && (song.storageImageId || song.storageId)
+      (song) => !song.coverUrl && (song.storageImageId || song.storageId)
     );
 
     // Nếu không có bài hát nào cần lấy ảnh, dừng
     if (songsNeedImage.length === 0) return;
 
     // Lấy ảnh cho từng bài hát
-    songsNeedImage.forEach(async (song: any) => {
+    songsNeedImage.forEach(async (song) => {
       try {
         // Ưu tiên lấy từ storageImageId trước
-        const imageId =
-          song.storageImageId ||
-          (song as any).storageImageId ||
-          (song as any).storageImageID;
+        const imageId = song.storageImageId;
 
-        let imageUrl = null;
+        let imageUrl: string | null = null;
 
         if (imageId) {
           console.log(
@@ -207,7 +191,7 @@ export default function Search() {
           console.log(
             `Đang lấy ảnh cho bài hát "${song.title}" từ storageId: ${song.storageId}`
           );
-          imageUrl = getImageUrl(song.storageId);
+          imageUrl = await getImageUrl(song.storageId);
         }
 
         if (imageUrl) {
@@ -216,7 +200,7 @@ export default function Search() {
           );
           setSongImages((prev) => ({
             ...prev,
-            [song.id]: imageUrl,
+            [song.id as string]: imageUrl,
           }));
         }
       } catch (error) {
@@ -225,28 +209,25 @@ export default function Search() {
     });
   }, [searchResult]);
 
-  const handlePlayTrack = (track: any) => {
+  const handlePlayTrack = (track: Track & { duration?: number; durationMs?: number; backgroundUrl?: string }) => {
     if (currentTrack?.id === track.id) {
       togglePlay();
     } else {
       // Kiểm tra và đảm bảo rằng track có tất cả thông tin cần thiết
-      const enhancedTrack = {
+      const enhancedTrack: Track = {
         ...track,
         // Đảm bảo các trường cần thiết đều được đưa vào
-        songUrl: track.songUrl || undefined,
+        songUrl: track.songUrl || track.previewUrl || undefined,
         previewUrl: track.previewUrl || track.songUrl || undefined,
         coverUrl:
           track.backgroundUrl ||
           songImages[track.id] ||
           track.coverUrl ||
-          undefined,
-        artistName:
-          track.artistName ||
-          artistNames[String(track.artistId)] ||
-          "Nghệ sĩ không xác định",
+          "",
+        artistName: track.artistName || "",
         durationMs:
           track.durationMs || (track.duration ? track.duration * 1000 : 0),
-      };
+      } as Track;
 
       setCurrentTrack(enhancedTrack);
       playTrack();
@@ -255,25 +236,25 @@ export default function Search() {
 
   const handlePlayAll = () => {
     if (searchResult && searchResult.result && searchResult.result.length > 0) {
-      const firstTrack = searchResult.result[0];
+      const firstTrack = searchResult.result[0] as Track & {
+        duration?: number;
+        backgroundUrl?: string;
+      };
       // Tương tự như handlePlayTrack, đảm bảo track có tất cả thông tin cần thiết
-      const enhancedTrack = {
+      const enhancedTrack: Track = {
         ...firstTrack,
-        songUrl: firstTrack.songUrl || undefined,
+        songUrl: firstTrack.songUrl || firstTrack.previewUrl || undefined,
         previewUrl: firstTrack.previewUrl || firstTrack.songUrl || undefined,
         coverUrl:
           firstTrack.backgroundUrl ||
           songImages[firstTrack.id] ||
           firstTrack.coverUrl ||
-          undefined,
-        artistName:
-          firstTrack.artistName ||
-          artistNames[String(firstTrack.artistId)] ||
-          "Nghệ sĩ không xác định",
+          "",
+        artistName: firstTrack.artistName || "",
         durationMs:
           firstTrack.durationMs ||
           (firstTrack.duration ? firstTrack.duration * 1000 : 0),
-      };
+      } as Track;
 
       console.log(
         "Đang phát bài hát đầu tiên với thông tin:",
@@ -284,7 +265,7 @@ export default function Search() {
     }
   };
 
-  const handleToggleFavorite = async (track: any) => {
+  const handleToggleFavorite = async (track: Track) => {
     const profileId = localStorage.getItem("profile_id");
     if (!profileId) return;
 
@@ -325,10 +306,10 @@ export default function Search() {
     }
   };
 
-  const openPlaylistPopup = async (track: any) => {
+  const openPlaylistPopup = async (track: Track) => {
     setSelectedTrack(track);
     const pls = await getUserPlaylists();
-    setPlaylists(pls);
+    setPlaylists(pls.map((p) => ({ id: p.id, name: p.name })));
     setShowPlaylistPopup(true);
   };
 
@@ -398,7 +379,7 @@ export default function Search() {
               </button>
             </div>
             <div className="flex flex-col gap-2">
-              {searchResult.result.map((song: any) => (
+              {searchResult.result.map((song) => (
                 <div
                   key={song.id}
                   className="group flex items-center justify-between bg-gray-800 rounded-lg px-4 py-3 hover:bg-gray-700 transition-colors"
@@ -446,7 +427,7 @@ export default function Search() {
                     </div>
                     <div
                       className="text-gray-400 text-sm cursor-pointer hover:underline"
-                      onClick={() => handleArtistClick(song.artistId)}
+                      onClick={() => handleArtistClick(song.artistId as string)}
                     >
                       {song.artistName ||
                         artistNames[String(song.artistId)] ||

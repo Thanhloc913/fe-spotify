@@ -7,7 +7,7 @@ import {
 } from "../types";
 import { mockData } from "../mock/data";
 import { getToken } from "../utils/auth";
-import { getImageUrl } from "./storageApi";
+// import { getImageUrl } from "./storageApi";
 
 // Constants
 const API_BASE_URL = "http://localhost:8082";
@@ -57,14 +57,16 @@ export const getAlbums = async (): Promise<ApiResponse<Album[]>> => {
 
 export const getAlbumById = async (
   id: string
-): Promise<ApiResponse<{ album: Album; tracks: Track[]; artist: Artist }>> => {
+): Promise<
+  ApiResponse<{ album: Album; tracks: Track[]; artist: Artist } | null>
+> => {
   if (!getToken()) throw new Error("No token");
   try {
     if (USE_MOCK_DATA) {
       // Mock data logic
       const album = mockData.albums.find((a) => a.id === id);
       if (!album) {
-        return createResponse(null as any, 404, "Album not found");
+        return createResponse(null, 404, "Album not found");
       }
       // Get album tracks (Track[])
       const tracks = album.tracks
@@ -97,7 +99,7 @@ export const getAlbumById = async (
 
     if (!albumResponse.data.success) {
       console.error("Album not found or error in API:", albumResponse.data);
-      return createResponse(null as any, 404, "Album not found");
+      return createResponse(null, 404, "Album not found");
     }
 
     const albumData = albumResponse.data.data;
@@ -151,7 +153,20 @@ export const getAlbumById = async (
       album.totalTracks = tracksData.length;
 
       // Chuyển đổi dữ liệu bài hát - sử dụng trực tiếp backgroundUrl và songUrl từ API
-      tracks = tracksData.map((track: any) => {
+      type RawTrack = {
+        id: string;
+        title?: string;
+        artistId?: string;
+        artistName?: string;
+        duration?: number;
+        coverUrl?: string;
+        backgroundUrl?: string;
+        songUrl?: string;
+        storageId?: string;
+        storageImageId?: string;
+        trackNumber?: number;
+      };
+      tracks = tracksData.map((track: RawTrack) => {
         return {
           id: track.id,
           title: track.title || "",
@@ -244,11 +259,11 @@ export const getAlbumById = async (
         "Profile API không trả về dữ liệu thành công:",
         albumResponse.data
       );
-      return createResponse(null as any, 404, "Album not found");
+      return createResponse(null, 404, "Album not found");
     }
   } catch (error) {
     console.error("Error fetching album details:", error);
-    return createResponse(null as any, 500, "Failed to fetch album details");
+    return createResponse(null, 500, "Failed to fetch album details");
   }
 };
 

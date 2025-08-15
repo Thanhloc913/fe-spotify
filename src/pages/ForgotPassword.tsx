@@ -1,4 +1,4 @@
-import React, { useState, ChangeEvent, FormEvent, useRef } from "react";
+import React, { useState, FormEvent, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   checkEmailExists,
@@ -172,8 +172,8 @@ const ForgotPassword: React.FC = () => {
         setStep(2);
         setSuccess("Mã xác thực đã được gửi đến email của bạn");
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError((err as Error).message);
     }
   };
 
@@ -224,8 +224,8 @@ const ForgotPassword: React.FC = () => {
       } else {
         setError(response.message || "Mã xác thực không đúng");
       }
-    } catch (err: any) {
-      setError(err.message || "Mã xác thực không đúng");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Mã xác thực không đúng");
     } finally {
       setIsVerifying(false);
     }
@@ -244,7 +244,7 @@ const ForgotPassword: React.FC = () => {
         setOtp(["", "", "", "", "", ""]);
         otpRefs.current[0]?.focus();
       }
-    } catch (err: any) {
+    } catch {
       setError("Không gửi lại được mã xác thực");
     } finally {
       setResendLoading(false);
@@ -265,8 +265,8 @@ const ForgotPassword: React.FC = () => {
       } else {
         setError(response.message || "Có lỗi xảy ra");
       }
-    } catch (err: any) {
-      setError(err.message || "Có lỗi xảy ra");
+    } catch (err: unknown) {
+      setError((err as Error).message || "Có lỗi xảy ra");
     }
   };
 

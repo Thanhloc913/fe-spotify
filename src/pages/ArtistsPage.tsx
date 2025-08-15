@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useState, useEffect } from "react";
-import { getArtists, getArtistById, getArtistAlbums } from "../api/artists";
+import { getArtists, getArtistById } from "../api/artists";
 import ArtistCard from "../components/cards/ArtistCard";
 import ArtistDetail from "../components/detail/ArtistsDetail";
 import type { Artist } from "../types";

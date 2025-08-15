@@ -13,7 +13,7 @@ import { FaEllipsisH } from "react-icons/fa";
 const PlaylistDetail = () => {
   const { id } = useParams<{ id: string }>();
   const [playlist, setPlaylist] = useState<UserPlaylist | null>(null);
-  const [tracks, setTracks] = useState<any[]>([]);
+  const [tracks, setTracks] = useState<Array<{ id: string; title: string; coverUrl: string; artistName: string; durationMs?: number }>>([]);
   const { setCurrentTrack, playTrack } = usePlayerStore();
   const [showMenu, setShowMenu] = useState(false);
   const [showRename, setShowRename] = useState(false);
@@ -29,7 +29,14 @@ const PlaylistDetail = () => {
         if (found) {
           const playlistTracks = found.trackIds
             .map((trackId) => mockTracks.find((t) => t.id === trackId))
-            .filter(Boolean);
+            .filter(Boolean)
+            .map((t) => ({
+              id: t!.id,
+              title: t!.title,
+              coverUrl: t!.coverUrl,
+              artistName: t!.artistName,
+              durationMs: t!.durationMs,
+            }));
           setTracks(playlistTracks);
         }
       });
