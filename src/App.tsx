@@ -5,26 +5,26 @@ import {
   Navigate,
 } from "react-router-dom";
 import Layout from "./components/layout/Layout";
-import HomePage from "./pages/HomePage";
-import LoginPage from "./pages/LoginPage";
+import HomePage from "./pages/public/HomePage";
+import LoginPage from "./pages/auth/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import ForgotPassword from "./pages/ForgotPassword";
 // import PrivateRoute from "./components/PrivateRoute";
-import Artists from "./pages/Artists";
-import Albums from "./pages/Albums";
-import Tracks from "./pages/Tracks";
-import ArtistDetail from "./pages/ArtistDetail";
-import AlbumDetail from "./pages/AlbumDetail";
-import Profile from "./pages/Profile";
-import PlaylistDetail from "./pages/PlaylistDetail";
-import LikedSongs from "./pages/LikedSongs";
+import Artists from "./pages/public/Artists";
+import Albums from "./pages/public/Albums";
+import Tracks from "./pages/public/Tracks";
+import ArtistDetail from "./pages/public/ArtistDetail";
+import AlbumDetail from "./pages/public/AlbumDetail";
+import Profile from "./pages/protected/Profile";
+import PlaylistDetail from "./pages/protected/PlaylistDetail";
+import LikedSongs from "./pages/protected/LikedSongs";
 import { UserProvider } from "./contexts/UserContext";
-import Search from "./pages/Search";
+import Search from "./pages/public/Search";
 import AdminLayout from "./components/AdminLayout";
 import GlobalProvider from "./GlobalProvider";
 import { AdminRoutes } from "./pages/admin/AdminRoutes";
-import PremiumPage from "./pages/PremiumPage";
-import PremiumPaymentProcessed from "./pages/PremiumPaymentProcessed";
+import PremiumPage from "./pages/protected/PremiumPage";
+import PremiumPaymentProcessed from "./pages/protected/PremiumPaymentProcessed";
 
 document.body.classList.add("dark");
 

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { login } from "../api/authApi";
+import { login } from "../../api/authApi";
 import { FaSpotify, FaGoogle, FaFacebook, FaApple } from "react-icons/fa";
-import { useUser } from "../contexts/UserContext";
-import { LoginSchema } from "../schemas/auth";
+import { useUser } from "../../contexts/UserContext";
+import { LoginSchema } from "../../schemas/auth";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -132,3 +132,6 @@ const LoginPage: React.FC = () => {
 };
 
 export default LoginPage;
+
+
+
